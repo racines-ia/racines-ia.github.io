@@ -1,0 +1,19 @@
+{
+  "name": "racines.ia",
+  "short_name": "racines.ia",
+  "description": "Moderniser le système éducatif : appel, cotes, bulletins officiels, palmarès et rapports aux parents pour toutes vos écoles.",
+  "lang": "fr",
+  "id": "/",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0c0d0a",
+  "theme_color": "#0c0d0a",
+  "categories": ["education", "productivity"],
+  "icons": [
+    { "src": "racine-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "racine-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "racine-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}

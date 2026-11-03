@@ -562,6 +562,19 @@
     if (!top) { history.replaceState({ racine: cur }, ''); return; }
     if (!same(top, cur)) history.pushState({ racine: cur }, '');
   }
+  /* Garde : depuis l'accueil de l'école, deux appuis sur Retour ramènent à racines.ia */
+  let guardAt = 0;
+  function guardMsg(t) { if (typeof window.toast === 'function' && document.getElementById('toast')) { window.toast(t); return; }
+    let d = document.getElementById('rg-toast'); if (!d) { d = document.createElement('div'); d.id = 'rg-toast'; d.style.cssText = 'position:fixed;left:50%;bottom:calc(110px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);z-index:2147483646;background:#F4F7E4;color:#152106;font:600 15px Outfit,system-ui,sans-serif;padding:12px 18px;border-radius:999px;box-shadow:0 10px 30px rgba(0,0,0,.4);max-width:90vw;text-align:center'; document.body.appendChild(d); }
+    d.textContent = t; d.hidden = false; clearTimeout(guardMsg.t); guardMsg.t = setTimeout(() => { d.hidden = true; }, 2500); }
+  function onGuard() {
+    const now = Date.now();
+    if (now - guardAt < 2500) { location.replace('/'); return; }
+    guardAt = now; guardMsg('Appuyez encore sur Retour pour revenir à racines.ia');
+    history.pushState({ racine: (typeof S !== 'undefined') ? snap() : null, g2: 1 }, '');
+  }
+  if (!(history.state && history.state.racineGuard)) { history.replaceState({ racineGuard: 1 }, ''); history.pushState({ racine: null, early: 1 }, ''); }
+  addEventListener('popstate', ev => { if (ev.state && ev.state.racineGuard) onGuard(); });
   function histInit() {
     if (typeof S === 'undefined') return;
     history.replaceState({ racine: snap() }, '');
@@ -572,6 +585,7 @@
     addEventListener('popstate', ev => {
       if (overlay === 'sheet') { overlay = null; try { closeSheet(); } catch (e) {} return; }
       if (overlay === 'fs') { overlay = null; try { closeBulFS(); } catch (e) {} return; }
+      if (ev.state && ev.state.racineGuard) return;
       const st = ev.state && ev.state.racine; if (!st) return;
       if (same(st, snap())) { history.back(); return; }   // doublon : on recule encore
       restoring = true; try { Object.assign(S, st); render(); scrollTo(0, 0); } finally { restoring = false; }

@@ -825,6 +825,11 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .aitag{display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:800;color:var(--soft-ink);background:var(--soft);border-radius:99px;padding:4px 8px}
 .chipb.sm{padding:5px 10px;font-size:12px}
 .aibox{display:flex;flex-direction:column;gap:8px}
+.pc-li{align-items:center}.pc-li .meter{margin-top:6px;height:6px}
+.pc-r{display:flex;flex-direction:column;align-items:flex-end;gap:3px;flex:none;text-align:right}.pc-r b{font-size:15px}.pc-r small{font-size:12px;color:var(--muted)}
+.pc-big{display:grid;grid-template-columns:1fr 1fr;gap:12px}.pc-big small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}.pc-big b{font-family:var(--f-d);font-weight:400;font-size:clamp(22px,6vw,30px);line-height:1.1;color:var(--accent)}
+.pc-k b{font-size:24px!important}
+.meter.late i{background:var(--bad)}.meter.ok i{background:var(--good)}
 .sn-sym{flex-wrap:wrap;overflow:visible}
 .sn-dec{display:flex;border-radius:20px}.sn-dec button{flex:1 1 auto}
 .sn-li{align-items:flex-start}.sn-li .pill{flex:none;margin-top:2px}
@@ -940,8 +945,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante'};
-const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem'};
+const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -991,6 +996,7 @@ const ICONS={
  bell:'<path d="M6 8a6 6 0 0 1 12 0c0 7 3 8 3 8H3s3-1 3-8"/><path d="M10.3 20a1.9 1.9 0 0 0 3.4 0"/>',
  pen2:'<path d="M4 20h4L19 9l-4-4L4 16v4Z"/><path d="m13.5 6.5 4 4"/>',
  med:'<rect x="3.5" y="6.5" width="17" height="13.5" rx="3"/><path d="M9 6.5V4.5h6v2M12 10.2v6.6M8.7 13.5h6.6"/>',
+ money:'<rect x="2.5" y="6" width="19" height="12" rx="2.5"/><circle cx="12" cy="12" r="2.6"/><path d="M6 9.5v5M18 9.5v5"/>',
  phone:'<path d="M5 4h4l2 5-2.5 1.5a11 11 0 0 0 5 5L15 13l5 2v4a2 2 0 0 1-2 2A16 16 0 0 1 3 6a2 2 0 0 1 2-2"/>'
 };
 const NAVI={
@@ -1133,7 +1139,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']];
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1155,7 +1161,7 @@ function screen(){
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1181,6 +1187,7 @@ function vAccueil(){
     <div class="sum3 num"><div><b>${ids.length}</b><span>Classes</span></div><div><b>${nbEl}</b><span>Élèves</span></div><div><b>${nbEns}</b><span>Enseignants</span></div></div>
     ${isDir()?(()=>{const L=personnel(),td=today();const n=L.filter(p=>S.presence[pid2(td,p.id)]).length;return `<button class="li actsum" data-act="go" data-v="presence"><span class="ib g">${ic('users',22)}</span><span class="grow"><span class="ttl" style="display:block">Présence du personnel</span><span class="muted small num">Aujourd’hui : ${n} présent${n>1?'s':''} sur ${L.length}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()?(()=>{const td=today();const L=santeList();const n=L.filter(x=>x.date===td).length,w=L.filter(x=>!x.envoyeAt).length;return `<button class="li actsum" data-act="go" data-v="sante"><span class="ib g">${ic('med',22)}</span><span class="grow"><span class="ttl" style="display:block">Cahier de sortie · santé</span><span class="muted small num">Aujourd’hui : ${n} élève${n>1?'s':''} malade${n>1?'s':''}${w?` · ${w} PDF à envoyer`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
+    ${isDir()?(()=>{const ids=classIds();const st=ids.map(c=>statClasse(c));const du=sum(st.map(x=>x.du)),pa=sum(st.map(x=>x.paye));const td=today();const j=sum(Object.values(S.paiem).filter(p=>p.date===td).map(p=>numM(p.montant)));return `<button class="li actsum" data-act="go" data-v="perception"><span class="ib g">${ic('money',22)}</span><span class="grow"><span class="ttl" style="display:block">Perception des frais</span><span class="muted small num">${du?`${Math.round(pa/du*100)} % perçu · reste ${fmtM(du-pa)}`:'Frais pas encore fixés'}${j?` · aujourd’hui ${fmtM(j)}`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()?(()=>{const td=today(),ci=classIds();const a=ci.filter(c=>appelClos(c,td)).length,cc=ci.filter(c=>cotesClos(c,td)).length,nb=unseen();return `<button class="li actsum" data-act="go" data-v="activite"><span class="ib g">${ic('bell',22)}</span><span class="grow"><span class="ttl" style="display:block">Activité du jour</span><span class="muted small num">Appel clôturé : ${a}/${ci.length} classes · Cotes : ${cc}/${ci.length}</span></span>${nb?`<span class="pill acc num">${nb} nouveau${nb>1?'x':''}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
     <button class="gcta" data-act="go" data-v="classes"><span><b>Voir les classes</b><small>Choisissez une classe pour ouvrir son registre d’appel, son cahier de cotes et ses bulletins.</small></span><i>${ic('chev',22)}</i></button>
    </section>
@@ -1387,6 +1394,7 @@ function vGestion(){
   const sansModele=ids.filter(c=>!S.classes[c].grille);const ec=S.config.ecole||{};
   return band({back:'accueil',kicker:'Direction',title:'Gestion de l’école',sub:'Classes, branches, enseignants et informations du bulletin'})+page(`
   <button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence. L’heure s’enregistre seule.</small></span><i>${ic('chev',22)}</i></button>
+  <button class="gcta" data-act="go" data-v="perception"><span><b>Perception des frais</b><small>Frais fixés par classe, paiements de chaque élève, montants restants, reçus PDF et rappels aux parents.</small></span><i>${ic('money',22)}</i></button>
   <button class="gcta" data-act="go" data-v="sante"><span><b>Cahier de sortie</b><small>Élèves malades : enregistrez l’heure, la date, le motif de sortie et les conseils aux parents (avec l’IA). La fiche part en PDF sur WhatsApp.</small></span><i>${ic('med',22)}</i></button>
   ${S.demo?'':`<section class="card pad stack"><div style="display:flex;gap:14px;align-items:center"><span class="ib g">${ic('chart',22)}</span><div><b>Simulation complète</b><p class="muted small" style="margin:2px 0 0">Testez l’application avec des élèves, des cotes et des registres fictifs dans les 6 classes. Vos vraies données ne sont pas touchées.</p></div></div><button class="btn grad" data-act="sim-start">Lancer la simulation</button></section>`}
   <section class="sec"><div class="sec-h"><h2 class="h2">Informations du bulletin</h2><span class="btns"><button class="btn sm" data-act="cal">Calendrier des périodes</button><button class="btn sm" data-act="ecole">Modifier</button></span></div>
@@ -2146,6 +2154,122 @@ async function santePDF(id){
   }catch(err){toast('Impossible de créer le PDF. Réessayez.')}finally{host.remove()}
 }
 function santeOpenWA(id){const x=S.sante[id];const e=santeEl(x);const n=waNum(e.telephone);if(!n)return;const a=document.createElement('a');a.href=`https://wa.me/${n}?text=${encodeURIComponent(santeTexte(id))}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+/* ---------- Perception des frais scolaires (direction uniquement) ---------- */
+const MODES=[['especes','Espèces'],['mobile','Mobile money'],['banque','Banque']];
+const PAR=()=>S.frais._param||{};
+const DEV=()=>PAR().devise||'FC';
+const fmtM=n=>{const v=Math.round((+n||0)*100)/100;return v.toLocaleString('fr-FR',{maximumFractionDigits:2}).replace(/ | /g,' ')+' '+DEV()};
+const numM=v=>{const x=Number(String(v??'').replace(/\s/g,'').replace(',','.'));return isNaN(x)?0:x};
+const fraisOf=cid=>S.frais['c_'+cid]||null;
+const tranchesOf=cid=>{const f=fraisOf(cid);if(!f)return[];const tr=(f.tranches||[]).filter(t=>numM(t.montant)>0);return tr.length?tr:[{nom:'Frais scolaires',montant:numM(f.montant),echeance:''}]};
+const totalClasse=cid=>sum(tranchesOf(cid).map(t=>numM(t.montant)));
+const remiseOf=eid=>S.frais['r_'+eid]||null;
+const paiementsOf=eid=>Object.entries(S.paiem).filter(([,p])=>p.eleveId===eid).map(([id,p])=>({id,...p})).sort((a,b)=>(b.date+(b.at||'')).localeCompare(a.date+(a.at||'')));
+function situation(eid){const e=S.eleves[eid]?{id:eid,...S.eleves[eid]}:null;const cid=e?.classeId;const tr=tranchesOf(cid);const brut=sum(tr.map(t=>numM(t.montant)));const r=remiseOf(eid);
+ const remise=r?Math.min(brut,r.type==='pct'?brut*numM(r.valeur)/100:numM(r.valeur)):0;const du=Math.max(0,brut-remise);
+ const paye=sum(paiementsOf(eid).map(p=>numM(p.montant)));const reste=Math.max(0,du-paye);
+ const td=today();const f=brut?du/brut:1;let cumul=0;let attendu=0;const etapes=tr.map(t=>{cumul+=numM(t.montant)*f;if(t.echeance&&t.echeance<=td)attendu=cumul;return{...t,du:numM(t.montant)*f,cumul}});
+ let restePaye=paye;etapes.forEach(t=>{t.paye=Math.min(t.du,restePaye);restePaye-=t.paye});
+ const retard=Math.max(0,attendu-paye);
+ const st=!brut?'nf':reste<=0.001?'ok':retard>0.001?'late':paye>0?'part':'none';
+ return{e,cid,brut,remise,du,paye,reste,retard,etapes,st,pct:du?Math.min(100,paye/du*100):100}}
+const STP={ok:['good','Soldé'],part:['acc','En cours'],late:['bad','En retard'],none:['warn','Rien payé'],nf:['','Frais non fixés']};
+function statClasse(cid){const es=elevesOf(cid);const L=es.map(e=>situation(e.id));return{es,L,du:sum(L.map(x=>x.du)),paye:sum(L.map(x=>x.paye)),reste:sum(L.map(x=>x.reste)),retard:L.filter(x=>x.st==='late').length,solde:L.filter(x=>x.st==='ok').length}}
+const pctBar=(p,cls='')=>`<div class="meter ${cls}"><i style="width:${Math.max(0,Math.min(100,p)).toFixed(1)}%"></i></div>`;
+function vPerception(){
+ if(!isDir()){S.view='prof';return screen()}
+ const ids=classIds();const all=ids.map(c=>({cid:c,...statClasse(c)}));const du=sum(all.map(x=>x.du)),pa=sum(all.map(x=>x.paye)),re=sum(all.map(x=>x.reste));const nl=sum(all.map(x=>x.retard));
+ const td=today();const auj=Object.values(S.paiem).filter(p=>p.date===td);const mois=Object.values(S.paiem).filter(p=>(p.date||'').slice(0,7)===td.slice(0,7));
+ const f=S.fCls&&ids.includes(S.fCls)?S.fCls:'';const q=(S.pq||'').trim().toLowerCase();
+ const fil=S.pFil||'tous';
+ const rows=(f?[all.find(x=>x.cid===f)]:all).flatMap(c=>c.L.map(x=>({...x,cls:S.classes[c.cid]}))).filter(x=>(!q||nomComplet(x.e).toLowerCase().includes(q))&&(fil==='tous'||(fil==='late'&&x.st==='late')||(fil==='none'&&x.st==='none')||(fil==='ok'&&x.st==='ok')||(fil==='part'&&x.st==='part')));
+ const li=x=>{const [pc,pl]=STP[x.st];return `<button class="li pc-li" data-act="pc-el" data-id="${h(x.e.id)}">${avEl(x.e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(x.e))}</span><span class="muted small num">${f?'':h((x.cls?.nom||'').replace(' année primaire',' année'))+' · '}${x.brut?`payé ${fmtM(x.paye)} sur ${fmtM(x.du)}`:'frais de la classe non fixés'}</span>${x.brut?pctBar(x.pct,x.st):''}</span><span class="pc-r"><span class="pill ${pc}">${pl}</span>${x.brut&&x.reste>0?`<b class="num">${fmtM(x.reste)}</b><small>reste</small>`:''}</span></button>`};
+ return band({back:'gestion',kicker:'Direction',title:'Perception',sub:`Frais scolaires · ${ANNEE}`})+page(`
+  <section class="card pad stack pc-sum">
+   <div class="pc-big"><div><small>Perçu</small><b class="num">${fmtM(pa)}</b></div><div><small>Reste à percevoir</small><b class="num">${fmtM(re)}</b></div></div>
+   ${pctBar(du?pa/du*100:0)}
+   <div class="sum3 num pc-k"><div><b>${du?Math.round(pa/du*100):0} %</b><span>du total attendu</span></div><div><b>${fmtM(auj.reduce((a,p)=>a+numM(p.montant),0))}</b><span>aujourd’hui · ${auj.length}</span></div><div><b>${nl}</b><span>élève${nl>1?'s':''} en retard</span></div></div>
+   <div class="muted small">Attendu cette année : <b class="num">${fmtM(du)}</b> · ce mois : <b class="num">${fmtM(mois.reduce((a,p)=>a+numM(p.montant),0))}</b></div>
+   <div class="btns"><button class="btn grad sm" data-act="pc-pay" data-id="">${ic('plus',16)} Enregistrer un paiement</button><button class="btn sm" data-act="pc-journal">${ic('cal',16)} Journal de caisse</button><button class="btn sm" data-act="pc-param">Monnaie : ${h(DEV())}</button></div>
+  </section>
+  <section class="sec"><div class="sec-h"><h2 class="h2">Frais fixés par classe</h2></div>
+   <div class="card list">${all.map(c=>{const t=totalClasse(c.cid);return `<button class="li" data-act="pc-frais" data-id="${h(c.cid)}"><span class="ib">${ic('book',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(S.classes[c.cid].nom)}</span><span class="muted small num">${t?`${fmtM(t)} par élève · ${tranchesOf(c.cid).length} tranche${tranchesOf(c.cid).length>1?'s':''} · ${c.es.length} élèves`:'Touchez pour fixer les frais'}</span>${t?pctBar(c.du?c.paye/c.du*100:0):''}</span><span class="pc-r">${t?`<b class="num">${c.du?Math.round(c.paye/c.du*100):0} %</b><small>${fmtM(c.reste)} reste</small>`:'<span class="pill warn">À fixer</span>'}</span></button>`}).join('')||'<div class="pad muted small">Créez d’abord des classes.</div>'}</div></section>
+  <section class="sec"><div class="sec-h"><h2 class="h2">Élèves</h2><span class="muted small num">${rows.length}</span></div>
+   <div class="chips" role="group" aria-label="Classe"><button class="chipb" data-act="pc-cls" data-v="" aria-pressed="${!f}">Toutes</button>${ids.map(c=>`<button class="chipb" data-act="pc-cls" data-v="${h(c)}" aria-pressed="${f===c}">${h(S.classes[c].nom.replace(' année primaire',''))}</button>`).join('')}</div>
+   <div class="chips" role="group" aria-label="Situation">${[['tous','Tous'],['late','En retard'],['none','Rien payé'],['part','En cours'],['ok','Soldés']].map(([k,l])=>`<button class="chipb sm" data-act="pc-fil" data-v="${k}" aria-pressed="${fil===k}">${l}</button>`).join('')}</div>
+   <input class="inp" id="pq" type="search" value="${h(S.pq||'')}" placeholder="Chercher un élève…" aria-label="Chercher un élève">
+   ${fil==='late'&&rows.length?`<button class="btn sm" data-act="pc-relances">${ic('bell',16)} Copier la liste des retards pour WhatsApp</button>`:''}
+   <div class="card list">${rows.map(li).join('')||'<div class="pad muted small">Aucun élève.</div>'}</div></section>`);
+}
+function fraisSheet(cid){const c=S.classes[cid];if(!c)return;const f=fraisOf(cid)||{};const tr=(f.tranches&&f.tranches.length?f.tranches:[{nom:'1re tranche',montant:'',echeance:''},{nom:'2e tranche',montant:'',echeance:''},{nom:'3e tranche',montant:'',echeance:''}]);
+ openSheet('Frais · '+c.nom,`<form id="f-frais" class="stack" data-id="${h(cid)}">
+  <p class="muted small" style="margin:0">Fixez le montant de chaque tranche et sa date limite. Le total est le frais scolaire annuel d’un élève de cette classe (en ${h(DEV())}).</p>
+  <div id="fr-rows" class="stack">${tr.map((t,i)=>`<div class="card pad stack" style="gap:8px"><div class="grid2"><div class="field"><label>Nom</label><input class="inp" name="nom_${i}" value="${h(t.nom||'')}"></div><div class="field"><label>Montant (${h(DEV())})</label><input class="inp num" name="mt_${i}" inputmode="decimal" value="${h(t.montant??'')}" placeholder="0"></div></div><div class="field"><label>Date limite</label><input class="inp" type="date" name="ech_${i}" value="${h(t.echeance||'')}"></div></div>`).join('')}</div>
+  <input type="hidden" name="n" value="${tr.length}">
+  <div class="btns"><button type="button" class="btn sm" data-act="pc-tradd">${ic('plus',16)} Ajouter une tranche</button></div>
+  <div class="field"><label><input type="checkbox" name="toutes" style="width:18px;height:18px;vertical-align:middle;accent-color:var(--accent)"> Appliquer ces frais à toutes les classes</label></div>
+  <button class="btn grad" type="submit">Enregistrer les frais</button></form>`);
+}
+function paySheet(eid,pid){const p=pid?S.paiem[pid]:null;const ids=classIds();const e0=eid?S.eleves[eid]:null;const cid=e0?.classeId||S.fCls||ids[0];
+ const opts=c=>elevesOf(c).map(e=>`<option value="${h(e.id)}" ${e.id===eid?'selected':''}>${h(nomComplet(e))}</option>`).join('');
+ const s=eid?situation(eid):null;
+ openSheet(pid?'Modifier le paiement':'Enregistrer un paiement',`<form id="f-pay" class="stack" data-id="${h(pid||'')}">
+  ${eid?`<input type="hidden" name="eleveId" value="${h(eid)}"><div class="idhead">${avEl(e0,'lg')}<div><b>${h(nomComplet(e0))}</b><div class="muted small num">${h(S.classes[cid]?.nom||'')} · reste ${fmtM(s.reste)}</div></div></div>`
+   :`<div class="grid2"><div class="field"><label for="pc-c">Classe</label><select class="inp" id="pc-c">${ids.map(c=>`<option value="${h(c)}" ${c===cid?'selected':''}>${h(S.classes[c].nom)}</option>`).join('')}</select></div><div class="field"><label for="pc-e">Élève</label><select class="inp" id="pc-e" name="eleveId" required>${opts(cid)}</select></div></div>`}
+  <div class="grid2"><div class="field"><label for="pc-m">Montant payé (${h(DEV())})</label><input class="inp num" id="pc-m" name="montant" inputmode="decimal" required value="${h(p?.montant??'')}" placeholder="0" style="font-size:22px;font-weight:700"></div><div class="field"><label for="pc-d">Date</label><input class="inp" type="date" id="pc-d" name="date" value="${h(p?.date||today())}" required></div></div>
+  ${s&&s.reste>0?`<div class="btns"><button type="button" class="chipb sm" data-act="pc-fill" data-v="${s.reste}">Tout le reste · ${fmtM(s.reste)}</button>${s.retard>0&&s.retard<s.reste?`<button type="button" class="chipb sm" data-act="pc-fill" data-v="${s.retard}">Le retard · ${fmtM(s.retard)}</button>`:''}</div>`:''}
+  <div class="field"><label>Mode de paiement</label><div class="seg" role="group" aria-label="Mode">${MODES.map(([k,l])=>`<button type="button" data-act="pc-mode" data-v="${k}" aria-pressed="${(p?.mode||'especes')===k}">${l}</button>`).join('')}</div><input type="hidden" name="mode" value="${h(p?.mode||'especes')}"></div>
+  <div class="grid2"><div class="field"><label for="pc-r">Payé par</label><input class="inp" id="pc-r" name="payeur" value="${h(p?.payeur||'')}" placeholder="Ex. Le père"></div><div class="field"><label for="pc-ref">Référence (facultatif)</label><input class="inp" id="pc-ref" name="ref" value="${h(p?.ref||'')}" placeholder="N° transaction"></div></div>
+  <button class="btn grad" type="submit">${pid?'Enregistrer':'Enregistrer et voir le reçu'}</button>
+  ${pid?`<button type="button" class="btn danger" data-act="pc-del" data-id="${h(pid)}">Supprimer ce paiement</button>`:''}</form>`,sh=>{const c=sh.querySelector('#pc-c');if(c)c.addEventListener('change',ev=>{sh.querySelector('#pc-e').innerHTML=opts(ev.target.value)})});
+}
+function eleveFinSheet(eid){const s=situation(eid);if(!s.e)return;const L=paiementsOf(eid);const r=remiseOf(eid);const [pc,pl]=STP[s.st];
+ openSheet('Frais de l’élève',`<div class="stack">
+  <div class="idhead">${avEl(s.e,'lg')}<div><b>${h(nomComplet(s.e))}</b><div class="muted small">${h(S.classes[s.cid]?.nom||'')} <span class="pill ${pc}">${pl}</span></div></div></div>
+  ${s.brut?`<div class="card pad stack"><div class="pc-big"><div><small>Payé</small><b class="num">${fmtM(s.paye)}</b></div><div><small>Reste</small><b class="num">${fmtM(s.reste)}</b></div></div>${pctBar(s.pct,s.st)}
+   <div class="muted small num">Frais annuels ${fmtM(s.brut)}${s.remise?` · réduction ${fmtM(s.remise)}${r?.motif?' ('+h(r.motif)+')':''} · à payer ${fmtM(s.du)}`:''}${s.retard>0?` · <b style="color:var(--bad)">en retard de ${fmtM(s.retard)}</b>`:''}</div></div>
+  <div class="card list">${s.etapes.map(t=>{const ok=t.paye>=t.du-0.001;const late=!ok&&t.echeance&&t.echeance<=today();return `<div class="li"><span class="pf-chk" style="background:${ok?'var(--accent)':'transparent'};color:${ok?'#fff':'inherit'};box-shadow:inset 0 0 0 2px ${late?'var(--bad)':'var(--line)'}">${ok?'✓':''}</span><span class="grow"><span class="ttl" style="display:block">${h(t.nom)}</span><span class="muted small num">${t.echeance?'avant le '+h(dfr(t.echeance)):'sans date limite'}</span></span><span class="pc-r"><b class="num">${fmtM(t.paye)} / ${fmtM(t.du)}</b>${late?'<small style="color:var(--bad)">en retard</small>':''}</span></div>`}).join('')}</div>`:`<div class="card pad small muted">Les frais de cette classe ne sont pas encore fixés. <button class="btn sm" data-act="pc-frais" data-id="${h(s.cid)}">Fixer les frais</button></div>`}
+  <div class="btns"><button class="btn grad" data-act="pc-pay" data-id="${h(eid)}">${ic('plus',16)} Enregistrer un paiement</button>${s.reste>0&&s.brut?`<button class="btn sm" data-act="pc-wa" data-id="${h(eid)}">Rappel au parent (WhatsApp)</button>`:''}<button class="btn sm" data-act="pc-remise" data-id="${h(eid)}">${r?'Modifier la réduction':'Réduction / bourse'}</button></div>
+  <h3 class="h2" style="font-size:18px">Historique des paiements · ${L.length}</h3>
+  <div class="card list">${L.map(p=>`<div class="li"><span class="ib">${ic('check',18)}</span><span class="grow"><span class="ttl num" style="display:block">${fmtM(p.montant)}</span><span class="muted small">${h(dfr(p.date))} · ${h((MODES.find(m=>m[0]===p.mode)||['','Espèces'])[1])}${p.recu?' · reçu n° '+h(p.recu):''}</span></span><button class="btn sm" data-act="pc-recu" data-id="${h(p.id)}">Reçu</button><button class="x" data-act="pc-edit" data-id="${h(p.id)}" aria-label="Modifier ce paiement">${ic('pen2',16)}</button></div>`).join('')||'<div class="pad muted small">Aucun paiement pour l’instant.</div>'}</div>
+ </div>`);
+}
+function remiseSheet(eid){const e=S.eleves[eid];const r=remiseOf(eid)||{type:'montant',valeur:'',motif:''};
+ openSheet('Réduction · '+nomComplet(e),`<form id="f-remise" class="stack" data-id="${h(eid)}"><p class="muted small" style="margin:0">Pour un enfant du personnel, une fratrie, une bourse… La réduction est retirée du total à payer.</p>
+  <div class="field"><label>Type</label><div class="seg" role="group"><button type="button" data-act="pc-rtype" data-v="montant" aria-pressed="${r.type!=='pct'}">Montant (${h(DEV())})</button><button type="button" data-act="pc-rtype" data-v="pct" aria-pressed="${r.type==='pct'}">Pourcentage</button></div><input type="hidden" name="type" value="${h(r.type||'montant')}"></div>
+  <div class="grid2"><div class="field"><label>Valeur</label><input class="inp num" name="valeur" inputmode="decimal" value="${h(r.valeur??'')}"></div><div class="field"><label>Motif</label><input class="inp" name="motif" value="${h(r.motif||'')}" placeholder="Ex. Enfant d’enseignant"></div></div>
+  <button class="btn grad" type="submit">Enregistrer</button>${remiseOf(eid)?`<button type="button" class="btn danger" data-act="pc-rdel" data-id="${h(eid)}">Retirer la réduction</button>`:''}</form>`);
+}
+function paramSheet(){openSheet('Monnaie des frais',`<form id="f-pparam" class="stack"><p class="muted small" style="margin:0">Choisissez la monnaie utilisée pour les frais et les paiements.</p><div class="seg" role="group">${['FC','$'].map(d=>`<button type="button" data-act="pc-dev" data-v="${d}" aria-pressed="${DEV()===d}">${d==='FC'?'Franc congolais (FC)':'Dollar ($)'}</button>`).join('')}</div><input type="hidden" name="devise" value="${h(DEV())}"><button class="btn grad" type="submit">Enregistrer</button></form>`)}
+function journalSheet(d){d=d||S.jDate||today();S.jDate=d;const L=Object.entries(S.paiem).filter(([,p])=>p.date===d).map(([id,p])=>({id,...p})).sort((a,b)=>(a.at||'').localeCompare(b.at||''));const tot=sum(L.map(p=>numM(p.montant)));
+ const dd=D(d);const prev=iso(new Date(dd.getTime()-864e5)),next=iso(new Date(dd.getTime()+864e5));
+ const parMode=MODES.map(([k,l])=>[l,sum(L.filter(p=>(p.mode||'especes')===k).map(p=>numM(p.montant)))]).filter(x=>x[1]>0);
+ openSheet('Journal de caisse',`<div class="stack"><div class="btns"><button class="x" data-act="pc-jday" data-v="${prev}" aria-label="Jour précédent">${ic('left',18)}</button><b class="num" style="text-transform:capitalize">${h(JLONG[dd.getUTCDay()])} ${h(dfr(d))}</b><button class="x" data-act="pc-jday" data-v="${next}" ${d>=today()?'disabled':''} aria-label="Jour suivant">${ic('chev',18)}</button></div>
+  <div class="card pad pc-big"><div><small>Total du jour</small><b class="num">${fmtM(tot)}</b></div><div><small>Paiements</small><b class="num">${L.length}</b></div></div>
+  ${parMode.length?`<div class="btns">${parMode.map(([l,v])=>`<span class="pill num">${l} : ${fmtM(v)}</span>`).join('')}</div>`:''}
+  <div class="card list">${L.map(p=>{const e=S.eleves[p.eleveId]||{nom:p.nom||'Élève'};return `<button class="li" data-act="pc-el" data-id="${h(p.eleveId)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${h(S.classes[e.classeId]?.nom||'')}${p.at?' · '+hm(p.at):''}</span></span><b class="num">${fmtM(p.montant)}</b></button>`}).join('')||'<div class="pad muted small">Aucun paiement ce jour-là.</div>'}</div>
+  ${L.length?`<button class="btn sm" data-act="pc-jcopy">Copier le résumé du jour</button>`:''}</div>`);
+}
+function recuPaper(pid){const p=S.paiem[pid];const e=S.eleves[p.eleveId]||{nom:p.nom||''};const s=situation(p.eleveId);const ec=S.config.ecole||{};const by=p.byNom?{nom:p.byNom,fn:p.byFn,sig:p.bySig}:santeBy();
+ return `<div class="ob rp sn-paper">
+  <div class="ob-top"><img src="${eLogo()}" alt=""><div class="ob-tt"><div>${h(ECO().nom)}</div><div>Reçu de paiement · Frais scolaires</div><div>Année scolaire ${ANNEE.replace('–',' - ')}</div></div><img src="${eLogo()}" alt=""></div>
+  <div class="rp-id"><div><b>${h(nomComplet(e))}</b><span>${h(S.classes[e.classeId]?.nom||p.classeNom||'')}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span><span>Reçu n° ${h(p.recu||'—')} · ${h(dfr(p.date))} ${D(p.date).getUTCFullYear()}</span></div></div>
+  <div class="rp-sec"><h4>Paiement</h4><div class="rp-kpis sn-k"><div><b>${fmtM(p.montant)}</b><span>montant payé</span></div><div><b class="sn-dc">${h((MODES.find(m=>m[0]===p.mode)||['','Espèces'])[1])}</b><span>mode</span></div><div><b>${fmtM(s.paye)}</b><span>total payé</span></div><div><b>${fmtM(s.reste)}</b><span>reste à payer</span></div></div>
+   ${p.payeur||p.ref?`<p class="rp-note">${p.payeur?'Payé par : '+h(p.payeur):''}${p.payeur&&p.ref?' · ':''}${p.ref?'Référence : '+h(p.ref):''}</p>`:''}</div>
+  <div class="rp-sec"><h4>Situation des frais</h4><table class="rp-t sm"><thead><tr><th>Tranche</th><th>Montant</th><th>Payé</th><th>Reste</th></tr></thead><tbody>${s.etapes.map(t=>`<tr><td>${h(t.nom)}</td><td>${fmtM(t.du)}</td><td>${fmtM(t.paye)}</td><td>${fmtM(Math.max(0,t.du-t.paye))}</td></tr>`).join('')}<tr class="tot"><td>Total</td><td>${fmtM(s.du)}</td><td>${fmtM(s.paye)}</td><td>${fmtM(s.reste)}</td></tr></tbody></table></div>
+  <div class="rp-sign" style="grid-template-columns:1fr 1fr"><div>Le payeur<br><small>${h(p.payeur||'………………………')}</small></div><div>Pour la direction${by.sig?`<br><img class="rp-sig" src="${h(by.sig)}" alt="">`:''}<br><small>${h(by.nom||ec.chef||'')}</small></div></div></div>`}
+function recuSheet(pid){const p=S.paiem[pid];if(!p)return;openSheet('Reçu de paiement',`<div class="stack"><div class="btns"><button class="btn grad" data-act="pc-recupdf" data-id="${h(pid)}">${ic('doc',16)} Envoyer le reçu (PDF)</button><button class="btn sm" data-act="pc-el" data-id="${h(p.eleveId)}">Voir l’élève</button></div><div class="fitbox">${recuPaper(pid)}</div></div>`,()=>applyFit())}
+async function recuPDF(pid){const p=S.paiem[pid];if(!p)return;const e=S.eleves[p.eleveId]||{};
+ const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+ toast('Préparation du PDF…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+ const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=recuPaper(pid);document.body.appendChild(host);const node=host.firstElementChild;node.style.width='794px';
+ try{const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4'});const mg=8;const iw=210-2*mg;let ih=cv.height*iw/cv.width,w=iw;if(ih>297-2*mg){w=iw*(297-2*mg)/ih;ih=297-2*mg}
+  pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',(210-w)/2,mg,w,ih);const s=situation(p.eleveId);
+  try{await dl.save({filename:`Reçu ${p.recu||''} - ${nomComplet(e)}.pdf`,data:pdf.output('blob'),text:`*${ECO().nom} · Reçu de paiement*\n${nomComplet(e)} : ${fmtM(p.montant)} payé le ${dfr(p.date)}.\nTotal payé : ${fmtM(s.paye)} · Reste : ${fmtM(s.reste)}.`});toast('Reçu prêt. Choisissez WhatsApp puis le parent.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+ }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
+function rappelTexte(eid){const s=situation(eid);return `*${ECO().nom} · Frais scolaires*\n\nBonjour, chers parents de ${nomComplet(s.e)} (${S.classes[s.cid]?.nom||''}).\n\nFrais de l’année : ${fmtM(s.du)}\nDéjà payé : ${fmtM(s.paye)}\n*Reste à payer : ${fmtM(s.reste)}*${s.retard>0?`\nMontant attendu à ce jour : ${fmtM(s.retard)}`:''}\n\n${s.etapes.filter(t=>t.paye<t.du-0.001).map(t=>`• ${t.nom} : ${fmtM(t.du-t.paye)}${t.echeance?' avant le '+dfr(t.echeance):''}`).join('\n')}\n\nMerci de passer à la direction. — La direction`}
+function copyTxt(t,msg){const done=()=>toast(msg||'Copié. Collez-le dans WhatsApp.');try{navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t))}catch(e){fallbackCopy(t)}}
+function nextRecu(){const y=today().slice(0,4);const n=Object.values(S.paiem).filter(p=>(p.recu||'').startsWith(y+'-')).length+1;return y+'-'+String(n).padStart(4,'0')}
 /* ---------- Assistant IA pour les textes aux parents ---------- */
 const AI_MODES=[['corriger','Corriger et reformuler'],['court','Plus court'],['chaleureux','Plus chaleureux'],['ferme','Plus ferme'],['trois','3 propositions']];
 let aiCtl=null;
@@ -2324,7 +2448,11 @@ function simData(){
    while(iso(dd)<td){const w=dd.getUTCDay(),x=iso(dd);if(w>0&&w<6)for(const pid of ids)if(R()<.9)presence[pid2(x,pid)]={date:x,personId:pid,nom:(inscr[pid]||agents[pid]).nom,img:sg,at:x+'T07:'+String(Math.floor(R()*55)).padStart(2,'0')+':00',by:''};dd.setUTCDate(dd.getUTCDate()+1)}}
   const sante={};{const el=Object.entries(eleves);const S1=[[0,'09:40',['Fièvre','Maux de tête'],'Fièvre apparue pendant la récréation, l’élève ne pouvait plus suivre.','38,6','maison','Sa mère','Gardez l’enfant au repos à la maison et faites-le boire souvent de l’eau propre. Surveillez sa température. Si la fièvre reste forte ou dure plus de 2 jours, conduisez-le au centre de santé. Merci de nous informer de son évolution.',true],[1,'11:15',['Maux de ventre','Vomissements'],'A vomi deux fois en classe.','','centre','Son oncle','Faites-le boire par petites gorgées et donnez-lui un repas léger. Consultez le centre de santé si les vomissements continuent.',false]];
    S1.forEach(([k,hr,sy,mo,tp,dc,rm,co,sent],i)=>{const [eid,e]=el[(k*17+5)%el.length];const d=i?td:joursOuvres('2026-10-05').filter(x=>x<td).slice(-1)[0]||td;sante['sim-s'+i]={eleveId:eid,classeId:e.classeId,nom:nomComplet(e),classeNom:classes[e.classeId]?.nom||'',date:d,heure:hr,symptomes:sy,motif:mo,temp:tp,remis:rm,decision:dc,conseils:co,byNom:inscr['sim-dir']?.nom||'La direction',byFn:'Directeur',bySig:'',by:'',at:d+'T'+hr+':00',...(sent?{envoyeAt:d+'T'+hr+':30'}:{})}})}
-  return{classes,eleves,notes,regs,appel,inscr,affect,journal,sigs,agents,presence,rapports,sante};
+  const frais={_param:{devise:'FC'}},paiem={};{const td2=today();PRIMAIRE.forEach(([cid],ci)=>{const base=[120000,135000,150000,165000,180000,200000][ci]||150000;frais['c_'+cid]={tranches:[{nom:'1re tranche',montant:base*.4,echeance:'2026-10-15'},{nom:'2e tranche',montant:base*.3,echeance:'2027-01-15'},{nom:'3e tranche',montant:base*.3,echeance:'2027-04-15'}],montant:base}});
+   let rn=0;Object.entries(eleves).forEach(([id,e],k)=>{const f=frais['c_'+e.classeId];if(!f)return;const tot=f.montant;const r=R();const parts=r<.18?[]:r<.45?[tot*.2]:r<.75?[tot*.25,tot*.15]:r<.9?[tot*.4,tot*.3]:[tot*.4,tot*.3,tot*.3];
+    parts.forEach((m,j)=>{rn++;const d=['2026-09-08','2026-10-06','2026-10-20','2026-11-02'][Math.min(3,j+(k%2))];paiem['sim-p'+rn]={eleveId:id,classeId:e.classeId,nom:nomComplet(e),montant:Math.round(m/500)*500,date:d>td2?td2:d,mode:['especes','mobile','especes','banque'][rn%4],payeur:rn%3?'Le père':'La mère',ref:'',recu:'2026-'+String(rn).padStart(4,'0'),byNom:'',by:'',at:(d>td2?td2:d)+'T0'+(8+rn%2)+':'+String(10+rn%49)+':00'}})});
+   const fe=Object.keys(eleves)[3];if(fe)frais['r_'+fe]={type:'pct',valeur:50,motif:'Enfant d’enseignant'}}
+  return{classes,eleves,notes,regs,appel,inscr,affect,journal,sigs,agents,presence,rapports,sante,frais,paiem};
 }
 const SIMCFG={ecole:{province:'Kinshasa – Funa',ville:'Kinshasa',commune:'Limete',code:'',chef:''}};
 function demoData(){S.demo=true;Object.assign(S,simData());S.config=SIMCFG;S.ready=true;render()}
@@ -2412,6 +2540,28 @@ const A={
   rapport:b=>rapportSheet(b.dataset.id),
   rkey:b=>rapportSheet(S.rEl,b.dataset.v),
   ai:b=>aiRewrite(b.dataset.f,b.dataset.v),
+  'pc-el':b=>eleveFinSheet(b.dataset.id),
+  'pc-pay':b=>paySheet(b.dataset.id||''),
+  'pc-edit':b=>{const p=S.paiem[b.dataset.id];if(p)paySheet(p.eleveId,b.dataset.id)},
+  'pc-del':async b=>{if(!arm(b))return;const p=S.paiem[b.dataset.id];await del('paiements',b.dataset.id);toast('Paiement supprimé');if(p)eleveFinSheet(p.eleveId);else closeSheet()},
+  'pc-frais':b=>fraisSheet(b.dataset.id),
+  'pc-tradd':b=>{const f=b.closest('form');const n=+f.querySelector('[name=n]').value;const box=f.querySelector('#fr-rows');const d=document.createElement('div');d.className='card pad stack';d.style.gap='8px';d.innerHTML=`<div class="grid2"><div class="field"><label>Nom</label><input class="inp" name="nom_${n}" value="${n+1}e tranche"></div><div class="field"><label>Montant (${h(DEV())})</label><input class="inp num" name="mt_${n}" inputmode="decimal" placeholder="0"></div></div><div class="field"><label>Date limite</label><input class="inp" type="date" name="ech_${n}"></div>`;box.appendChild(d);f.querySelector('[name=n]').value=n+1},
+  'pc-cls':b=>{S.fCls=b.dataset.v;render()},
+  'pc-fil':b=>{S.pFil=b.dataset.v;render()},
+  'pc-mode':b=>{const f=b.closest('form');f.querySelectorAll('[data-act=pc-mode]').forEach(x=>x.setAttribute('aria-pressed',x===b));f.querySelector('[name=mode]').value=b.dataset.v},
+  'pc-fill':b=>{const i=document.getElementById('pc-m');if(i)i.value=String(Math.round(+b.dataset.v*100)/100).replace('.',',')},
+  'pc-remise':b=>remiseSheet(b.dataset.id),
+  'pc-rtype':b=>{const f=b.closest('form');f.querySelectorAll('[data-act=pc-rtype]').forEach(x=>x.setAttribute('aria-pressed',x===b));f.querySelector('[name=type]').value=b.dataset.v},
+  'pc-rdel':async b=>{if(!arm(b))return;await del('frais','r_'+b.dataset.id);toast('Réduction retirée');eleveFinSheet(b.dataset.id)},
+  'pc-param':()=>paramSheet(),
+  'pc-dev':b=>{const f=b.closest('form');f.querySelectorAll('[data-act=pc-dev]').forEach(x=>x.setAttribute('aria-pressed',x===b));f.querySelector('[name=devise]').value=b.dataset.v},
+  'pc-journal':()=>journalSheet(today()),
+  'pc-jday':b=>journalSheet(b.dataset.v),
+  'pc-jcopy':()=>{const d=S.jDate||today();const L=Object.values(S.paiem).filter(p=>p.date===d);copyTxt(`*${ECO().nom} · Caisse du ${dfr(d)}*\n${L.length} paiement(s) · total ${fmtM(sum(L.map(p=>numM(p.montant))))}\n\n`+L.map(p=>{const e=S.eleves[p.eleveId]||{nom:p.nom||''};return `• ${nomComplet(e)} (${(S.classes[e.classeId]?.nom||'').replace(' année primaire','')}) : ${fmtM(p.montant)}`}).join('\n'),'Résumé copié.')},
+  'pc-recu':b=>recuSheet(b.dataset.id),
+  'pc-recupdf':b=>recuPDF(b.dataset.id),
+  'pc-wa':b=>{const s=situation(b.dataset.id);const t=rappelTexte(b.dataset.id);const n=waNum(s.e.telephone);if(n){const a=document.createElement('a');a.href=`https://wa.me/${n}?text=${encodeURIComponent(t)}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}else copyTxt(t,'Message copié (pas de téléphone des parents dans la fiche).')},
+  'pc-relances':()=>{const ids=S.fCls?[S.fCls]:classIds();const L=ids.flatMap(c=>elevesOf(c).map(e=>situation(e.id))).filter(x=>x.st==='late');copyTxt(`*${ECO().nom} · Frais en retard*\n\n`+L.map(x=>`• ${nomComplet(x.e)} (${(S.classes[x.cid]?.nom||'').replace(' année primaire','')}) : ${fmtM(x.retard)} en retard · reste ${fmtM(x.reste)}`).join('\n'),'Liste copiée.')},
   'sante-new':()=>santeForm(''),
   'sante-open':b=>santeFiche(b.dataset.id),
   'sante-edit':b=>santeForm(b.dataset.id),
@@ -2471,9 +2621,18 @@ document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.targe
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}});
-document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
+  if(f.id==='f-frais'){const cid=f.dataset.id;const n=+fd.n;const tr=[];for(let i=0;i<n;i++){const m=numM(fd['mt_'+i]);if(m>0)tr.push({nom:(fd['nom_'+i]||'').trim()||`Tranche ${i+1}`,montant:m,echeance:fd['ech_'+i]||''})}
+    if(!tr.length){toast('Indiquez au moins un montant.');return}const doc={tranches:tr,montant:sum(tr.map(t=>t.montant)),at:new Date().toISOString()};
+    const cs=fd.toutes?classIds():[cid];for(const c of cs)await put('frais','c_'+c,doc);closeSheet();toast(cs.length>1?'Frais appliqués à toutes les classes':'Frais enregistrés');return}
+  if(f.id==='f-pay'){const eid=fd.eleveId;const e=S.eleves[eid];const m=numM(fd.montant);if(!e){toast('Choisissez l’élève.');return}if(!(m>0)){toast('Indiquez le montant payé.');return}
+    const id=f.dataset.id||'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.paiem[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
+    await put('paiements',id,{...old,eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:(fd.payeur||'').trim(),ref:(fd.ref||'').trim(),recu:old.recu||nextRecu(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()});
+    toast(f.dataset.id?'Paiement modifié':'Paiement enregistré');if(f.dataset.id)eleveFinSheet(eid);else recuSheet(id);return}
+  if(f.id==='f-remise'){const eid=f.dataset.id;const v=numM(fd.valeur);if(!(v>0)){await del('frais','r_'+eid);eleveFinSheet(eid);return}await put('frais','r_'+eid,{type:fd.type,valeur:v,motif:(fd.motif||'').trim()});toast('Réduction enregistrée');eleveFinSheet(eid);return}
+  if(f.id==='f-pparam'){await put('frais','_param',{...PAR(),devise:fd.devise||'FC'});closeSheet();toast('Monnaie enregistrée');return}
   if(f.id==='f-sante'){const id=f.dataset.id||'s-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const e=S.eleves[fd.eleveId];if(!e){toast('Choisissez l’élève.');return}
     const old=S.sante[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
     const doc={...old,eleveId:fd.eleveId,classeId:e.classeId,nom:nomComplet(e),classeNom:S.classes[e.classeId]?.nom||'',date:fd.date,heure:fd.heure,symptomes:(fd.symptomes||'').split('|').filter(Boolean),motif:(fd.motif||'').trim(),temp:(fd.temp||'').trim(),remis:(fd.remis||'').trim(),decision:fd.decision||'maison',conseils:(fd.conseils||'').trim(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()};

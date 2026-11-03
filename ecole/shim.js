@@ -438,10 +438,10 @@
       const { data: st } = await sb.rpc('racine_mon_ecole');
       const e = Array.isArray(st) ? st[0] : st;
       if (e && e.code) {
-        const info = { code: e.code, nom: e.nom, devise: e.devise || '', logo: e.logo || '', theme: e.theme || '' };
+        const info = { code: e.code, nom: e.nom, devise: e.devise || '', logo: e.logo || '', theme: e.theme || '', type: e.type || 'primaire' };
         const prev = window.ECOLE;
         try { localStorage.setItem('racine-ecole', JSON.stringify(info)); } catch (x) {}
-        const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise || (prev.theme || '') !== info.theme);
+        const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise || (prev.theme || '') !== info.theme || (prev.type || 'primaire') !== info.type);
         if (changed && !sessionStorage.getItem('racine-reload')) { try { sessionStorage.setItem('racine-reload', '1'); } catch (x) {} location.reload(); return; }
         window.ECOLE = info; document.title = info.nom; window.__theme = info.theme || 'violet'; window.applyTheme();
         if (member.role === 'admin' && !info.theme) { const wait = () => { const it = document.getElementById('intro'); if (it && !it.hidden) return setTimeout(wait, 600); setTimeout(() => themePicker(true), 400); }; setTimeout(wait, 800); } try { sessionStorage.removeItem('racine-reload'); } catch (x) {}

@@ -820,6 +820,27 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .rp-t.sm td.b{font-weight:800;background:#f1ebfc}
 .rp-sig{height:42px;max-width:150px;margin-top:4px}
 .sigprev{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+/* carte d'élève : 340 × 539 px = 54 × 85,6 mm */
+.idc{position:relative;width:340px;height:539px;background:#fff;color:#0d1240;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:16px;letter-spacing:0;line-height:1.15;text-transform:none}
+.idc *{box-sizing:border-box}
+.idc-strip{position:absolute;right:0;top:0;width:26px;height:100%}
+.idc-in{position:absolute;left:0;top:0;right:26px;bottom:22px;padding:14px 14px 0 16px;display:flex;flex-direction:column}
+.idc-top{display:flex;align-items:center;gap:8px}.idc-top img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}.idc-top b{display:block;font-size:12.5px;font-weight:700;color:#1424c8;text-transform:uppercase;letter-spacing:.02em;line-height:1.1}.idc-top small{display:block;font-size:7.5px;color:#5a6090;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
+.idc-lbl{display:flex;align-items:center;justify-content:space-between;margin-top:9px}.idc-lbl span{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0d1240;padding-bottom:3px;border-bottom:2.5px solid #1c2fe0}.idc-lbl em{font-style:normal;font-size:8.5px;font-weight:600;color:#5a6090}
+.idc-ph{position:relative;height:106px;margin-top:7px;display:flex;justify-content:center}
+.idc-ph i{position:absolute;left:0;right:0;bottom:0;height:54px;border-radius:16px 16px 0 0;background:linear-gradient(160deg,#2236ff,#0a14a0)}
+.idc-ph img,.idc-ph span{position:relative;width:102px;height:102px;border-radius:50%;object-fit:cover;border:4px solid #fff;background:#e7e9f5;box-shadow:0 4px 12px rgba(10,20,160,.25);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:#1c2fe0}
+.idc-no{position:absolute;right:8px;bottom:8px;font-size:10px;font-weight:700;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);padding:3px 7px;border-radius:999px}
+.idc-nm{margin-top:7px}.idc-nm b{display:block;font-size:19px;font-weight:700;color:#1424c8;text-transform:uppercase;line-height:1.05;letter-spacing:-.01em}.idc-nm span{display:block;font-size:15px;font-weight:600;color:#0d1240;margin-top:1px}.idc-nm i{display:block;width:96px;height:4px;background:#ffd400;border-radius:2px;margin-top:5px}
+.idc-cl{align-self:flex-start;max-width:100%;margin-top:6px;font-size:9.5px;line-height:1.2;font-weight:700;color:#fff;background:#1c2fe0;padding:3px 9px;border-radius:999px}
+.idc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:8px}
+.idc-f{min-width:0}.idc-f.w{grid-column:1/-1}.idc-f small{display:block;font-size:7.5px;font-weight:600;color:#6a70a0;text-transform:uppercase;letter-spacing:.05em}.idc-f b{display:block;font-size:10.5px;font-weight:600;color:#0d1240;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #e3e6f5;padding-bottom:2px}
+.idc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-bottom:6px}
+.idc-sig{display:flex;flex-direction:column;min-width:0}.idc-sig small,.idc-val small{font-size:7px;font-weight:600;color:#6a70a0;text-transform:uppercase;letter-spacing:.05em}.idc-sig b{font-size:8.5px;font-weight:700;color:#0d1240;border-top:1px solid #c9cdea;padding-top:2px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idc-sg{position:relative;height:36px;width:140px;display:block}.idc-sg img{position:absolute;left:0;bottom:0;height:34px;max-width:120px;object-fit:contain;z-index:1}.idc-sg .sceau{position:absolute;right:0;top:-6px;width:44px;height:44px;margin:0;opacity:.7}
+.idc-val{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.idc-val b{font-size:9px;font-weight:700;color:#1424c8;margin-bottom:2px}
+.idc-bot{position:absolute;left:0;right:26px;bottom:0;height:22px;background:linear-gradient(90deg,#0a14a0,#2236ff);color:#ffd400;font-size:8.5px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.03em}
+.idc-prev{display:flex;justify-content:center;padding:10px 0}.idc-prev .idc{box-shadow:0 14px 34px rgba(10,20,120,.35);border:1px solid #e3e6f5}
 .obt td.sg{padding:0 1px;height:22px;vertical-align:middle}.obt .bsg{display:block;max-width:100%;height:18px;margin:auto;object-fit:contain}
 .sign3 .bsg.big{display:inline-block;height:46px;max-width:150px;margin-top:4px}
 .sceau{display:inline-block;width:74px;height:74px;color:#1d3f9a;opacity:.82;transform:rotate(-12deg);margin-top:4px}.sceau svg{width:100%;height:100%}
@@ -996,6 +1017,7 @@ const avatar=(p,cls='')=>p.photo?`<img class="av ph ${cls}" src="${h(p.photo)}" 
 function elevesOf(cid){return Object.entries(S.eleves).filter(([,e])=>!cid||e.classeId===cid).map(([id,e])=>({id,...e})).sort((a,b)=>coll.compare(nomComplet(a),nomComplet(b)))}
 function teachersOf(cid){return ensList().filter(p=>clsOfEns(p.id).includes(cid))}
 const ICONS={
+ card:'<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><circle cx="12" cy="9" r="2.6"/><path d="M8.5 15.5c.7-1.6 2-2.4 3.5-2.4s2.8.8 3.5 2.4M9 18.5h6"/>',
  pen:'<path d="M4 20l4.2-1 10.6-10.6a2.1 2.1 0 0 0-3-3L5.2 16 4 20z"/><path d="M14 7l3 3"/>',
  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
  grid:'<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
@@ -1433,7 +1455,7 @@ function bulSign(k,r){const cid=S.cid;const me=signer(r);
 function eleveRows(list,showCls){return list.map((e,n)=>{const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';return `<button class="li" data-act="eleve" data-id="${h(e.id)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${showCls?h(S.classes[e.classeId]?.nom||'')+' · ':''}${e.sexe==='F'?'Fille':'Garçon'}${dn?' · né(e) le '+dn:''}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span></span><span class="chev">${ic('chev',18)}</span></button>`}).join('')}
 function tabEleves(){
   const es=elevesOf(S.cid);
-  return `<div class="sec-h"><h2 class="h2">${es.length} élève${es.length>1?'s':''}</h2><button class="btn grad sm" data-act="new-eleve">${ic('plus',18)} Inscrire un élève</button></div>
+  return `<div class="sec-h"><h2 class="h2">${es.length} élève${es.length>1?'s':''}</h2><span class="btns">${es.length?`<button class="btn sm" data-act="cartescls" data-id="${h(S.cid)}">${ic('card',16)} Cartes d’élèves</button>`:''}<button class="btn grad sm" data-act="new-eleve">${ic('plus',18)} Inscrire un élève</button></span></div>
    ${es.length?`<div class="card list">${eleveRows(es)}</div>`:`<div class="card empty"><h3>Aucun élève inscrit</h3><p class="muted small">Ajoutez le premier élève avec son identité complète.</p></div>`}`;
 }
 
@@ -1596,7 +1618,7 @@ function ficheEleve(id){
   const r=resume(id,S.classes[e.classeId]||{},'an');
   openSheet('Fiche de l’élève',`<div class="stack">
    <div class="idhead">${e.photo?`<img class="fiche-ph" src="${h(e.photo)}" alt="Photo de ${h(nomComplet(e))}">`:`<span class="fiche-ini">${h(initials(e))}</span>`}<div><h3 style="font-size:21px">${h(nomComplet(e))}</h3><div class="muted small">${h(S.classes[e.classeId]?.nom||'')} · ${e.sexe==='F'?'Fille':'Garçon'}${r.pct!=null?' · '+pctf(r.pct)+' sur l’année':''}</div></div></div>
-   <div class="btns"><button class="btn grad sm" data-act="voir-bul" data-id="${h(id)}">${ic('doc',16)} Voir son bulletin</button><button class="btn grad sm" data-act="rapport" data-id="${h(id)}">${ic('cal',16)} Rapport de l’élève</button><button class="btn sm" data-act="edit-eleve" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn sm" data-act="sante-eleve" data-id="${h(id)}">${ic('med',16)} Élève malade</button>`:''}</div>
+   <div class="btns"><button class="btn grad sm" data-act="voir-bul" data-id="${h(id)}">${ic('doc',16)} Voir son bulletin</button><button class="btn grad sm" data-act="rapport" data-id="${h(id)}">${ic('cal',16)} Rapport de l’élève</button><button class="btn grad sm" data-act="carte" data-id="${h(id)}">${ic('card',16)} Carte d’élève</button><button class="btn sm" data-act="edit-eleve" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn sm" data-act="sante-eleve" data-id="${h(id)}">${ic('med',16)} Élève malade</button>`:''}</div>
    ${isDir()?(()=>{const L=santeList().filter(x=>x.eleveId===id);return L.length?`<div class="card list"><div class="pad eyebrow" style="padding-bottom:0">Sorties pour raison de santé · ${L.length}</div>${L.map(x=>`<button class="li" data-act="sante-open" data-id="${h(x.id)}"><span class="ib">${ic('med',18)}</span><span class="grow"><span class="ttl" style="display:block">${h(dfr(x.date))} · ${h(x.heure||'')}</span><span class="muted small">${h(santeMotif(x))}</span></span><span class="chev">${ic('chev',18)}</span></button>`).join('')}</div>`:''})():''}
    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Identité</div><dl class="kv">${kv('Nom',e.nom)}${kv('Postnom',e.postnom)}${kv('Prénom',e.prenom)}${kv('Sexe',e.sexe==='F'?'Féminin':'Masculin')}${kv('Né(e) à',e.lieuNaissance)}${kv('le',dn)}${kv('Nationalité',e.nationalite)}${kv('N° Perm.',e.matricule)}${kv('N° ID',e.numId)}</dl></div>
    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Famille et contact</div><dl class="kv">${kv('Père',e.pere)}${kv('Mère',e.mere)}${kv('Tuteur',e.tuteur)}${kv('Téléphone',e.telephone)}${kv('Adresse',e.adresse)}</dl></div>
@@ -2260,6 +2282,70 @@ async function santePDF(id){
   }catch(err){toast('Impossible de créer le PDF. Réessayez.')}finally{host.remove()}
 }
 function santeOpenWA(id){const x=S.sante[id];const e=santeEl(x);const n=waNum(e.telephone);if(!n)return;const a=document.createElement('a');a.href=`https://wa.me/${n}?text=${encodeURIComponent(santeTexte(id))}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}
+/* ---------- Carte d’élève (recto, format carte bancaire 54 × 85,6 mm) ---------- */
+function carteStrip(){let o='';const W=13,H=13,n=Math.ceil(539/H);for(let i=0;i<n;i++)for(let j=0;j<2;j++){const x=j*W,y=i*H,t=(i*3+j*5+(i>>1))%6;
+  if(t===0)o+=`<rect x="${x}" y="${y}" width="${W}" height="${H}" fill="#1c2fe0"/>`;
+  else if(t===1)o+=`<path d="M${x} ${y}h${W}v${H}A${W} ${H} 0 0 1 ${x} ${y}z" fill="#5b6cff"/>`;
+  else if(t===2)o+=`<rect x="${x}" y="${y}" width="${W}" height="${H}" fill="#b9c2ff"/>`;
+  else if(t===3)o+=`<path d="M${x} ${y+H}V${y}A${W} ${H} 0 0 1 ${x+W} ${y+H}z" fill="#1c2fe0"/>`;
+  else if(t===4)o+=`<rect x="${x+W/2}" y="${y}" width="${W/2}" height="${H}" fill="#3d4ff0"/>`}
+  return `<svg class="idc-strip" viewBox="0 0 26 539" preserveAspectRatio="none" aria-hidden="true">${o}</svg>`}
+function carteInfo(id){
+  const e=S.eleves[id];const cid=e.classeId;const es=elevesOf(cid);const ordre=Math.max(1,es.findIndex(x=>x.id===id)+1);
+  const ci=Math.max(1,classIds().indexOf(cid)+1);const code=(ECO().code||eIni()||'EC').toUpperCase();
+  return{e,cls:S.classes[cid],ordre,num:`${code}-${ANNEE.replace(/20(\d\d)\D+20(\d\d)/,'$1$2')}-C${ci}-${String(ordre).padStart(3,'0')}`}}
+function carteHtml(id){
+  const {e,cls,ordre,num}=carteInfo(id);const ec=S.config.ecole||{};
+  const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';
+  const chef=chefPerson();const sg=chef?.signature||chefSig(e.classeId)?.img||'';const chefNom=chef?.nom||chefSig(e.classeId)?.nom||ec.chef||'';
+  const row=(l,v,w)=>`<div class="idc-f${w?' w':''}"><small>${l}</small><b>${v?h(v):'—'}</b></div>`;
+  const fin=ANNEE.slice(-4);
+  return `<div class="idc">
+   ${carteStrip()}
+   <div class="idc-in">
+    <div class="idc-top"><img src="${eLogo()}" alt=""><div><b>${h(ECO().nom)}</b><small>${h((ECO().devise||'').replace(/ · /g,' – '))}</small></div></div>
+    <div class="idc-lbl"><span>Carte d’élève</span><em>${h(ANNEE)}</em></div>
+    <div class="idc-ph"><i></i>${e.photo?`<img src="${h(e.photo)}" alt="">`:`<span>${h(initials(e))}</span>`}<b class="idc-no">N° ${String(ordre).padStart(2,'0')}</b></div>
+    <div class="idc-nm"><b>${h([e.nom,e.postnom].filter(Boolean).join(' '))}</b><span>${h(e.prenom||'')}</span><i></i></div>
+    <div class="idc-cl">${h(cls?.nom||'')}${cls?.section?` · ${h(cls.section)}`:''}</div>
+    <div class="idc-grid">
+     ${row('N° d’ordre · Sexe',String(ordre).padStart(2,'0')+' · '+(e.sexe==='F'?'Féminin':'Masculin'))}${row('Nationalité',e.nationalite)}
+     ${row('Né(e) à · le',[e.lieuNaissance,dn].filter(Boolean).join(', le '),1)}
+     ${row('N° Perm.',e.matricule)}${row('N° ID',e.numId)}
+     ${row('Père',e.pere)}${row('Mère',e.mere)}
+     ${e.tuteur?row('Tuteur',e.tuteur)+row('Téléphone',e.telephone)+row('Adresse',e.adresse,1):row('Téléphone',e.telephone)+row('Adresse',e.adresse)}
+    </div>
+    <div class="idc-foot">
+     <div class="idc-sig"><small>${isSec()?'Le Préfet des études':'Le Directeur'}</small><span class="idc-sg">${sg?`<img src="${h(sg)}" alt="">`:''}${sceau()}</span><b>${h(chefNom)}</b></div>
+     <div class="idc-val"><small>Carte n°</small><b>${h(num)}</b><small>Valable jusqu’au</small><b>31/07/${fin}</b></div>
+    </div>
+   </div>
+   <div class="idc-bot">${h(ec.ville||'Kinshasa')} · ${h(ECO().nom)}</div>
+  </div>`;
+}
+function carteSheet(id){const e=S.eleves[id];if(!e)return;
+  openSheet('Carte d’élève',`<div class="stack"><p class="muted small" style="margin:0">Recto seulement, au format d’une carte bancaire (5,4 × 8,56 cm). Le PDF A4 garde la taille réelle, avec des traits de coupe.</p>
+   <div class="idc-prev">${carteHtml(id)}</div>
+   <div class="btns"><button class="btn grad" data-act="cartepdf" data-id="${h(id)}" data-v="a4">${ic('doc',16)} PDF A4 à imprimer</button><button class="btn" data-act="cartepdf" data-id="${h(id)}" data-v="carte">PDF format carte</button></div>
+   <button class="btn sm" data-act="cartescls" data-id="${h(e.classeId)}">${ic('users',16)} Cartes de toute la classe (${elevesOf(e.classeId).length})</button></div>`);
+}
+async function carteCanvas(id){const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;background:#fff';host.innerHTML=carteHtml(id);document.body.appendChild(host);
+  try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));return await html2canvas(host.firstElementChild,{scale:4,backgroundColor:'#ffffff',useCORS:true})}finally{host.remove()}}
+async function cartePDF(ids,mode){
+  const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;
+  if(!dl){toast('L’enregistrement n’est pas disponible ici.');return}
+  toast(ids.length>1?`Préparation des ${ids.length} cartes…`:'Préparation de la carte…');
+  try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF pour le moment. Vérifiez la connexion et réessayez.');return}
+  try{const {jsPDF}=window.jspdf;const CW=54,CH=85.6;let pdf;
+    if(mode==='carte'){pdf=new jsPDF({unit:'mm',format:[CW,CH],orientation:'portrait'});for(let i=0;i<ids.length;i++){if(i)pdf.addPage([CW,CH],'portrait');const cv=await carteCanvas(ids[i]);pdf.addImage(cv.toDataURL('image/jpeg',.95),'JPEG',0,0,CW,CH)}}
+    else{pdf=new jsPDF({unit:'mm',format:'a4'});const g=4,cols=3,rows=3,x0=(210-cols*CW-(cols-1)*g)/2,y0=(297-rows*CH-(rows-1)*g)/2;
+      for(let i=0;i<ids.length;i++){const k=i%9;if(i&&!k)pdf.addPage();const x=x0+(k%cols)*(CW+g),y=y0+Math.floor(k/cols)*(CH+g);const cv=await carteCanvas(ids[i]);pdf.addImage(cv.toDataURL('image/jpeg',.95),'JPEG',x,y,CW,CH);
+        pdf.setDrawColor(170);pdf.setLineWidth(.15);const m=3;[[x,y],[x+CW,y],[x,y+CH],[x+CW,y+CH]].forEach(([a,b])=>{const sx=a===x?-1:1,sy=b===y?-1:1;pdf.line(a+sx*.8,b,a+sx*(m+.8),b);pdf.line(a,b+sy*.8,a,b+sy*(m+.8))})}
+      pdf.setFontSize(7);pdf.setTextColor(150);pdf.text('Imprimer à 100 % (taille réelle) puis découper le long des traits.',105,292,{align:'center'})}
+    const e=S.eleves[ids[0]];const name=ids.length>1?`Cartes d’élèves - ${S.classes[e.classeId]?.nom||''}.pdf`:`Carte d’élève - ${nomComplet(e)}.pdf`;
+    try{await dl.save({filename:name,data:pdf.output('blob')});toast('PDF de la carte enregistré.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être enregistré.')}
+  }catch(err){toast('Impossible de créer le PDF. Réessayez.')}
+}
 /* ---------- Perception des frais scolaires (direction uniquement) ---------- */
 const MODES=[['especes','Espèces'],['mobile','Mobile money'],['banque','Banque']];
 const PAR=()=>S.frais._param||{};
@@ -2767,6 +2853,9 @@ const A={
   demorole:b=>{S.demoRole=b.dataset.v;if(S.view==='gestion'&&b.dataset.v!=='dir')S.view='accueil';render()},
   'sim-start':b=>startSim(b.dataset.v==='sec'),
   bsign:b=>bulSign(b.dataset.k,b.dataset.r),
+  carte:b=>carteSheet(b.dataset.id),
+  cartepdf:b=>cartePDF([b.dataset.id],b.dataset.v),
+  cartescls:b=>{const ids=elevesOf(b.dataset.id).map(e=>e.id);if(ids.length)cartePDF(ids,'a4')},
   bunsign:async b=>{if(!arm(b))return;await del('signatures',bsid(S.cid,b.dataset.k,b.dataset.r));toast('Signature retirée')},
   'bs-redo':()=>{$('#bs-prev').hidden=true;$('#bs-wrap').hidden=false;initPad($('#sheet'))},
   psit:b=>{S.view='palmsit';render();scrollTo(0,0)},

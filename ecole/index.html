@@ -820,29 +820,36 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .rp-t.sm td.b{font-weight:800;background:#f1ebfc}
 .rp-sig{height:42px;max-width:150px;margin-top:4px}
 .sigprev{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-/* carte d'élève : 380 × 539 px = format A5 (148 × 210 mm), aux couleurs de l'application */
-.idc{position:relative;width:380px;height:539px;background:#1d0f3d;color:#1d0f3d;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:18px;letter-spacing:0;line-height:1.15;text-transform:none}
+/* carte d'élève : 380 × 539 px = format A5 (148 × 210 mm) ; couleurs en CSS pour suivre le thème de l'école */
+.idc{position:relative;width:380px;height:539px;background:#ffffff;color:#1d0f3d;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:18px;letter-spacing:0;line-height:1.15;text-transform:none;display:flex;flex-direction:column}
 .idc.print{border-radius:0}
 .idc *{box-sizing:border-box}
-.idc-bg{position:absolute;inset:0;width:100%;height:100%}
-.idc-top{position:absolute;left:30px;width:260px;top:16px;display:flex;align-items:center;justify-content:center;gap:9px}
-.idc-top img{width:42px;height:42px;border-radius:50%;object-fit:cover;flex:none}
-.idc-top b{display:block;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:17px;letter-spacing:.03em;text-transform:uppercase;line-height:1.02;color:#2c1660}
-.idc-top small{display:block;font-size:7px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#8363c6;margin-top:2px}
-.idc-ttl{position:absolute;left:30px;width:260px;top:68px;text-align:center;font-size:8.5px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:#533989}
-.idc-ph{position:absolute;left:94px;top:86px;width:132px;height:132px;border-radius:50%;padding:5px;background:#ede6fa;box-shadow:0 0 0 2px #fff,0 8px 20px rgba(29,15,61,.22)}
-.idc-ph img,.idc-ph span{width:100%;height:100%;border-radius:50%;object-fit:cover;display:flex;align-items:center;justify-content:center;background:#efe9fb;font-family:"Anton",sans-serif;font-size:40px;color:#533989}
-.idc-no{position:absolute;right:-4px;bottom:6px;min-width:34px;height:34px;padding:0 6px;border-radius:999px;display:flex;align-items:center;justify-content:center;font-family:"Anton",sans-serif;font-weight:400;font-size:17px;color:#fff;background:linear-gradient(135deg,#2c1660,#8363c6);border:3px solid #fff}
-.idc-body{position:absolute;left:74px;right:34px;top:230px;bottom:12px;display:flex;flex-direction:column;align-items:center;text-align:center}
-.idc-nm{font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:19px;letter-spacing:.02em;text-transform:uppercase;line-height:1.05;color:#1d0f3d}.idc-nm b{font-weight:400;color:#8363c6}
-.idc-cl{margin-top:3px;padding:0 10px 3px;border-bottom:1.5px solid #1d0f3d;font-size:10px;font-weight:700;color:#3a1e72;white-space:nowrap}.idc-cl small{display:block;font-size:7.5px;font-weight:600;color:#8363c6}
-.idc-ls{margin-top:6px;display:grid;grid-template-columns:auto 1fr;column-gap:7px;row-gap:1.5px;width:100%;text-align:left}
-.idc-l{display:contents}.idc-l span{font-size:8.5px;font-weight:600;color:#8363c6;text-align:right;white-space:nowrap;line-height:12.5px}.idc-l span::after{content:" :"}.idc-l b{font-size:10px;font-weight:600;color:#1d0f3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:12.5px}
-.idc-foot{margin-top:auto;width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:6px}
-.idc-sig{display:flex;flex-direction:column;align-items:center;min-width:0}.idc-sig b{font-size:8px;font-weight:700;color:#1d0f3d;border-top:1px solid #1d0f3d;padding-top:2px;max-width:130px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.idc-sig small,.idc-val small{font-size:6.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8363c6}
-.idc-sg{position:relative;height:34px;width:130px;display:block}.idc-sg img{position:absolute;left:4px;bottom:0;height:32px;max-width:100px;object-fit:contain;z-index:1}.idc-sg .sceau{position:absolute;right:0;top:-6px;width:42px;height:42px;margin:0;opacity:.7;color:#533989}
-.idc-val{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.idc-val b{font-size:9px;font-weight:700;color:#2c1660;margin-bottom:1px}
-.idc-bc{width:100%;margin-top:5px;padding:3px 8px 1px;border:1px solid #1d0f3d;background:#fff;display:flex;flex-direction:column;align-items:center}.idc-bc svg{display:block;width:100%;height:20px}.idc-bc small{font-size:6.5px;font-weight:600;letter-spacing:.3em;color:#1d0f3d;line-height:1.3}
+.idc-hd{position:relative;overflow:hidden;height:184px;padding:16px 20px 0;color:#fff;background:linear-gradient(135deg,#1d0f3d 0%,#2c1660 34%,#533989 64%,#8363c6 88%,#baa2eb 100%);flex:none}
+.idc-o1,.idc-o2{position:absolute;border-radius:50%;border:24px solid rgba(255,255,255,.12)}.idc-o1{width:180px;height:180px;right:-70px;top:-90px}.idc-o2{width:130px;height:130px;left:-60px;bottom:-80px;border-width:18px;border-color:rgba(255,255,255,.08)}
+.idc-top{position:relative;display:flex;align-items:flex-start;justify-content:space-between}
+.idc-top img{width:54px;height:54px;border-radius:50%;object-fit:cover;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.35),0 6px 14px rgba(0,0,0,.25)}
+.idc-yr{font-size:9px;font-weight:700;letter-spacing:.06em;padding:4px 10px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3);margin-top:4px}
+.idc-sch{position:relative;margin-top:7px}.idc-sch b{display:block;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:18px;letter-spacing:.03em;text-transform:uppercase;line-height:1.05}
+.idc-sch small{display:block;font-size:7.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.78);margin-top:2px}
+.idc-ttl{position:relative;margin-top:6px;margin-right:-.24em;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:34px;line-height:1.05;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap;color:#fff}
+.idc-mid{position:relative;display:flex;gap:14px;padding:0 20px;margin-top:-30px;flex:none}
+.idc-ph{width:122px;height:146px;border-radius:22px;overflow:hidden;background:#efe9fb;border:4px solid #fff;box-shadow:0 10px 22px rgba(29,15,61,.28);flex:none;display:flex;align-items:center;justify-content:center}
+.idc-ph img{width:100%;height:100%;object-fit:cover}.idc-ph span{font-family:"Anton",sans-serif;font-size:42px;color:#533989}
+.idc-side{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:5px;padding-bottom:2px}
+.idc-no{align-self:flex-start;display:flex;align-items:center;gap:8px;border-radius:12px;padding:4px 10px;background:linear-gradient(135deg,#231544,#3a1e72);color:#fff}.idc-no small{font-size:7px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#d3c3f5;max-width:34px;line-height:1.1}.idc-no b{font-family:"Anton",sans-serif;font-weight:400;font-size:24px;line-height:1}
+.idc-nm{font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;letter-spacing:.02em;text-transform:uppercase;line-height:1.04;color:#2c1660}.idc-nm b{font-weight:400;color:#8363c6}.idc-nm span{display:block;font-family:"Outfit",sans-serif;font-size:14px;font-weight:600;text-transform:none;letter-spacing:0;color:#533989;margin-top:2px}
+.idc-cl{padding-top:3px;border-top:1.5px solid #e6dcfa}.idc-cl b{display:block;font-size:11px;font-weight:700;color:#1d0f3d;line-height:1.15}.idc-cl em{display:block;font-style:normal;font-size:8.5px;font-weight:500;color:#6b5a93}
+.idc-f small,.idc-sig small,.idc-val small{display:block;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8363c6}
+.idc-cut{position:relative;margin:12px 0 0;border-top:2px dashed #d9cdf3;flex:none}.idc-cut::before,.idc-cut::after{content:"";position:absolute;top:-8px;width:14px;height:14px;border-radius:50%;background:#1d0f3d}.idc-cut::before{left:-7px}.idc-cut::after{right:-7px}
+.idc-grid{display:grid;grid-template-columns:1.15fr 1fr 1fr;gap:6px 10px;padding:10px 20px 0;flex:none}
+.idc-f{min-width:0}.idc-f.w2{grid-column:span 2}.idc-f.w3{grid-column:1/-1}.idc-f b{display:block;font-size:10.5px;font-weight:600;color:#1d0f3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:2px;border-bottom:1px solid #eee7fa}
+.idc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:6px 20px 6px}
+.idc-sig{display:flex;flex-direction:column;min-width:0}.idc-sig b{font-size:8.5px;font-weight:700;color:#1d0f3d;border-top:1px solid #d9cdf3;padding-top:2px;max-width:170px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idc-sg{position:relative;height:38px;width:170px;display:block}.idc-sg img{position:absolute;left:0;bottom:0;height:36px;max-width:130px;object-fit:contain;z-index:1}.idc-sg .sceau{position:absolute;right:6px;top:-8px;width:48px;height:48px;margin:0;opacity:.7;color:#533989}
+.idc-val{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.idc-val b{font-size:9.5px;font-weight:700;color:#2c1660;margin-bottom:2px}
+.idc-bcw{padding:0 20px 8px;flex:none}.idc-bc{width:100%;padding:3px 10px 1px;border:1px solid #d9cdf3;border-radius:8px;background:#fff;display:flex;flex-direction:column;align-items:center}.idc-bc svg{display:block;width:100%;height:20px}.idc-bc small{font-size:6.5px;font-weight:600;letter-spacing:.3em;color:#1d0f3d;line-height:1.3}
+.idc-bot{position:relative;overflow:hidden;height:22px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 20px;background:linear-gradient(135deg,#1d0f3d 0%,#2c1660 34%,#533989 64%,#8363c6 88%,#baa2eb 100%);color:#fff;font-size:8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.idc-bot span{position:relative}.idc-bot i{position:absolute;top:-20px;width:10px;height:70px;background:rgba(255,255,255,.14);transform:rotate(35deg)}.idc-bot i:nth-child(1){left:150px}.idc-bot i:nth-child(2){left:170px;background:rgba(255,255,255,.09)}.idc-bot i:nth-child(3){left:186px;width:5px;background:rgba(255,255,255,.07)}
 .idc-prev{display:flex;justify-content:center;padding:10px 0}.idc-prev .idc{box-shadow:0 14px 34px rgba(0,0,0,.45)}
 .obt td.sg{padding:0 1px;height:22px;vertical-align:middle}.obt .bsg{display:block;max-width:100%;height:18px;margin:auto;object-fit:contain}
 .sign3 .bsg.big{display:inline-block;height:46px;max-width:150px;margin-top:4px}
@@ -2300,37 +2307,40 @@ function carteInfo(id){
 const C39={'0':'000110100','1':'100100001','2':'001100001','3':'101100000','4':'000110001','5':'100110000','6':'001110000','7':'000100101','8':'100100100','9':'001100100','-':'010000101','*':'010010100'};
 function code39(txt,W,H){const t='*'+String(txt).replace(/[^0-9-]/g,'')+'*';const n=1,w=2.5;let units=0;for(const ch of t){for(const b of C39[ch])units+=b==='1'?w:n;units+=n}units-=n;
   const u=W/units;let x=0,o='';for(const ch of t){[...C39[ch]].forEach((b,i)=>{const bw=(b==='1'?w:n)*u;if(i%2===0)o+=`<rect x="${x.toFixed(2)}" y="0" width="${bw.toFixed(2)}" height="${H}"/>`;x+=bw});x+=n*u}
-  return `<div class="idc-bc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Code-barres ${h(txt)}"><g fill="#1d0f3d">${o}</g></svg><small>${h(txt)}</small></div>`}
+  return `<div class="idc-bc"><svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-label="Code-barres ${h(txt)}"><g fill="#111111">${o}</g></svg><small>${h(txt)}</small></div>`}
 function carteHtml(id,print){
   const {e,cls,ordre,num}=carteInfo(id);const ec=S.config.ecole||{};
   const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';
   const chef=chefPerson();const cs=chefSig(e.classeId);const sg=chef?.signature||cs?.img||'';const chefNom=chef?.nom||cs?.nom||ec.chef||'';
-  const L=(l,v)=>`<div class="idc-l"><span>${l}</span><b>${v?h(v):'—'}</b></div>`;
+  const row=(l,v,w)=>`<div class="idc-f${w?' w'+w:''}"><small>${l}</small><b>${v?h(v):'—'}</b></div>`;
   const fin=ANNEE.slice(-4);const no=String(ordre).padStart(2,'0');const bc=(e.matricule||'').replace(/\D/g,'')||(e.numId||'').replace(/\D/g,'').slice(0,12);
-  const G='<linearGradient id="idcg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#2c1660"/><stop offset=".55" stop-color="#8363c6"/><stop offset="1" stop-color="#baa2eb"/></linearGradient>';
+  const nl=[e.nom,e.postnom].filter(Boolean).join(' ').length;
   return `<div class="idc${print?' print':''}">
-   <svg class="idc-bg" viewBox="0 0 380 539" preserveAspectRatio="none" aria-hidden="true"><defs>${G}<clipPath id="idcp"><path d="M0 0H380V539H0Z"/></clipPath></defs>
-    <rect width="380" height="539" fill="#1d0f3d"/>
-    <path d="M0 0H70L0 92Z" fill="url(#idcg)"/><path d="M0 104L80 0H96L0 124Z" fill="#533989" opacity=".7"/><path d="M0 136L104 0H112L0 146Z" fill="#8363c6" opacity=".45"/>
-    <path d="M380 539H300L380 430Z" fill="url(#idcg)"/><path d="M380 412L282 539H266L380 392Z" fill="#533989" opacity=".7"/><path d="M380 378L258 539H250L380 368Z" fill="#8363c6" opacity=".45"/>
-    <path d="M30 0H290V168C290 200 346 196 346 236V539H74V300C74 262 30 266 30 226Z" fill="#fff"/>
-   </svg>
-   <div class="idc-top"><img src="${eLogo()}" alt=""><div><b>${h(ECO().nom)}</b><small>${h((ECO().devise||'').replace(/ · /g,' – '))}</small></div></div>
-   <div class="idc-ttl">Carte d’élève · ${h(ANNEE)}</div>
-   <div class="idc-ph">${e.photo?`<img src="${h(e.photo)}" alt="">`:`<span>${h(initials(e))}</span>`}<b class="idc-no">${no}</b></div>
-   <div class="idc-body">
-    <div class="idc-nm" style="font-size:${nomComplet(e).length>24?15:nomComplet(e).length>19?17:19}px"><b>${h(e.nom||'')}</b> ${h([e.postnom,e.prenom].filter(Boolean).join(' '))}</div>
-    <div class="idc-cl">${h(cls?.nom||'')}${cls?.section?`<small>${h(cls.section)}</small>`:''}</div>
-    <div class="idc-ls">
-     ${L('N° d’ordre',no)}${L('Sexe',e.sexe==='F'?'Féminin':'Masculin')}${L('Né(e) à',[e.lieuNaissance,dn].filter(Boolean).join(', le '))}${L('Nationalité',e.nationalite)}
-     ${L('N° Perm.',e.matricule)}${L('N° ID',e.numId)}${L('Père',e.pere)}${L('Mère',e.mere)}${e.tuteur?L('Tuteur',e.tuteur):''}${L('Téléphone',e.telephone)}${L('Adresse',e.adresse)}
-    </div>
-    <div class="idc-foot">
-     <div class="idc-sig"><span class="idc-sg">${sg?`<img src="${h(sg)}" alt="">`:''}${sceau()}</span><b>${h(chefNom)}</b><small>${isSec()?'Le Préfet des études':'Le Directeur'}</small></div>
-     <div class="idc-val"><small>Carte n°</small><b>${h(num)}</b><small>Valable jusqu’au</small><b>31/07/${fin}</b></div>
-    </div>
-    ${bc?code39(bc,220,24):''}
+   <div class="idc-hd"><i class="idc-o1"></i><i class="idc-o2"></i>
+    <div class="idc-top"><img src="${eLogo()}" alt=""><span class="idc-yr">${h(ANNEE)}</span></div>
+    <div class="idc-sch"><b>${h(ECO().nom)}</b><small>${h((ECO().devise||'').replace(/ · /g,' – '))}</small></div>
+    <div class="idc-ttl">Carte d’élève</div>
    </div>
+   <div class="idc-mid">
+    <div class="idc-ph">${e.photo?`<img src="${h(e.photo)}" alt="">`:`<span>${h(initials(e))}</span>`}</div>
+    <div class="idc-side">
+     <div class="idc-no"><small>N° d’ordre</small><b>${no}</b></div>
+     <div class="idc-nm" style="font-size:${nl>20?17:nl>15?19:21}px"><b>${h(e.nom||'')}</b> ${h(e.postnom||'')}<span>${h(e.prenom||'')}</span></div>
+     <div class="idc-cl"><b>${h(cls?.nom||'')}</b>${cls?.section?`<em>${h(cls.section)}</em>`:''}</div>
+    </div>
+   </div>
+   <div class="idc-cut" aria-hidden="true"></div>
+   <div class="idc-grid">
+    ${row('Sexe · Nationalité',[e.sexe==='F'?'Féminin':'Masculin',e.nationalite].filter(Boolean).join(' · '))}${row('N° Perm.',e.matricule)}${row('N° ID',e.numId)}
+    ${row('Né(e) à · le',[e.lieuNaissance,dn].filter(Boolean).join(', le '),2)}${row('Téléphone',e.telephone)}
+    ${row('Père',e.pere)}${row('Mère',e.mere)}${e.tuteur?row('Tuteur',e.tuteur)+row('Adresse',e.adresse,3):row('Adresse',e.adresse)}
+   </div>
+   <div class="idc-foot">
+    <div class="idc-sig"><small>${isSec()?'Le Préfet des études':'Le Directeur'}</small><span class="idc-sg">${sg?`<img src="${h(sg)}" alt="">`:''}${sceau()}</span><b>${h(chefNom)}</b></div>
+    <div class="idc-val"><small>Carte n°</small><b>${h(num)}</b><small>Valable jusqu’au</small><b>31/07/${fin}</b></div>
+   </div>
+   ${bc?`<div class="idc-bcw">${code39(bc,300,22)}</div>`:''}
+   <div class="idc-bot"><i></i><i></i><i></i><span>${h(ec.ville||'Kinshasa')}</span><span>racines.ia</span></div>
   </div>`;
 }
 function carteSheet(id){const e=S.eleves[id];if(!e)return;

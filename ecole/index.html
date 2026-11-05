@@ -820,27 +820,31 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .rp-t.sm td.b{font-weight:800;background:#f1ebfc}
 .rp-sig{height:42px;max-width:150px;margin-top:4px}
 .sigprev{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
-/* carte d'élève : 340 × 539 px = 54 × 85,6 mm */
-.idc{position:relative;width:340px;height:539px;background:#fff;color:#0d1240;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:16px;letter-spacing:0;line-height:1.15;text-transform:none}
+/* carte d'élève : 340 × 539 px = 54 × 85,6 mm, aux couleurs de l'application */
+.idc{position:relative;width:340px;height:539px;background:#fff;color:#1d0f3d;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:18px;letter-spacing:0;line-height:1.15;text-transform:none;display:flex;flex-direction:column}
 .idc *{box-sizing:border-box}
-.idc-strip{position:absolute;right:0;top:0;width:26px;height:100%}
-.idc-in{position:absolute;left:0;top:0;right:26px;bottom:22px;padding:14px 14px 0 16px;display:flex;flex-direction:column}
-.idc-top{display:flex;align-items:center;gap:8px}.idc-top img{width:34px;height:34px;border-radius:50%;object-fit:cover;flex:none}.idc-top b{display:block;font-size:12.5px;font-weight:700;color:#1424c8;text-transform:uppercase;letter-spacing:.02em;line-height:1.1}.idc-top small{display:block;font-size:7.5px;color:#5a6090;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-top:2px}
-.idc-lbl{display:flex;align-items:center;justify-content:space-between;margin-top:9px}.idc-lbl span{font-size:9px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:#0d1240;padding-bottom:3px;border-bottom:2.5px solid #1c2fe0}.idc-lbl em{font-style:normal;font-size:8.5px;font-weight:600;color:#5a6090}
-.idc-ph{position:relative;height:106px;margin-top:7px;display:flex;justify-content:center}
-.idc-ph i{position:absolute;left:0;right:0;bottom:0;height:54px;border-radius:16px 16px 0 0;background:linear-gradient(160deg,#2236ff,#0a14a0)}
-.idc-ph img,.idc-ph span{position:relative;width:102px;height:102px;border-radius:50%;object-fit:cover;border:4px solid #fff;background:#e7e9f5;box-shadow:0 4px 12px rgba(10,20,160,.25);display:flex;align-items:center;justify-content:center;font-size:36px;font-weight:700;color:#1c2fe0}
-.idc-no{position:absolute;right:8px;bottom:8px;font-size:10px;font-weight:700;color:#fff;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.4);padding:3px 7px;border-radius:999px}
-.idc-nm{margin-top:7px}.idc-nm b{display:block;font-size:19px;font-weight:700;color:#1424c8;text-transform:uppercase;line-height:1.05;letter-spacing:-.01em}.idc-nm span{display:block;font-size:15px;font-weight:600;color:#0d1240;margin-top:1px}.idc-nm i{display:block;width:96px;height:4px;background:#ffd400;border-radius:2px;margin-top:5px}
-.idc-cl{align-self:flex-start;max-width:100%;margin-top:6px;font-size:9.5px;line-height:1.2;font-weight:700;color:#fff;background:#1c2fe0;padding:3px 9px;border-radius:999px}
-.idc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 10px;margin-top:8px}
-.idc-f{min-width:0}.idc-f.w{grid-column:1/-1}.idc-f small{display:block;font-size:7.5px;font-weight:600;color:#6a70a0;text-transform:uppercase;letter-spacing:.05em}.idc-f b{display:block;font-size:10.5px;font-weight:600;color:#0d1240;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;border-bottom:1px solid #e3e6f5;padding-bottom:2px}
-.idc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding-bottom:6px}
-.idc-sig{display:flex;flex-direction:column;min-width:0}.idc-sig small,.idc-val small{font-size:7px;font-weight:600;color:#6a70a0;text-transform:uppercase;letter-spacing:.05em}.idc-sig b{font-size:8.5px;font-weight:700;color:#0d1240;border-top:1px solid #c9cdea;padding-top:2px;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.idc-sg{position:relative;height:36px;width:140px;display:block}.idc-sg img{position:absolute;left:0;bottom:0;height:34px;max-width:120px;object-fit:contain;z-index:1}.idc-sg .sceau{position:absolute;right:0;top:-6px;width:44px;height:44px;margin:0;opacity:.7}
-.idc-val{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.idc-val b{font-size:9px;font-weight:700;color:#1424c8;margin-bottom:2px}
-.idc-bot{position:absolute;left:0;right:26px;bottom:0;height:22px;background:linear-gradient(90deg,#0a14a0,#2236ff);color:#ffd400;font-size:8.5px;font-weight:600;display:flex;align-items:center;justify-content:center;letter-spacing:.03em}
-.idc-prev{display:flex;justify-content:center;padding:10px 0}.idc-prev .idc{box-shadow:0 14px 34px rgba(10,20,120,.35);border:1px solid #e3e6f5}
+.idc-hd{position:relative;height:142px;padding:16px 18px 0;color:#fff;background:radial-gradient(circle at 108% -14%,transparent 0 62px,rgba(255,255,255,.14) 63px 86px,transparent 87px),radial-gradient(circle at -10% 135%,transparent 0 52px,rgba(255,255,255,.12) 53px 72px,transparent 73px),linear-gradient(135deg,#1d0f3d 0%,#2c1660 34%,#533989 64%,#8363c6 88%,#baa2eb 100%);flex:none}
+.idc-top{display:flex;align-items:center;gap:9px}.idc-top img{width:36px;height:36px;border-radius:50%;object-fit:cover;flex:none;background:#fff;box-shadow:0 0 0 2px rgba(255,255,255,.35)}
+.idc-top b{display:block;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:15px;letter-spacing:.03em;text-transform:uppercase;line-height:1.05}
+.idc-top small{display:block;font-size:7.5px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.75);margin-top:2px}
+.idc-ttl{position:absolute;right:18px;top:58px;text-align:right}.idc-ttl b{display:block;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:21px;letter-spacing:.03em;text-transform:uppercase;line-height:1}.idc-ttl span{display:inline-block;margin-top:5px;font-size:8.5px;font-weight:700;letter-spacing:.06em;padding:3px 9px;border-radius:999px;background:rgba(255,255,255,.18);border:1px solid rgba(255,255,255,.3)}
+.idc-mid{position:relative;display:flex;gap:12px;padding:0 18px;margin-top:-58px;flex:none}
+.idc-ph{width:128px;height:156px;border-radius:20px;overflow:hidden;background:#efe9fb;border:4px solid #fff;box-shadow:0 10px 22px rgba(29,15,61,.28);flex:none;display:flex;align-items:center;justify-content:center}
+.idc-ph img{width:100%;height:100%;object-fit:cover}.idc-ph span{font-family:"Anton",sans-serif;font-size:42px;color:#533989}
+.idc-side{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;gap:8px;padding-bottom:4px}
+.idc-no{align-self:flex-start;border-radius:14px;padding:6px 12px 5px;background:linear-gradient(135deg,#231544,#3a1e72);color:#fff}.idc-no small{display:block;font-size:7px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:#d3c3f5}.idc-no b{display:block;font-family:"Anton",sans-serif;font-weight:400;font-size:30px;line-height:1}
+.idc-cl small,.idc-f small,.idc-sig small,.idc-val small{display:block;font-size:7px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:#8363c6}
+.idc-cl b{display:block;font-size:12px;font-weight:700;color:#1d0f3d;line-height:1.1}.idc-cl em{display:block;font-style:normal;font-size:8.5px;font-weight:500;color:#6b5a93;margin-top:1px}
+.idc-nm{padding:10px 18px 0;flex:none}.idc-nm b{display:block;font-family:"Anton","Arial Narrow",sans-serif;font-weight:400;font-size:24px;letter-spacing:.02em;text-transform:uppercase;line-height:1.02;color:#2c1660}.idc-nm span{display:block;font-size:15px;font-weight:600;color:#533989;margin-top:2px}
+.idc-cut{position:relative;margin:9px 0 0;border-top:2px dashed #d9cdf3;flex:none}.idc-cut::before,.idc-cut::after{content:"";position:absolute;top:-8px;width:14px;height:14px;border-radius:50%;background:#1d0f3d}.idc-cut::before{left:-7px}.idc-cut::after{right:-7px}
+.idc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 12px;padding:8px 18px 0;flex:none}
+.idc-f{min-width:0}.idc-f.w{grid-column:1/-1}.idc-f b{display:block;font-size:10.5px;font-weight:600;color:#1d0f3d;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-bottom:2px;border-bottom:1px solid #eee7fa}
+.idc-foot{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:8px;padding:6px 18px 7px}
+.idc-sig{display:flex;flex-direction:column;min-width:0}.idc-sig b{font-size:8.5px;font-weight:700;color:#1d0f3d;border-top:1px solid #d9cdf3;padding-top:2px;max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.idc-sg{position:relative;height:36px;width:150px;display:block}.idc-sg img{position:absolute;left:0;bottom:0;height:34px;max-width:120px;object-fit:contain;z-index:1}.idc-sg .sceau{position:absolute;right:4px;top:-8px;width:46px;height:46px;margin:0;opacity:.7;color:#533989}
+.idc-val{text-align:right;display:flex;flex-direction:column;align-items:flex-end}.idc-val b{font-size:9.5px;font-weight:700;color:#2c1660;margin-bottom:2px}
+.idc-bot{height:20px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:0 18px;background:linear-gradient(135deg,#1d0f3d 0%,#2c1660 34%,#533989 64%,#8363c6 88%,#baa2eb 100%);color:#fff;font-size:8px;font-weight:600;letter-spacing:.06em;text-transform:uppercase}
+.idc-prev{display:flex;justify-content:center;padding:10px 0}.idc-prev .idc{box-shadow:0 14px 34px rgba(0,0,0,.45)}
 .obt td.sg{padding:0 1px;height:22px;vertical-align:middle}.obt .bsg{display:block;max-width:100%;height:18px;margin:auto;object-fit:contain}
 .sign3 .bsg.big{display:inline-block;height:46px;max-width:150px;margin-top:4px}
 .sceau{display:inline-block;width:74px;height:74px;color:#1d3f9a;opacity:.82;transform:rotate(-12deg);margin-top:4px}.sceau svg{width:100%;height:100%}
@@ -2297,30 +2301,35 @@ function carteInfo(id){
 function carteHtml(id){
   const {e,cls,ordre,num}=carteInfo(id);const ec=S.config.ecole||{};
   const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';
-  const chef=chefPerson();const sg=chef?.signature||chefSig(e.classeId)?.img||'';const chefNom=chef?.nom||chefSig(e.classeId)?.nom||ec.chef||'';
+  const chef=chefPerson();const cs=chefSig(e.classeId);const sg=chef?.signature||cs?.img||'';const chefNom=chef?.nom||cs?.nom||ec.chef||'';
   const row=(l,v,w)=>`<div class="idc-f${w?' w':''}"><small>${l}</small><b>${v?h(v):'—'}</b></div>`;
-  const fin=ANNEE.slice(-4);
+  const fin=ANNEE.slice(-4);const no=String(ordre).padStart(2,'0');
   return `<div class="idc">
-   ${carteStrip()}
-   <div class="idc-in">
+   <div class="idc-hd">
     <div class="idc-top"><img src="${eLogo()}" alt=""><div><b>${h(ECO().nom)}</b><small>${h((ECO().devise||'').replace(/ · /g,' – '))}</small></div></div>
-    <div class="idc-lbl"><span>Carte d’élève</span><em>${h(ANNEE)}</em></div>
-    <div class="idc-ph"><i></i>${e.photo?`<img src="${h(e.photo)}" alt="">`:`<span>${h(initials(e))}</span>`}<b class="idc-no">N° ${String(ordre).padStart(2,'0')}</b></div>
-    <div class="idc-nm"><b>${h([e.nom,e.postnom].filter(Boolean).join(' '))}</b><span>${h(e.prenom||'')}</span><i></i></div>
-    <div class="idc-cl">${h(cls?.nom||'')}${cls?.section?` · ${h(cls.section)}`:''}</div>
-    <div class="idc-grid">
-     ${row('N° d’ordre · Sexe',String(ordre).padStart(2,'0')+' · '+(e.sexe==='F'?'Féminin':'Masculin'))}${row('Nationalité',e.nationalite)}
-     ${row('Né(e) à · le',[e.lieuNaissance,dn].filter(Boolean).join(', le '),1)}
-     ${row('N° Perm.',e.matricule)}${row('N° ID',e.numId)}
-     ${row('Père',e.pere)}${row('Mère',e.mere)}
-     ${e.tuteur?row('Tuteur',e.tuteur)+row('Téléphone',e.telephone)+row('Adresse',e.adresse,1):row('Téléphone',e.telephone)+row('Adresse',e.adresse)}
-    </div>
-    <div class="idc-foot">
-     <div class="idc-sig"><small>${isSec()?'Le Préfet des études':'Le Directeur'}</small><span class="idc-sg">${sg?`<img src="${h(sg)}" alt="">`:''}${sceau()}</span><b>${h(chefNom)}</b></div>
-     <div class="idc-val"><small>Carte n°</small><b>${h(num)}</b><small>Valable jusqu’au</small><b>31/07/${fin}</b></div>
+    <div class="idc-ttl"><b>Carte d’élève</b><span>${h(ANNEE)}</span></div>
+   </div>
+   <div class="idc-mid">
+    <div class="idc-ph">${e.photo?`<img src="${h(e.photo)}" alt="">`:`<span>${h(initials(e))}</span>`}</div>
+    <div class="idc-side">
+     <div class="idc-no"><small>N° d’ordre</small><b>${no}</b></div>
+     <div class="idc-cl"><small>Classe</small><b>${h(cls?.nom||'')}</b>${cls?.section?`<em>${h(cls.section)}</em>`:''}</div>
     </div>
    </div>
-   <div class="idc-bot">${h(ec.ville||'Kinshasa')} · ${h(ECO().nom)}</div>
+   <div class="idc-nm"><b>${h([e.nom,e.postnom].filter(Boolean).join(' '))}</b><span>${h(e.prenom||'')}</span></div>
+   <div class="idc-cut" aria-hidden="true"></div>
+   <div class="idc-grid">
+    ${row('Sexe · Nationalité',[e.sexe==='F'?'Féminin':'Masculin',e.nationalite].filter(Boolean).join(' · '))}${row('N° Perm.',e.matricule)}
+    ${row('Né(e) à · le',[e.lieuNaissance,dn].filter(Boolean).join(', le '),1)}
+    ${row('N° ID',e.numId)}${row('Téléphone',e.telephone)}
+    ${row('Père',e.pere)}${row('Mère',e.mere)}
+    ${e.tuteur?row('Tuteur',e.tuteur)+row('Adresse',e.adresse):row('Adresse',e.adresse,1)}
+   </div>
+   <div class="idc-foot">
+    <div class="idc-sig"><small>${isSec()?'Le Préfet des études':'Le Directeur'}</small><span class="idc-sg">${sg?`<img src="${h(sg)}" alt="">`:''}${sceau()}</span><b>${h(chefNom)}</b></div>
+    <div class="idc-val"><small>Carte n°</small><b>${h(num)}</b><small>Valable jusqu’au</small><b>31/07/${fin}</b></div>
+   </div>
+   <div class="idc-bot"><span>${h(ec.ville||'Kinshasa')}</span><span>racines.ia</span></div>
   </div>`;
 }
 function carteSheet(id){const e=S.eleves[id];if(!e)return;

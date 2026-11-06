@@ -1,0 +1,67 @@
+name: Construire l'APK de Tiya
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Préparer le projet Flutter
+        run: |
+          flutter create --org co.cuervo --project-name tiya --platforms android ../tiya_build
+          rsync -a --exclude '.git' --exclude '.github' ./ ../tiya_build/
+          rm -rf ../tiya_build/test
+          cd ../tiya_build
+          if [ -f android/app/build.gradle.kts ]; then
+            sed -i -E 's/minSdk\s*=\s*flutter\.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts
+          fi
+          if [ -f android/app/build.gradle ]; then
+            sed -i -E 's/minSdkVersion\s+flutter\.minSdkVersion/minSdkVersion 26/' android/app/build.gradle
+          fi
+          grep -n "minSdk" android/app/build.gradle* || true
+
+      - name: Analyser le code
+        working-directory: ../tiya_build
+        run: |
+          flutter pub get
+          flutter analyze --no-fatal-infos --no-fatal-warnings
+
+      - name: Compiler l'APK
+        working-directory: ../tiya_build
+        run: |
+          flutter build apk --release
+          mkdir -p $GITHUB_WORKSPACE/dist
+          cp build/app/outputs/flutter-apk/app-release.apk $GITHUB_WORKSPACE/dist/Tiya.apk
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Tiya-apk
+          path: dist/Tiya.apk
+
+      - name: Publier la version (téléchargement facile depuis le téléphone)
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v1.0.${{ github.run_number }}
+          name: Tiya v1.0.${{ github.run_number }}
+          body: |
+            Télécharge **Tiya.apk** ci-dessous et installe-le sur ton téléphone Android.
+          files: dist/Tiya.apk
+          make_latest: true

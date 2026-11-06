@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tiya_accessibility_description">Tiya est ton agent IA. Avec cette autorisation, Tiya peut lire ce qui est affiché à l\'écran, toucher, écrire et ouvrir des applications à ta place, uniquement quand tu lui donnes une tâche. Les apps de banque et de mobile money sont bloquées par défaut.</string>
+</resources>

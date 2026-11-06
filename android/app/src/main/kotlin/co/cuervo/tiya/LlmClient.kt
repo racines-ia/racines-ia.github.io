@@ -7,10 +7,13 @@ import java.io.InputStreamReader
 import java.net.HttpURLConnection
 import java.net.URL
 
-class LlmException(message: String) : Exception(message)
+class LlmException(message: String, val code: Int = 0) : Exception(message)
 
 /** Appelle Gemini ou Claude et renvoie la réponse texte brute du modèle. */
 class LlmClient(private val settings: TiyaSettings) {
+    companion object {
+        const val FALLBACK_GEMINI = "gemini-3.5-flash-lite"
+    }
 
     fun ask(system: String, userText: String, imageJpegBase64: String?): String {
         return if (settings.provider == "claude") askClaude(system, userText, imageJpegBase64)
@@ -37,11 +40,17 @@ class LlmClient(private val settings: TiyaSettings) {
             .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
             .put(
                 "generationConfig",
-                JSONObject().put("temperature", 0.2).put("responseMimeType", "application/json")
+                JSONObject().put("responseMimeType", "application/json")
             )
 
-        val url = "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
-        val res = post(url, body.toString(), mapOf("x-goog-api-key" to key))
+        val res = try {
+            post(geminiUrl(model), body.toString(), mapOf("x-goog-api-key" to key))
+        } catch (e: LlmException) {
+            // Modèle surchargé, quota du jour épuisé ou modèle retiré : on bascule sur le modèle de secours.
+            if (model != FALLBACK_GEMINI && e.code in listOf(404, 429, 500, 503, 504)) {
+                post(geminiUrl(FALLBACK_GEMINI), body.toString(), mapOf("x-goog-api-key" to key))
+            } else throw e
+        }
         val json = JSONObject(res)
         val cands = json.optJSONArray("candidates")
         if (cands == null || cands.length() == 0) {
@@ -58,6 +67,9 @@ class LlmClient(private val settings: TiyaSettings) {
         }
         return sb.toString()
     }
+
+    private fun geminiUrl(model: String) =
+        "https://generativelanguage.googleapis.com/v1beta/models/$model:generateContent"
 
     private fun askClaude(system: String, userText: String, img: String?): String {
         val key = settings.claudeKey
@@ -114,7 +126,7 @@ class LlmClient(private val settings: TiyaSettings) {
                 val msg = runCatching {
                     JSONObject(text).optJSONObject("error")?.optString("message")
                 }.getOrNull()
-                throw LlmException(friendlyError(code, msg ?: text.take(300)))
+                throw LlmException(friendlyError(code, msg ?: text.take(300)), code)
             }
             return text
         } catch (e: LlmException) {

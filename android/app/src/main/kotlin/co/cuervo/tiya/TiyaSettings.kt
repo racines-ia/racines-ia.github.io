@@ -88,7 +88,7 @@ class TiyaSettings(context: Context) {
     }
 
     companion object {
-        const val DEFAULT_GEMINI_MODEL = "gemini-2.5-flash"
+        const val DEFAULT_GEMINI_MODEL = "gemini-3.8-flash"
         const val DEFAULT_CLAUDE_MODEL = "claude-sonnet-5-5"
         // Mots-clés : toute app dont le nom ou le package contient un de ces mots est bloquée.
         const val DEFAULT_BLOCKED = "banque\nbank\nm-pesa\nmpesa\norange money\nairtel money\nafrimoney\nillicocash"

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'brand.dart';
 import 'native.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -18,6 +19,7 @@ class _SettingsPageState extends State<SettingsPage> {
   bool _speak = true;
   double _maxSteps = 30;
   bool _showKeys = false;
+  String _version = '';
 
   final _geminiKey = TextEditingController();
   final _geminiModel = TextEditingController();
@@ -34,6 +36,12 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Future<void> _load() async {
     final s = await Native.getSettings();
+    String v = '';
+    try {
+      final r = await Native.version();
+      v = (r['name'] ?? '').toString();
+    } catch (_) {}
+    if (!mounted) return;
     setState(() {
       _provider = (s['provider'] ?? 'gemini').toString();
       _geminiKey.text = (s['geminiKey'] ?? '').toString();
@@ -46,6 +54,7 @@ class _SettingsPageState extends State<SettingsPage> {
       _maxSteps = ((s['maxSteps'] ?? 30) as num).toDouble();
       _blocked.text = (s['blockedApps'] ?? '').toString();
       _name.text = (s['userName'] ?? '').toString();
+      _version = v;
       _loading = false;
     });
   }
@@ -67,8 +76,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Future<void> _save({bool quiet = false}) async {
     await Native.saveSettings(_collect());
     if (!quiet && mounted) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text('Réglages enregistrés')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Réglages enregistrés')));
     }
   }
 
@@ -82,13 +90,14 @@ class _SettingsPageState extends State<SettingsPage> {
     showDialog(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(ok ? '✅ Connexion réussie' : '❌ Échec de connexion'),
+        backgroundColor: const Color(0xFF0B1230),
+        icon: Icon(ok ? Icons.check_circle_rounded : Icons.error_outline_rounded,
+            color: ok ? TiyaColors.green : const Color(0xFFF87171), size: 34),
+        title: Text(ok ? 'Connexion réussie' : 'Échec de connexion'),
         content: Text(ok
             ? "${_provider == 'claude' ? 'Claude' : 'Gemini'} répond correctement. Tiya est prête."
             : (r['message'] ?? '').toString()),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK')),
-        ],
+        actions: [TextButton(onPressed: () => Navigator.pop(context), child: const Text('OK'))],
       ),
     );
   }
@@ -105,10 +114,10 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _section(String t) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 22, 4, 8),
+        padding: const EdgeInsets.fromLTRB(4, 26, 4, 10),
         child: Text(t,
             style: const TextStyle(
-                fontSize: 13, fontWeight: FontWeight.w700, color: Color(0xFF00BFA5))),
+                fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.6, color: TiyaColors.faint)),
       );
 
   InputDecoration _dec(String label, {String? hint, Widget? suffix}) => InputDecoration(
@@ -116,144 +125,243 @@ class _SettingsPageState extends State<SettingsPage> {
         hintText: hint,
         suffixIcon: suffix,
         filled: true,
-        fillColor: const Color(0xFF1A1A27),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide.none,
+        fillColor: const Color(0x0DFFFFFF),
+        labelStyle: const TextStyle(color: TiyaColors.muted),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: TiyaColors.glassBorder),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: TiyaColors.blueLight),
         ),
       );
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Réglages de Tiya'),
-        actions: [
-          TextButton(onPressed: () => _save(), child: const Text('Enregistrer')),
-        ],
-      ),
-      body: _loading
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 40),
+  Widget _brain(String id, String name, String sub) {
+    final sel = _provider == id;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(22),
+          onTap: () => setState(() => _provider = id),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            padding: const EdgeInsets.fromLTRB(18, 16, 16, 16),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(22),
+              color: sel ? null : const Color(0x08FFFFFF),
+              gradient: sel
+                  ? const RadialGradient(
+                      center: Alignment(0.85, -1.2),
+                      radius: 1.4,
+                      colors: [Color(0x553B82F6), Color(0x0F2563EB)],
+                    )
+                  : null,
+              border: Border.all(color: sel ? const Color(0x9960A5FA) : TiyaColors.glassBorder),
+              boxShadow: sel
+                  ? const [BoxShadow(color: Color(0x332563EB), blurRadius: 26)]
+                  : null,
+            ),
+            child: Row(
               children: [
-                _section('CERVEAU DE TIYA'),
-                SegmentedButton<String>(
-                  segments: const [
-                    ButtonSegment(value: 'gemini', label: Text('Gemini'), icon: Icon(Icons.auto_awesome)),
-                    ButtonSegment(value: 'claude', label: Text('Claude'), icon: Icon(Icons.psychology)),
-                  ],
-                  selected: {_provider},
-                  onSelectionChanged: (s) => setState(() => _provider = s.first),
+                Expanded(
+                  child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                    Text(name, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 3),
+                    Text(sub, style: const TextStyle(fontSize: 12.5, color: TiyaColors.muted)),
+                  ]),
                 ),
-                const SizedBox(height: 14),
-                if (_provider == 'gemini') ...[
-                  TextField(
-                    controller: _geminiKey,
-                    obscureText: !_showKeys,
-                    decoration: _dec('Clé API Gemini',
-                        hint: 'AIza…',
-                        suffix: IconButton(
-                          icon: Icon(_showKeys ? Icons.visibility_off : Icons.visibility),
-                          onPressed: () => setState(() => _showKeys = !_showKeys),
-                        )),
+                if (sel)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: TiyaColors.blueLight),
+                    ),
+                    child: const Text('Actif', style: TextStyle(fontSize: 11.5, color: TiyaColors.ice)),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Gratuite sur aistudio.google.com › Get API key.',
-                    style: TextStyle(fontSize: 12, color: Colors.white54),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(controller: _geminiModel, decoration: _dec('Modèle Gemini')),
-                ] else ...[
-                  TextField(
-                    controller: _claudeKey,
-                    obscureText: !_showKeys,
-                    decoration: _dec('Clé API Claude',
-                        hint: 'sk-ant-…',
-                        suffix: IconButton(
-                          icon: Icon(_showKeys ? Icons.visibility_off : Icons.visibility),
-                          onPressed: () => setState(() => _showKeys = !_showKeys),
-                        )),
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Sur platform.claude.com › API Keys (paiement à l\'usage par carte).',
-                    style: TextStyle(fontSize: 12, color: Colors.white54),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(controller: _claudeModel, decoration: _dec('Modèle Claude')),
-                ],
-                const SizedBox(height: 12),
-                FilledButton.icon(
-                  onPressed: _testing ? null : _test,
-                  icon: _testing
-                      ? const SizedBox(
-                          width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(Icons.wifi_tethering),
-                  label: Text(_testing ? 'Test en cours…' : 'Tester la connexion'),
-                ),
-
-                _section('TOI'),
-                TextField(controller: _name, decoration: _dec('Ton prénom (optionnel)')),
-
-                _section('COMPORTEMENT'),
-                SwitchListTile(
-                  value: _confirm,
-                  onChanged: (v) => setState(() => _confirm = v),
-                  title: const Text('Demander avant les actions sensibles'),
-                  subtitle: const Text('Envoyer un message, supprimer, partager, appeler…'),
-                ),
-                SwitchListTile(
-                  value: _vision,
-                  onChanged: (v) => setState(() => _vision = v),
-                  title: const Text("Voir l'écran (captures)"),
-                  subtitle: const Text('Indispensable pour les photos. Consomme plus de crédit.'),
-                ),
-                SwitchListTile(
-                  value: _speak,
-                  onChanged: (v) => setState(() => _speak = v),
-                  title: const Text('Tiya parle à voix haute'),
-                ),
-                ListTile(
-                  title: const Text('Nombre maximum d\'étapes par tâche'),
-                  subtitle: Slider(
-                    value: _maxSteps,
-                    min: 5,
-                    max: 100,
-                    divisions: 19,
-                    label: _maxSteps.round().toString(),
-                    onChanged: (v) => setState(() => _maxSteps = v),
-                  ),
-                  trailing: Text(_maxSteps.round().toString()),
-                ),
-
-                _section('APPS PROTÉGÉES'),
-                const Text(
-                  'Tiya refuse d\'ouvrir toute app dont le nom contient un de ces mots (un par ligne). '
-                  'Garde ici tes apps de banque et de mobile money.',
-                  style: TextStyle(fontSize: 12, color: Colors.white60),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _blocked,
-                  minLines: 4,
-                  maxLines: 10,
-                  decoration: _dec('Mots-clés bloqués'),
-                ),
-                const SizedBox(height: 20),
-                FilledButton(
-                  onPressed: () async {
-                    await _save();
-                    if (context.mounted) Navigator.pop(context);
-                  },
-                  child: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 12),
-                    child: Text('Enregistrer'),
-                  ),
-                ),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _switch(String title, String? sub, bool v, ValueChanged<bool> onChanged) {
+    return SwitchListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+      value: v,
+      onChanged: onChanged,
+      activeTrackColor: TiyaColors.blue,
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600)),
+      subtitle: sub == null ? null : Text(sub, style: const TextStyle(color: TiyaColors.muted, fontSize: 12.5)),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final eye = IconButton(
+      tooltip: _showKeys ? 'Masquer la clé' : 'Afficher la clé',
+      icon: Icon(_showKeys ? Icons.visibility_off_outlined : Icons.visibility_outlined),
+      onPressed: () => setState(() => _showKeys = !_showKeys),
+    );
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Colors.black, TiyaColors.night, Color(0xFF071232)],
+          ),
+        ),
+        child: SafeArea(
+          child: _loading
+              ? const Center(child: CircularProgressIndicator())
+              : Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 14, 16, 4),
+                      child: Row(children: [
+                        const TiyaLogo(size: 26),
+                        const SizedBox(width: 10),
+                        const Text('Réglages', style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
+                        const Spacer(),
+                        RoundButton(
+                          icon: Icons.close_rounded,
+                          tooltip: 'Fermer',
+                          size: 42,
+                          borderColor: TiyaColors.glassBorder,
+                          onTap: () async {
+                            await _save(quiet: true);
+                            if (context.mounted) Navigator.pop(context);
+                          },
+                        ),
+                      ]),
+                    ),
+                    Expanded(
+                      child: ListView(
+                        padding: const EdgeInsets.fromLTRB(18, 0, 18, 30),
+                        children: [
+                          _section('CERVEAU DE TIYA'),
+                          _brain('gemini', 'Gemini', 'Gratuit pour commencer · Google'),
+                          _brain('claude', 'Claude', "Payant à l'usage · plus précis · Anthropic"),
+                          const SizedBox(height: 8),
+                          if (_provider == 'gemini') ...[
+                            TextField(
+                              controller: _geminiKey,
+                              obscureText: !_showKeys,
+                              decoration: _dec('Clé API Gemini', hint: 'AIza…', suffix: eye),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(6, 6, 6, 12),
+                              child: Text('Gratuite sur aistudio.google.com › Get API key.',
+                                  style: TextStyle(fontSize: 12, color: TiyaColors.faint)),
+                            ),
+                            TextField(controller: _geminiModel, decoration: _dec('Modèle Gemini')),
+                          ] else ...[
+                            TextField(
+                              controller: _claudeKey,
+                              obscureText: !_showKeys,
+                              decoration: _dec('Clé API Claude', hint: 'sk-ant-…', suffix: eye),
+                            ),
+                            const Padding(
+                              padding: EdgeInsets.fromLTRB(6, 6, 6, 12),
+                              child: Text("platform.claude.com › API Keys (crédit nécessaire).",
+                                  style: TextStyle(fontSize: 12, color: TiyaColors.faint)),
+                            ),
+                            TextField(controller: _claudeModel, decoration: _dec('Modèle Claude')),
+                          ],
+                          const SizedBox(height: 14),
+                          FilledButton.icon(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: const Color(0xFF0B1640),
+                              minimumSize: const Size.fromHeight(52),
+                            ),
+                            onPressed: _testing ? null : _test,
+                            icon: _testing
+                                ? const SizedBox(
+                                    width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2))
+                                : const Icon(Icons.wifi_tethering_rounded),
+                            label: Text(_testing ? 'Test en cours…' : 'Tester la connexion',
+                                style: const TextStyle(fontWeight: FontWeight.w700)),
+                          ),
+                          _section('TOI'),
+                          TextField(controller: _name, decoration: _dec('Ton prénom (optionnel)')),
+                          _section('COMPORTEMENT'),
+                          Glass(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            child: Column(children: [
+                              _switch('Confirmer avant les actions sensibles',
+                                  'Envoyer, supprimer, partager, appeler…', _confirm, (v) => setState(() => _confirm = v)),
+                              _switch("Voir l'écran (captures)", 'Indispensable pour les photos. Consomme plus de crédit.',
+                                  _vision, (v) => setState(() => _vision = v)),
+                              _switch('Tiya parle à voix haute', null, _speak, (v) => setState(() => _speak = v)),
+                              ListTile(
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 4),
+                                title: const Text("Étapes maximum par tâche",
+                                    style: TextStyle(fontWeight: FontWeight.w600)),
+                                trailing: Text(_maxSteps.round().toString(),
+                                    style: const TextStyle(fontWeight: FontWeight.w700)),
+                                subtitle: Slider(
+                                  value: _maxSteps,
+                                  min: 5,
+                                  max: 100,
+                                  divisions: 19,
+                                  activeColor: TiyaColors.blueLight,
+                                  label: _maxSteps.round().toString(),
+                                  onChanged: (v) => setState(() => _maxSteps = v),
+                                ),
+                              ),
+                            ]),
+                          ),
+                          _section('APPS PROTÉGÉES'),
+                          const Padding(
+                            padding: EdgeInsets.fromLTRB(4, 0, 4, 10),
+                            child: Text(
+                              "Tiya refuse d'ouvrir toute app dont le nom contient un de ces mots (un par ligne). Garde ici tes apps de banque et de mobile money.",
+                              style: TextStyle(fontSize: 12.5, color: TiyaColors.muted),
+                            ),
+                          ),
+                          TextField(
+                            controller: _blocked,
+                            minLines: 4,
+                            maxLines: 10,
+                            decoration: _dec('Mots-clés bloqués'),
+                          ),
+                          const SizedBox(height: 24),
+                          FilledButton(
+                            style: FilledButton.styleFrom(
+                              backgroundColor: TiyaColors.blue,
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(52),
+                            ),
+                            onPressed: () async {
+                              await _save();
+                              if (context.mounted) Navigator.pop(context);
+                            },
+                            child: const Text('Enregistrer', style: TextStyle(fontWeight: FontWeight.w700)),
+                          ),
+                          const SizedBox(height: 26),
+                          Center(
+                            child: Column(children: [
+                              const TiyaLogo(size: 22, color: Color(0xFF8B93AD)),
+                              const SizedBox(height: 8),
+                              Text('Tiya $_version · cuervo.co',
+                                  style: const TextStyle(fontSize: 12, color: TiyaColors.faint)),
+                            ]),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

@@ -1,17 +1,22 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import 'brand.dart';
 import 'native.dart';
 import 'settings_page.dart';
 
-void main() => runApp(const TiyaApp());
-
-const kViolet = Color(0xFF7C4DFF);
-const kTeal = Color(0xFF00BFA5);
-const kBg = Color(0xFF0E0E16);
-const kCard = Color(0xFF1A1A27);
-const kCard2 = Color(0xFF24243A);
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+    statusBarColor: Colors.transparent,
+    statusBarIconBrightness: Brightness.light,
+    systemNavigationBarColor: Colors.black,
+    systemNavigationBarIconBrightness: Brightness.light,
+  ));
+  runApp(const TiyaApp());
+}
 
 class TiyaApp extends StatelessWidget {
   const TiyaApp({super.key});
@@ -24,11 +29,17 @@ class TiyaApp extends StatelessWidget {
       theme: ThemeData(
         brightness: Brightness.dark,
         useMaterial3: true,
-        scaffoldBackgroundColor: kBg,
+        scaffoldBackgroundColor: Colors.black,
         colorScheme: ColorScheme.fromSeed(
-          seedColor: kViolet,
+          seedColor: TiyaColors.blue,
           brightness: Brightness.dark,
-          surface: kBg,
+          surface: TiyaColors.night,
+          primary: TiyaColors.blueLight,
+        ),
+        snackBarTheme: const SnackBarThemeData(
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: Color(0xFF111A3A),
+          contentTextStyle: TextStyle(color: Colors.white),
         ),
       ),
       home: const HomePage(),
@@ -45,6 +56,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   final _input = TextEditingController();
+  final _focus = FocusNode();
   final _scroll = ScrollController();
   final List<Map<String, dynamic>> _events = [];
   StreamSubscription? _sub;
@@ -56,14 +68,23 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String? _waitingFor;
   bool _listening = false;
   bool _hasKey = true;
+  String _name = '';
+  String _yesLabel = 'Oui';
+  String _noLabel = 'Non';
+
+  Map<String, dynamic>? _update;
+  double? _updateProgress;
+  DateTime? _lastUpdateCheck;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _sub = Native.events().listen(_onEvent);
+    _input.addListener(() => setState(() {}));
     _loadHistory();
     _refresh();
+    _checkUpdate();
     _poll = Timer.periodic(const Duration(seconds: 3), (_) => _refresh());
   }
 
@@ -73,6 +94,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     _sub?.cancel();
     _poll?.cancel();
     _input.dispose();
+    _focus.dispose();
     _scroll.dispose();
     super.dispose();
   }
@@ -82,8 +104,11 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (state == AppLifecycleState.resumed) {
       _refresh();
       _loadHistory();
+      _checkUpdate();
     }
   }
+
+  // ---------------------------------------------------------------- données
 
   Future<void> _loadHistory() async {
     try {
@@ -111,37 +136,70 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         _running = s['running'] == true;
         _waitingFor = s['waitingFor'] as String?;
         _hasKey = (key ?? '').toString().isNotEmpty;
+        _name = (st['userName'] ?? '').toString();
       });
     } catch (_) {}
   }
 
+  Future<void> _checkUpdate() async {
+    final now = DateTime.now();
+    if (_lastUpdateCheck != null && now.difference(_lastUpdateCheck!).inMinutes < 30) return;
+    _lastUpdateCheck = now;
+    try {
+      final r = await Native.checkUpdate();
+      if (!mounted) return;
+      setState(() => _update = r);
+    } catch (_) {}
+  }
+
+  Future<void> _installUpdate() async {
+    final u = _update;
+    if (u == null || u['url'] == null) return;
+    final r = await Native.downloadUpdate(u['url'].toString(), (u['latest'] ?? 'maj').toString());
+    if (r == 'permission') {
+      _snack("Autorise Tiya à installer des applications, puis appuie à nouveau sur Installer.");
+    } else {
+      setState(() => _updateProgress = 0);
+    }
+  }
+
   void _onEvent(Map<String, dynamic> e) {
     final type = e['type'];
-    if (type == 'partial_speech') {
-      _input.text = e['text'] ?? '';
-      return;
-    }
-    if (type == 'speech') {
-      setState(() => _listening = false);
-      _input.text = e['text'] ?? '';
-      _send();
-      return;
-    }
-    if (type == 'speech_end') {
-      setState(() => _listening = false);
-      return;
-    }
-    if (type == 'status') {
-      _refresh();
-      return;
+    switch (type) {
+      case 'partial_speech':
+        _input.text = e['text'] ?? '';
+        return;
+      case 'speech':
+        setState(() => _listening = false);
+        _input.text = e['text'] ?? '';
+        _send();
+        return;
+      case 'speech_end':
+        setState(() => _listening = false);
+        return;
+      case 'status':
+        _refresh();
+        return;
+      case 'update_progress':
+        setState(() => _updateProgress = (e['progress'] as num?)?.toDouble());
+        return;
+      case 'update_ready':
+        setState(() => _updateProgress = null);
+        return;
+      case 'update_error':
+        setState(() => _updateProgress = null);
+        _snack((e['text'] ?? '').toString());
+        return;
     }
     setState(() {
       _events.add(e);
       if (type == 'ask') _waitingFor = 'answer';
-      if (type == 'confirm') _waitingFor = 'confirm';
-      if (type == 'done' || type == 'error') {
-        _waitingFor = null;
+      if (type == 'confirm') {
+        _waitingFor = e['voice'] == true ? 'voice' : 'confirm';
+        _yesLabel = (e['yesLabel'] ?? 'Oui').toString();
+        _noLabel = (e['noLabel'] ?? 'Non').toString();
       }
+      if (type == 'done' || type == 'error') _waitingFor = null;
     });
     _toBottom();
   }
@@ -150,19 +208,21 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(
-          _scroll.position.maxScrollExtent + 200,
-          duration: const Duration(milliseconds: 250),
+          _scroll.position.maxScrollExtent + 300,
+          duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
       }
     });
   }
 
+  // ---------------------------------------------------------------- actions
+
   Future<void> _send() async {
     final text = _input.text.trim();
     if (text.isEmpty) return;
     if (!_service) {
-      _snack("Active d'abord Tiya dans les réglages d'accessibilité.");
+      _snack("Active d'abord Tiya dans l'accessibilité (étape 2).");
       return;
     }
     _input.clear();
@@ -170,7 +230,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     if (_waitingFor != null) {
       await Native.reply(text);
     } else if (_running) {
-      _snack('Tiya travaille déjà. Appuie sur Stop pour arrêter.');
+      _snack('Tiya travaille déjà. Appuie sur « Arrêter » pour annuler.');
     } else {
       try {
         await Native.startTask(text);
@@ -184,7 +244,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   Future<void> _toggleMic() async {
     if (!_mic) {
       await Native.requestMic();
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future.delayed(const Duration(milliseconds: 700));
       _refresh();
       return;
     }
@@ -202,136 +262,341 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   }
 
   void _snack(String m) {
-    if (!mounted) return;
+    if (!mounted || m.isEmpty) return;
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(m)));
   }
+
+  Future<void> _openSettings() async {
+    await Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
+    _refresh();
+  }
+
+  void _useSuggestion(String t) {
+    _input.text = t;
+    _input.selection = TextSelection.collapsed(offset: t.length);
+    _focus.requestFocus();
+  }
+
+  // ---------------------------------------------------------------- interface
 
   @override
   Widget build(BuildContext context) {
     final setupNeeded = !_service || !_hasKey || !_mic;
+    final showConversation = _events.isNotEmpty;
+    final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: kBg,
-        titleSpacing: 16,
-        title: Row(
-          children: [
-            const _Logo(size: 34),
-            const SizedBox(width: 10),
-            const Text('Tiya', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 22)),
-            const SizedBox(width: 10),
-            _StatusDot(on: _service, running: _running),
-          ],
+      resizeToAvoidBottomInset: true,
+      backgroundColor: Colors.black,
+      body: AnimatedContainer(
+        duration: const Duration(milliseconds: 600),
+        decoration: BoxDecoration(gradient: _running ? kWorkGradient : kHomeGradient),
+        child: SafeArea(
+          child: Column(
+            children: [
+              _TopBar(
+                running: _running,
+                service: _service,
+                onSettings: _openSettings,
+                onClear: showConversation
+                    ? () async {
+                        await Native.clearHistory();
+                        setState(() => _events.clear());
+                      }
+                    : null,
+              ),
+              if (_update?['available'] == true)
+                _UpdateBanner(
+                  version: (_update?['latest'] ?? '').toString(),
+                  progress: _updateProgress,
+                  onInstall: _installUpdate,
+                ),
+              Expanded(
+                child: ListView(
+                  controller: _scroll,
+                  padding: const EdgeInsets.fromLTRB(18, 8, 18, 20),
+                  children: [
+                    if (!showConversation || bottomInset == 0)
+                      _Hero(
+                        compact: showConversation,
+                        running: _running,
+                        name: _name,
+                      ),
+                    if (setupNeeded)
+                      _SetupCard(
+                        service: _service,
+                        hasKey: _hasKey,
+                        mic: _mic,
+                        onSettings: _openSettings,
+                        onRefresh: _refresh,
+                      ),
+                    if (!showConversation && !setupNeeded) _Suggestions(onPick: _useSuggestion),
+                    ..._buildEvents(),
+                  ],
+                ),
+              ),
+              if (_waitingFor == 'confirm' || _waitingFor == 'voice')
+                _ConfirmBar(
+                  voice: _waitingFor == 'voice',
+                  yes: _yesLabel,
+                  no: _noLabel,
+                  onAnswer: (yes) async {
+                    await Native.confirm(yes);
+                    setState(() => _waitingFor = null);
+                  },
+                ),
+              if (_running && _waitingFor == null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _StopButton(onTap: () async {
+                    await Native.stopTask();
+                    _refresh();
+                  }),
+                ),
+              _InputBar(
+                controller: _input,
+                focus: _focus,
+                listening: _listening,
+                waiting: _waitingFor == 'answer',
+                onSend: _send,
+                onMic: _toggleMic,
+              ),
+            ],
+          ),
         ),
-        actions: [
-          IconButton(
-            tooltip: "Effacer l'historique",
-            icon: const Icon(Icons.delete_sweep_outlined),
-            onPressed: () async {
-              await Native.clearHistory();
-              setState(() => _events.clear());
-            },
-          ),
-          IconButton(
-            tooltip: 'Réglages',
-            icon: const Icon(Icons.tune),
-            onPressed: () async {
-              await Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const SettingsPage()),
-              );
-              _refresh();
-            },
-          ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ListView(
-              controller: _scroll,
-              padding: const EdgeInsets.fromLTRB(14, 8, 14, 16),
-              children: [
-                if (setupNeeded)
-                  _SetupCard(
-                    service: _service,
-                    hasKey: _hasKey,
-                    mic: _mic,
-                    onRefresh: _refresh,
-                  ),
-                if (_events.isEmpty) _EmptyState(onPick: (t) {
-                  _input.text = t;
-                }),
-                ..._events.map((e) => _EventTile(e)),
-              ],
-            ),
-          ),
-          if (_waitingFor == 'confirm') _ConfirmBar(onAnswer: (yes) async {
-            await Native.confirm(yes);
-            setState(() => _waitingFor = null);
-          }),
-          _InputBar(
-            controller: _input,
-            running: _running,
-            listening: _listening,
-            waiting: _waitingFor == 'answer',
-            onSend: _send,
-            onMic: _toggleMic,
-            onStop: () async {
-              await Native.stopTask();
-              _refresh();
-            },
-          ),
-        ],
       ),
     );
+  }
+
+  List<Widget> _buildEvents() {
+    final out = <Widget>[];
+    int lastStep = -1;
+    for (var i = 0; i < _events.length; i++) {
+      if (_events[i]['type'] == 'step') lastStep = i;
+    }
+    for (var i = 0; i < _events.length; i++) {
+      final e = _events[i];
+      out.add(_EventTile(e, activeStep: _running && i == lastStep));
+    }
+    return out;
   }
 }
 
 // ------------------------------------------------------------------ widgets
 
-class _Logo extends StatelessWidget {
-  final double size;
-  const _Logo({required this.size});
+class _TopBar extends StatelessWidget {
+  final bool running;
+  final bool service;
+  final VoidCallback onSettings;
+  final VoidCallback? onClear;
+  const _TopBar({
+    required this.running,
+    required this.service,
+    required this.onSettings,
+    this.onClear,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(colors: [kViolet, kTeal]),
+    final Color dot;
+    final String label;
+    if (!service) {
+      dot = const Color(0xFFF87171);
+      label = 'Désactivée';
+    } else if (running) {
+      dot = TiyaColors.blueLight;
+      label = 'Au travail';
+    } else {
+      dot = TiyaColors.green;
+      label = 'Prête';
+    }
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(20, 14, 16, 6),
+      child: Row(
+        children: [
+          const TiyaLogo(size: 26),
+          const SizedBox(width: 10),
+          const Text('Tiya',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700, letterSpacing: 0.3)),
+          const SizedBox(width: 10),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: running ? const Color(0x2E3B82F6) : const Color(0x0FFFFFFF),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Row(mainAxisSize: MainAxisSize.min, children: [
+              Container(width: 7, height: 7, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+              const SizedBox(width: 6),
+              Text(label, style: const TextStyle(fontSize: 11.5, color: Color(0xFFD1D5DB))),
+            ]),
+          ),
+          const Spacer(),
+          if (onClear != null) ...[
+            RoundButton(
+              icon: Icons.delete_sweep_outlined,
+              tooltip: "Effacer l'historique",
+              onTap: onClear,
+              size: 42,
+              borderColor: TiyaColors.glassBorder,
+            ),
+            const SizedBox(width: 8),
+          ],
+          RoundButton(
+            icon: Icons.tune_rounded,
+            tooltip: 'Réglages',
+            onTap: onSettings,
+            size: 42,
+            borderColor: TiyaColors.glassBorder,
+          ),
+        ],
       ),
-      child: Text('T',
-          style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.w900,
-              fontSize: size * 0.5)),
     );
   }
 }
 
-class _StatusDot extends StatelessWidget {
-  final bool on;
+class _Hero extends StatelessWidget {
+  final bool compact;
   final bool running;
-  const _StatusDot({required this.on, required this.running});
+  final String name;
+  const _Hero({required this.compact, required this.running, required this.name});
 
   @override
   Widget build(BuildContext context) {
-    final color = !on ? Colors.redAccent : (running ? Colors.amber : kTeal);
-    final label = !on ? 'désactivée' : (running ? 'au travail' : 'prête');
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: kCard2,
-        borderRadius: BorderRadius.circular(20),
+    final h = DateTime.now().hour;
+    final hello = (h >= 18 || h < 4) ? 'Bonsoir' : 'Bonjour';
+    final who = name.isEmpty ? '' : ' $name';
+    if (compact) {
+      return Padding(
+        padding: const EdgeInsets.only(top: 18, bottom: 22),
+        child: Column(
+          children: [
+            TiyaOrb(size: 88, active: running),
+            const SizedBox(height: 20),
+            Text(
+              running ? "Je m'en occupe…" : 'Autre chose ?',
+              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.w600),
+            ),
+          ],
+        ),
+      );
+    }
+    return Padding(
+      padding: const EdgeInsets.only(top: 56, bottom: 30),
+      child: Column(
+        children: [
+          TiyaOrb(size: 150, active: running),
+          const SizedBox(height: 34),
+          Text('$hello$who',
+              style: const TextStyle(fontSize: 15, color: TiyaColors.muted)),
+          const SizedBox(height: 10),
+          Text(
+            h >= 18 || h < 4 ? "Comment puis-je t'aider ce soir ?" : "Comment puis-je t'aider aujourd'hui ?",
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 30, height: 1.18, fontWeight: FontWeight.w600),
+          ),
+        ],
       ),
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Container(width: 7, height: 7, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
-        const SizedBox(width: 5),
-        Text(label, style: const TextStyle(fontSize: 11, color: Colors.white70)),
-      ]),
+    );
+  }
+}
+
+class _Suggestions extends StatelessWidget {
+  final void Function(String) onPick;
+  const _Suggestions({required this.onPick});
+
+  static const _items = [
+    (Icons.chat_bubble_outline_rounded, 'Lis mes messages WhatsApp', 'Ouvre WhatsApp et lis-moi mes derniers messages'),
+    (Icons.mic_none_rounded, 'Envoie un vocal', 'Envoie un vocal sur WhatsApp à '),
+    (Icons.bluetooth_rounded, 'Active le Bluetooth', 'Active le Bluetooth'),
+    (Icons.call_outlined, 'Appelle quelqu\'un', 'Appelle '),
+    (Icons.photo_outlined, 'Envoie une photo', 'Ouvre la galerie et envoie ma dernière photo à '),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return Wrap(
+      spacing: 10,
+      runSpacing: 10,
+      alignment: WrapAlignment.center,
+      children: [
+        for (final it in _items)
+          Material(
+            color: TiyaColors.glass,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+              side: const BorderSide(color: Color(0x1FFFFFFF)),
+            ),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(18),
+              onTap: () => onPick(it.$3),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                child: Row(mainAxisSize: MainAxisSize.min, children: [
+                  Icon(it.$1, size: 17, color: const Color(0xFFE5E7EB)),
+                  const SizedBox(width: 8),
+                  Text(it.$2, style: const TextStyle(fontSize: 13.5, color: Color(0xFFE5E7EB))),
+                ]),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+class _UpdateBanner extends StatelessWidget {
+  final String version;
+  final double? progress;
+  final VoidCallback onInstall;
+  const _UpdateBanner({required this.version, required this.progress, required this.onInstall});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 6, 18, 4),
+      child: Glass(
+        radius: 20,
+        padding: const EdgeInsets.fromLTRB(16, 12, 12, 12),
+        color: const Color(0x262563EB),
+        border: const Color(0x6660A5FA),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(children: [
+              const Icon(Icons.system_update_rounded, color: TiyaColors.ice, size: 22),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('Mise à jour disponible',
+                      style: TextStyle(fontWeight: FontWeight.w700, fontSize: 14.5)),
+                  Text('Tiya $version', style: const TextStyle(fontSize: 12.5, color: TiyaColors.muted)),
+                ]),
+              ),
+              FilledButton(
+                style: FilledButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: const Color(0xFF0B1640),
+                ),
+                onPressed: progress == null ? onInstall : null,
+                child: Text(progress == null ? 'Installer' : '${(progress! * 100).round()} %'),
+              ),
+            ]),
+            if (progress != null) ...[
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  minHeight: 4,
+                  backgroundColor: const Color(0x22FFFFFF),
+                  color: TiyaColors.blueLight,
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
@@ -340,68 +605,62 @@ class _SetupCard extends StatelessWidget {
   final bool service;
   final bool hasKey;
   final bool mic;
+  final VoidCallback onSettings;
   final VoidCallback onRefresh;
   const _SetupCard({
     required this.service,
     required this.hasKey,
     required this.mic,
+    required this.onSettings,
     required this.onRefresh,
   });
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 14),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: kCard,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: kViolet, width: 1),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Configuration de Tiya',
-              style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 4),
-          const Text('3 étapes avant de pouvoir lui donner des tâches.',
-              style: TextStyle(color: Colors.white60, fontSize: 13)),
-          const SizedBox(height: 12),
-          _SetupStep(
-            n: 1,
-            done: hasKey,
-            title: "Ajouter une clé API (Gemini ou Claude)",
-            button: 'Réglages',
-            onTap: () async {
-              await Navigator.push(context,
-                  MaterialPageRoute(builder: (_) => const SettingsPage()));
-              onRefresh();
-            },
-          ),
-          _SetupStep(
-            n: 2,
-            done: service,
-            title: "Activer Tiya dans l'accessibilité",
-            subtitle:
-                "Réglages › Accessibilité › Applications installées › Tiya › Activer. "
-                "Si c'est grisé (« paramètre restreint ») : ouvre « Infos de l'app », menu ⋮ en haut à droite › Autoriser les paramètres restreints, puis recommence.",
-            button: 'Ouvrir',
-            onTap: Native.openAccessibilitySettings,
-            secondButton: "Infos de l'app",
-            onSecond: Native.openAppSettings,
-          ),
-          _SetupStep(
-            n: 3,
-            done: mic,
-            title: 'Autoriser le micro (commande vocale)',
-            button: 'Autoriser',
-            onTap: () async {
-              await Native.requestMic();
-              await Future.delayed(const Duration(seconds: 1));
-              onRefresh();
-            },
-          ),
-        ],
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Glass(
+        border: const Color(0x5960A5FA),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Configuration',
+                style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 1.6, color: TiyaColors.faint)),
+            const SizedBox(height: 4),
+            const Text('3 étapes avant de commencer',
+                style: TextStyle(fontSize: 17, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 12),
+            _SetupStep(
+              n: 1,
+              done: hasKey,
+              title: 'Ajouter ta clé API (Gemini ou Claude)',
+              button: 'Réglages',
+              onTap: onSettings,
+            ),
+            _SetupStep(
+              n: 2,
+              done: service,
+              title: "Activer Tiya dans l'accessibilité",
+              subtitle:
+                  "Accessibilité › Applications installées › Tiya › Activer. Si c'est grisé : Infos de l'app › menu ⋮ › Autoriser les paramètres restreints.",
+              button: 'Ouvrir',
+              onTap: Native.openAccessibilitySettings,
+              secondButton: "Infos de l'app",
+              onSecond: Native.openAppSettings,
+            ),
+            _SetupStep(
+              n: 3,
+              done: mic,
+              title: 'Autoriser le micro',
+              button: 'Autoriser',
+              onTap: () async {
+                await Native.requestMic();
+                await Future.delayed(const Duration(seconds: 1));
+                onRefresh();
+              },
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -431,40 +690,58 @@ class _SetupStep extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          CircleAvatar(
-            radius: 13,
-            backgroundColor: done ? kTeal : kCard2,
+          Container(
+            width: 26,
+            height: 26,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: done ? const Color(0x2934D399) : const Color(0x1AFFFFFF),
+            ),
             child: done
-                ? const Icon(Icons.check, size: 16, color: Colors.white)
-                : Text('$n', style: const TextStyle(fontSize: 12, color: Colors.white)),
+                ? const Icon(Icons.check_rounded, size: 16, color: TiyaColors.green)
+                : Text('$n', style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(title,
                     style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: done ? Colors.white54 : Colors.white,
-                        decoration: done ? TextDecoration.lineThrough : null)),
+                      fontWeight: FontWeight.w600,
+                      color: done ? const Color(0xFF8B93AD) : Colors.white,
+                    )),
                 if (subtitle != null && !done)
                   Padding(
                     padding: const EdgeInsets.only(top: 3),
-                    child: Text(subtitle!,
-                        style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                    child: Text(subtitle!, style: const TextStyle(fontSize: 12, color: TiyaColors.muted)),
                   ),
                 if (!done)
                   Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: Wrap(spacing: 8, children: [
-                      FilledButton.tonal(onPressed: onTap, child: Text(button)),
+                    padding: const EdgeInsets.only(top: 8),
+                    child: Wrap(spacing: 8, runSpacing: 6, children: [
+                      FilledButton(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: Colors.white,
+                          foregroundColor: const Color(0xFF0B1640),
+                        ),
+                        onPressed: onTap,
+                        child: Text(button),
+                      ),
                       if (secondButton != null)
-                        OutlinedButton(onPressed: onSecond, child: Text(secondButton!)),
+                        OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Color(0x40FFFFFF)),
+                          ),
+                          onPressed: onSecond,
+                          child: Text(secondButton!),
+                        ),
                     ]),
                   ),
               ],
@@ -476,56 +753,10 @@ class _SetupStep extends StatelessWidget {
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  final void Function(String) onPick;
-  const _EmptyState({required this.onPick});
-
-  static const ideas = [
-    'Ouvre WhatsApp et lis-moi mes derniers messages',
-    'Ouvre la galerie et envoie ma dernière photo à Papa sur WhatsApp',
-    "Mets une alarme demain à 6h",
-    'Cherche « météo Kinshasa » sur Google',
-    'Ouvre TikTok et va sur mon profil',
-  ];
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 30),
-      child: Column(
-        children: [
-          const _Logo(size: 72),
-          const SizedBox(height: 14),
-          const Text('Que dois-je faire pour toi ?',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 6),
-          const Text(
-            "Écris ou parle. Tiya prend la main sur ton téléphone, et la bulle flottante te montre ce qu'elle fait.",
-            textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white60),
-          ),
-          const SizedBox(height: 18),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            alignment: WrapAlignment.center,
-            children: ideas
-                .map((t) => ActionChip(
-                      label: Text(t, style: const TextStyle(fontSize: 12)),
-                      backgroundColor: kCard,
-                      onPressed: () => onPick(t),
-                    ))
-                .toList(),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _EventTile extends StatelessWidget {
   final Map<String, dynamic> e;
-  const _EventTile(this.e);
+  final bool activeStep;
+  const _EventTile(this.e, {required this.activeStep});
 
   @override
   Widget build(BuildContext context) {
@@ -536,73 +767,127 @@ class _EventTile extends StatelessWidget {
         return Align(
           alignment: Alignment.centerRight,
           child: Container(
-            margin: const EdgeInsets.only(top: 10, bottom: 4, left: 50),
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            margin: const EdgeInsets.only(top: 14, bottom: 8, left: 56),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
             decoration: BoxDecoration(
-              gradient: const LinearGradient(colors: [kViolet, Color(0xFF5E35B1)]),
-              borderRadius: BorderRadius.circular(18),
+              color: const Color(0x332563EB),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x5960A5FA)),
             ),
-            child: Text(text, style: const TextStyle(color: Colors.white)),
+            child: Text(text, style: const TextStyle(fontSize: 15, height: 1.35)),
           ),
         );
       case 'step':
         return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 3),
+          padding: const EdgeInsets.symmetric(vertical: 5),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Padding(
-                padding: EdgeInsets.only(top: 2),
-                child: Icon(Icons.bolt, size: 15, color: kTeal),
-              ),
-              const SizedBox(width: 6),
+              _StepMark(active: activeStep),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(text,
-                    style: const TextStyle(fontSize: 12.5, color: Colors.white60)),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 3),
+                  child: Text(
+                    text,
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.35,
+                      color: activeStep ? Colors.white : const Color(0xFFC9CFDB),
+                    ),
+                  ),
+                ),
               ),
             ],
           ),
         );
       case 'ask':
       case 'confirm':
-        return _TiyaBubble(
+        return _Card(
           text: text,
-          color: const Color(0xFF3A2E00),
-          icon: type == 'ask' ? Icons.help_outline : Icons.verified_user_outlined,
+          icon: type == 'ask' ? Icons.help_outline_rounded : Icons.verified_user_outlined,
+          color: const Color(0x242563EB),
+          border: const Color(0x6660A5FA),
         );
       case 'error':
-        return _TiyaBubble(
+        return _Card(
           text: text,
-          color: const Color(0xFF3A1414),
-          icon: Icons.error_outline,
+          icon: Icons.error_outline_rounded,
+          color: const Color(0x26DC2626),
+          border: const Color(0x66F87171),
+          iconColor: const Color(0xFFFCA5A5),
         );
       default: // message, done
-        return _TiyaBubble(text: text, color: kCard2, icon: Icons.auto_awesome);
+        return _Card(text: text, logo: true);
     }
   }
 }
 
-class _TiyaBubble extends StatelessWidget {
-  final String text;
-  final Color color;
-  final IconData icon;
-  const _TiyaBubble({required this.text, required this.color, required this.icon});
+class _StepMark extends StatelessWidget {
+  final bool active;
+  const _StepMark({required this.active});
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Container(
-        margin: const EdgeInsets.only(top: 6, bottom: 6, right: 40),
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-        decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(18)),
+    if (active) {
+      return Container(
+        width: 26,
+        height: 26,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x383B82F6)),
+        child: const SizedBox(
+          width: 12,
+          height: 12,
+          child: CircularProgressIndicator(strokeWidth: 2, color: TiyaColors.blueLight),
+        ),
+      );
+    }
+    return Container(
+      width: 26,
+      height: 26,
+      alignment: Alignment.center,
+      decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0x2934D399)),
+      child: const Icon(Icons.check_rounded, size: 15, color: TiyaColors.green),
+    );
+  }
+}
+
+class _Card extends StatelessWidget {
+  final String text;
+  final IconData? icon;
+  final bool logo;
+  final Color color;
+  final Color border;
+  final Color iconColor;
+  const _Card({
+    required this.text,
+    this.icon,
+    this.logo = false,
+    this.color = TiyaColors.glass,
+    this.border = TiyaColors.glassBorder,
+    this.iconColor = TiyaColors.ice,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Glass(
+        radius: 22,
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+        color: color,
+        border: border,
         child: Row(
-          mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(icon, size: 17, color: kTeal),
-            const SizedBox(width: 8),
-            Flexible(child: SelectableText(text)),
+            Padding(
+              padding: const EdgeInsets.only(top: 1),
+              child: logo
+                  ? const TiyaLogo(size: 20, glow: Color(0x9960A5FA), glowSigma: 4)
+                  : Icon(icon, size: 20, color: iconColor),
+            ),
+            const SizedBox(width: 12),
+            Expanded(child: SelectableText(text, style: const TextStyle(fontSize: 15, height: 1.4))),
           ],
         ),
       ),
@@ -611,86 +896,55 @@ class _TiyaBubble extends StatelessWidget {
 }
 
 class _ConfirmBar extends StatelessWidget {
+  final bool voice;
+  final String yes;
+  final String no;
   final void Function(bool) onAnswer;
-  const _ConfirmBar({required this.onAnswer});
+  const _ConfirmBar({required this.voice, required this.yes, required this.no, required this.onAnswer});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: kCard,
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 4),
-      child: Row(children: [
-        const Expanded(child: Text('Tiya attend ta confirmation')),
-        OutlinedButton(onPressed: () => onAnswer(false), child: const Text('Non')),
-        const SizedBox(width: 8),
-        FilledButton(onPressed: () => onAnswer(true), child: const Text('Oui')),
-      ]),
-    );
-  }
-}
-
-class _InputBar extends StatelessWidget {
-  final TextEditingController controller;
-  final bool running;
-  final bool listening;
-  final bool waiting;
-  final VoidCallback onSend;
-  final VoidCallback onMic;
-  final VoidCallback onStop;
-
-  const _InputBar({
-    required this.controller,
-    required this.running,
-    required this.listening,
-    required this.waiting,
-    required this.onSend,
-    required this.onMic,
-    required this.onStop,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return SafeArea(
-      top: false,
-      child: Container(
-        padding: const EdgeInsets.fromLTRB(10, 8, 10, 10),
-        color: kBg,
-        child: Row(
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(18, 0, 18, 10),
+      child: Glass(
+        radius: 24,
+        color: const Color(0x242563EB),
+        border: const Color(0x6660A5FA),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Expanded(
-              child: TextField(
-                controller: controller,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                decoration: InputDecoration(
-                  hintText: listening
-                      ? 'Je t\'écoute…'
-                      : waiting
-                          ? 'Réponds à Tiya…'
-                          : 'Donne une tâche à Tiya…',
-                  filled: true,
-                  fillColor: kCard,
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(26),
-                    borderSide: BorderSide.none,
+            Row(children: [
+              Icon(voice ? Icons.mic_rounded : Icons.verified_user_outlined, color: TiyaColors.ice, size: 20),
+              const SizedBox(width: 10),
+              Text(voice ? 'Enregistrement en cours' : 'Tiya attend ta confirmation',
+                  style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
+            ]),
+            const SizedBox(height: 14),
+            Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.white,
+                    minimumSize: const Size.fromHeight(48),
+                    side: const BorderSide(color: Color(0x40FFFFFF)),
                   ),
+                  onPressed: () => onAnswer(false),
+                  child: Text(no, style: const TextStyle(fontWeight: FontWeight.w600)),
                 ),
               ),
-            ),
-            const SizedBox(width: 8),
-            _RoundButton(
-              icon: listening ? Icons.graphic_eq : Icons.mic,
-              color: listening ? Colors.redAccent : kCard2,
-              onTap: onMic,
-            ),
-            const SizedBox(width: 6),
-            if (running && !waiting)
-              _RoundButton(icon: Icons.stop, color: Colors.redAccent, onTap: onStop)
-            else
-              _RoundButton(icon: Icons.arrow_upward, color: kViolet, onTap: onSend),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: const Color(0xFF0B1640),
+                    minimumSize: const Size.fromHeight(48),
+                  ),
+                  onPressed: () => onAnswer(true),
+                  child: Text(yes, style: const TextStyle(fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ]),
           ],
         ),
       ),
@@ -698,24 +952,105 @@ class _InputBar extends StatelessWidget {
   }
 }
 
-class _RoundButton extends StatelessWidget {
-  final IconData icon;
-  final Color color;
+class _StopButton extends StatelessWidget {
   final VoidCallback onTap;
-  const _RoundButton({required this.icon, required this.color, required this.onTap});
+  const _StopButton({required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: color,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Icon(icon, color: Colors.white),
+    return FilledButton.icon(
+      style: FilledButton.styleFrom(
+        backgroundColor: const Color(0xEBDC2626),
+        foregroundColor: Colors.white,
+        minimumSize: const Size(0, 48),
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+      ),
+      onPressed: onTap,
+      icon: const Icon(Icons.stop_rounded),
+      label: const Text('Arrêter Tiya', style: TextStyle(fontWeight: FontWeight.w700)),
+    );
+  }
+}
+
+class _InputBar extends StatelessWidget {
+  final TextEditingController controller;
+  final FocusNode focus;
+  final bool listening;
+  final bool waiting;
+  final VoidCallback onSend;
+  final VoidCallback onMic;
+
+  const _InputBar({
+    required this.controller,
+    required this.focus,
+    required this.listening,
+    required this.waiting,
+    required this.onSend,
+    required this.onMic,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final hasText = controller.text.trim().isNotEmpty;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 14),
+      child: Glass(
+        radius: 32,
+        padding: const EdgeInsets.fromLTRB(20, 6, 6, 6),
+        color: const Color(0x29BFDBFE),
+        border: const Color(0x59DBEAFE),
+        child: Row(
+          children: [
+            Expanded(
+              child: TextField(
+                controller: controller,
+                focusNode: focus,
+                minLines: 1,
+                maxLines: 4,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+                style: const TextStyle(fontSize: 16, color: Colors.white),
+                cursorColor: TiyaColors.ice,
+                decoration: InputDecoration(
+                  isCollapsed: true,
+                  border: InputBorder.none,
+                  hintText: listening
+                      ? "Je t'écoute…"
+                      : waiting
+                          ? 'Réponds à Tiya…'
+                          : "Demande n'importe quoi…",
+                  hintStyle: const TextStyle(color: Color(0xB3E5E7EB)),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            if (hasText) ...[
+              RoundButton(
+                icon: Icons.mic_none_rounded,
+                tooltip: 'Parler',
+                onTap: onMic,
+                size: 44,
+                background: const Color(0x1AFFFFFF),
+              ),
+              const SizedBox(width: 6),
+              RoundButton(
+                icon: Icons.arrow_upward_rounded,
+                tooltip: 'Envoyer',
+                onTap: onSend,
+                size: 48,
+                background: Colors.white,
+                foreground: const Color(0xFF0B1640),
+              ),
+            ] else
+              RoundButton(
+                icon: listening ? Icons.stop_rounded : Icons.graphic_eq_rounded,
+                tooltip: listening ? "Arrêter l'écoute" : 'Parler à Tiya',
+                onTap: onMic,
+                size: 48,
+                background: listening ? TiyaColors.red : Colors.white,
+                foreground: listening ? Colors.white : const Color(0xFF0B1640),
+              ),
+          ],
         ),
       ),
     );

@@ -246,6 +246,37 @@ class TiyaService : AccessibilityService() {
         return if (gesture(path, ms.coerceIn(100, 3000))) "OK" else "ÉCHEC : le glissement n'a pas abouti."
     }
 
+    /** Appui maintenu puis glissement vers le haut (verrouillage d'un vocal). */
+    fun holdAndSlideUp(x: Float, y: Float): Boolean {
+        val dist = resources.displayMetrics.density * 170f
+        val endY = (y - dist).coerceAtLeast(10f)
+        val hold = Path().apply { moveTo(x, y); lineTo(x, y - 1f) }
+        val first = GestureDescription.StrokeDescription(hold, 0, 650, true)
+        if (!dispatchAndWait(GestureDescription.Builder().addStroke(first).build(), 650)) return false
+        val slide = Path().apply { moveTo(x, y - 1f); lineTo(x, endY) }
+        val second = first.continueStroke(slide, 0, 700, false)
+        return dispatchAndWait(GestureDescription.Builder().addStroke(second).build(), 700)
+    }
+
+    private fun dispatchAndWait(g: GestureDescription, duration: Long): Boolean {
+        val latch = CountDownLatch(1)
+        var ok = false
+        main.post {
+            val sent = dispatchGesture(g, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    ok = true; latch.countDown()
+                }
+
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    latch.countDown()
+                }
+            }, null)
+            if (!sent) latch.countDown()
+        }
+        latch.await(duration + 3000, TimeUnit.MILLISECONDS)
+        return ok
+    }
+
     private fun gesture(path: Path, duration: Long): Boolean {
         val g = GestureDescription.Builder()
             .addStroke(GestureDescription.StrokeDescription(path, 0, duration))
@@ -350,6 +381,24 @@ class TiyaService : AccessibilityService() {
         main.post { tts?.speak(text.take(400), TextToSpeech.QUEUE_FLUSH, null, "tiya") }
     }
 
+    /** Parle et attend la fin de la phrase (avant d'utiliser le micro pour autre chose). */
+    fun speakAndWait(text: String) {
+        if (!TiyaSettings(this).speak || !ttsReady || text.isBlank()) return
+        val done = CountDownLatch(1)
+        main.post {
+            val t = tts
+            if (t == null) { done.countDown(); return@post }
+            t.setOnUtteranceProgressListener(object : android.speech.tts.UtteranceProgressListener() {
+                override fun onStart(utteranceId: String?) {}
+                override fun onDone(utteranceId: String?) { done.countDown() }
+                @Deprecated("Deprecated in Java")
+                override fun onError(utteranceId: String?) { done.countDown() }
+            })
+            t.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tiya_wait")
+        }
+        done.await(8, TimeUnit.SECONDS)
+    }
+
     /** source = "app" (le texte revient à l'interface) ou "bubble" (Tiya agit directement). */
     fun startListening(source: String) {
         main.post {
@@ -434,6 +483,7 @@ class TiyaService : AccessibilityService() {
     }
 
     fun showQuestion(q: String) = main.post { overlay?.showPanel(q, confirm = false) }
-    fun showConfirm(q: String) = main.post { overlay?.showPanel(q, confirm = true) }
+    fun showConfirm(q: String, yesLabel: String = "Oui", noLabel: String = "Non") =
+        main.post { overlay?.showPanel(q, confirm = true, yesLabel = yesLabel, noLabel = noLabel) }
     fun hideQuestion() = main.post { overlay?.hidePanel() }
 }

@@ -10,6 +10,7 @@ import android.view.Gravity
 import android.view.MotionEvent
 import android.view.View
 import android.view.WindowManager
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import kotlin.math.abs
@@ -23,7 +24,7 @@ class TiyaOverlay(private val service: TiyaService) {
     private val wm = service.getSystemService(WindowManager::class.java)
     private val root = LinearLayout(service)
     private val bar = LinearLayout(service)
-    private val logo = TextView(service)
+    private val logo = ImageView(service)
     private val status = TextView(service)
     private val mic = TextView(service)
     private val stop = TextView(service)
@@ -59,21 +60,14 @@ class TiyaOverlay(private val service: TiyaService) {
 
         bar.orientation = LinearLayout.HORIZONTAL
         bar.gravity = Gravity.CENTER_VERTICAL
-        bar.background = rounded(0xEE14141F.toInt(), 28)
+        bar.background = GradientDrawable().apply { setColor(0xEB0A0C18.toInt()); cornerRadius = dp(30).toFloat(); setStroke(dp(1), 0x593B82F6) }
         bar.setPadding(dp(6), dp(6), dp(6), dp(6))
         bar.elevation = dp(6).toFloat()
 
-        logo.text = "T"
-        logo.setTextColor(Color.WHITE)
-        logo.typeface = Typeface.DEFAULT_BOLD
-        logo.textSize = 18f
-        logo.gravity = Gravity.CENTER
-        logo.background = GradientDrawable().apply {
-            shape = GradientDrawable.OVAL
-            colors = intArrayOf(0xFF7C4DFF.toInt(), 0xFF00BFA5.toInt())
-            gradientType = GradientDrawable.LINEAR_GRADIENT
-        }
-        bar.addView(logo, LinearLayout.LayoutParams(dp(40), dp(40)))
+        logo.setImageResource(R.drawable.tiya_bubble)
+        logo.scaleType = ImageView.ScaleType.FIT_CENTER
+        logo.contentDescription = "Tiya"
+        bar.addView(logo, LinearLayout.LayoutParams(dp(44), dp(44)))
 
         status.setTextColor(Color.WHITE)
         status.textSize = 13f
@@ -83,10 +77,10 @@ class TiyaOverlay(private val service: TiyaService) {
         status.visibility = View.GONE
         bar.addView(status)
 
-        styleCircle(mic, "🎤", 0xFF2A2A3D.toInt())
+        styleCircle(mic, "🎤", 0xFF1C2033.toInt())
         bar.addView(mic, LinearLayout.LayoutParams(dp(36), dp(36)).apply { leftMargin = dp(6) })
 
-        styleCircle(stop, "■", 0xFFE53935.toInt())
+        styleCircle(stop, "■", 0xFFDC2626.toInt())
         stop.visibility = View.GONE
         bar.addView(stop, LinearLayout.LayoutParams(dp(36), dp(36)).apply { leftMargin = dp(6) })
 
@@ -95,7 +89,7 @@ class TiyaOverlay(private val service: TiyaService) {
         ))
 
         panel.orientation = LinearLayout.VERTICAL
-        panel.background = rounded(0xF214141F.toInt(), 18)
+        panel.background = GradientDrawable().apply { setColor(0xF20A0F24.toInt()); cornerRadius = dp(20).toFloat(); setStroke(dp(1), 0x6660A5FA) }
         panel.setPadding(dp(14), dp(12), dp(14), dp(12))
         panel.visibility = View.GONE
         question.setTextColor(Color.WHITE)
@@ -105,8 +99,8 @@ class TiyaOverlay(private val service: TiyaService) {
 
         btnRow.orientation = LinearLayout.HORIZONTAL
         btnRow.setPadding(0, dp(10), 0, 0)
-        stylePill(btnYes, "Oui", 0xFF00BFA5.toInt())
-        stylePill(btnNo, "Non", 0xFF3A3A50.toInt())
+        stylePill(btnYes, "Oui", 0xFF2563EB.toInt())
+        stylePill(btnNo, "Non", 0xFF1C2033.toInt())
         btnRow.addView(btnYes)
         btnRow.addView(btnNo, LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
@@ -217,7 +211,7 @@ class TiyaOverlay(private val service: TiyaService) {
 
     fun setListening(on: Boolean) {
         listening = on
-        styleCircle(mic, if (on) "●" else "🎤", if (on) 0xFFE53935.toInt() else 0xFF2A2A3D.toInt())
+        styleCircle(mic, if (on) "●" else "🎤", if (on) 0xFFDC2626.toInt() else 0xFF1C2033.toInt())
         if (on) {
             status.text = "Je t'écoute…"
             status.visibility = View.VISIBLE
@@ -226,11 +220,11 @@ class TiyaOverlay(private val service: TiyaService) {
         }
     }
 
-    fun showPanel(text: String, confirm: Boolean) {
+    fun showPanel(text: String, confirm: Boolean, yesLabel: String = "Oui", noLabel: String = "Non") {
         panelIsConfirm = confirm
         question.text = text
-        btnYes.text = if (confirm) "Oui" else "🎤 Répondre"
-        btnNo.text = if (confirm) "Non" else "✍ Écrire"
+        btnYes.text = if (confirm) yesLabel else "🎤 Répondre"
+        btnNo.text = if (confirm) noLabel else "✍ Écrire"
         panel.visibility = View.VISIBLE
     }
 

@@ -8,6 +8,9 @@ on:
 permissions:
   contents: write
 
+env:
+  VERSION_BASE: '1.1'
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,13 +33,8 @@ jobs:
           rsync -a --exclude '.git' --exclude '.github' ./ ../tiya_build/
           rm -rf ../tiya_build/test
           cd ../tiya_build
-          if [ -f android/app/build.gradle.kts ]; then
-            sed -i -E 's/minSdk\s*=\s*flutter\.minSdkVersion/minSdk = 26/' android/app/build.gradle.kts
-          fi
-          if [ -f android/app/build.gradle ]; then
-            sed -i -E 's/minSdkVersion\s+flutter\.minSdkVersion/minSdkVersion 26/' android/app/build.gradle
-          fi
-          grep -n "minSdk" android/app/build.gradle* || true
+          python3 .ci/patch_gradle.py
+          grep -n "minSdk\|signingConfig" android/app/build.gradle* || true
 
       - name: Analyser le code
         working-directory: ../tiya_build
@@ -47,21 +45,28 @@ jobs:
       - name: Compiler l'APK
         working-directory: ../tiya_build
         run: |
-          flutter build apk --release
+          flutter build apk --release --split-per-abi \
+            --build-name=${VERSION_BASE}.${{ github.run_number }} \
+            --build-number=${{ github.run_number }}
           mkdir -p $GITHUB_WORKSPACE/dist
-          cp build/app/outputs/flutter-apk/app-release.apk $GITHUB_WORKSPACE/dist/Tiya.apk
+          cp build/app/outputs/flutter-apk/app-arm64-v8a-release.apk $GITHUB_WORKSPACE/dist/Tiya.apk
+          cp build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk $GITHUB_WORKSPACE/dist/Tiya-armv7.apk
+          ls -la $GITHUB_WORKSPACE/dist
 
       - uses: actions/upload-artifact@v4
         with:
           name: Tiya-apk
-          path: dist/Tiya.apk
+          path: dist/*.apk
 
-      - name: Publier la version (téléchargement facile depuis le téléphone)
+      - name: Publier la version
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: v1.0.${{ github.run_number }}
-          name: Tiya v1.0.${{ github.run_number }}
+          tag_name: v${{ env.VERSION_BASE }}.${{ github.run_number }}
+          name: Tiya v${{ env.VERSION_BASE }}.${{ github.run_number }}
           body: |
-            Télécharge **Tiya.apk** ci-dessous et installe-le sur ton téléphone Android.
-          files: dist/Tiya.apk
+            **Tiya.apk** : pour la plupart des téléphones (64 bits).
+            **Tiya-armv7.apk** : seulement pour les téléphones anciens (32 bits).
+          files: |
+            dist/Tiya.apk
+            dist/Tiya-armv7.apk
           make_latest: true

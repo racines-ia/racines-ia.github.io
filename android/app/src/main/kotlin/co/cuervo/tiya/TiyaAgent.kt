@@ -20,8 +20,9 @@ class TiyaAgent(private val service: TiyaService) {
     @Volatile var running = false
         private set
     @Volatile private var stopRequested = false
-    @Volatile var waitingFor: String? = null   // "answer" | "confirm" | null
+    @Volatile var waitingFor: String? = null   // "answer" | "confirm" | "voice" | null
         private set
+    @Volatile private var skipConfirmOnce = false
 
     fun start(task: String, fromApp: Boolean) {
         if (running) {
@@ -61,8 +62,8 @@ class TiyaAgent(private val service: TiyaService) {
         if (waitingFor == "answer") {
             TiyaBus.emit("user", text)
             answers.offer(text)
-        } else if (waitingFor == "confirm") {
-            val yes = Regex("^(oui|ok|d'accord|vas-y|go|yes|confirme)", RegexOption.IGNORE_CASE)
+        } else if (waitingFor == "confirm" || waitingFor == "voice") {
+            val yes = Regex("^(oui|ok|d'accord|vas-y|go|yes|confirme|envoie|envoyer)", RegexOption.IGNORE_CASE)
                 .containsMatchIn(text.trim())
             TiyaBus.emit("user", text)
             confirmations.offer(yes)
@@ -70,7 +71,7 @@ class TiyaAgent(private val service: TiyaService) {
     }
 
     fun confirm(yes: Boolean) {
-        if (waitingFor == "confirm") confirmations.offer(yes)
+        if (waitingFor == "confirm" || waitingFor == "voice") confirmations.offer(yes)
     }
 
     // ------------------------------------------------------------------
@@ -158,7 +159,9 @@ class TiyaAgent(private val service: TiyaService) {
             "tap", "long_press" -> {
                 val long = action == "long_press"
                 val el = if (d.has("id")) snap.byId(d.optInt("id")) else null
-                if (el != null && settings.confirmSensitive && isSensitive(el.line)) {
+                val skip = skipConfirmOnce
+                skipConfirmOnce = false
+                if (el != null && settings.confirmSensitive && !skip && isSensitive(el.line)) {
                     val ok = askConfirm(
                         "Tiya veut appuyer sur ${elementName(el.line)}. " +
                             d.optString("thought", "").take(200) + "\nJe continue ?"
@@ -190,6 +193,7 @@ class TiyaAgent(private val service: TiyaService) {
                 if (a == null || b == null) "ÉCHEC : coordonnées manquantes."
                 else service.swipe(a.first, a.second, b.first, b.second, d.optLong("ms", 400))
             }
+            "voice_note" -> voiceNote(d, snap)
             "back" -> service.globalBack()
             "home" -> service.goHome()
             "recents" -> service.recents()
@@ -206,6 +210,70 @@ class TiyaAgent(private val service: TiyaService) {
                 "Message dit à l'utilisateur."
             }
             else -> "ÉCHEC : action inconnue « $action »."
+        }
+    }
+
+    /**
+     * Message vocal (WhatsApp, Messenger, Telegram…) :
+     * appui sur le micro puis glissement vers le cadenas pour verrouiller l'enregistrement.
+     * L'utilisateur parle, puis choisit Envoyer ou Annuler sur la bulle.
+     */
+    private fun voiceNote(d: JSONObject, snap: ScreenSnapshot): String {
+        if (!d.has("id")) return "ÉCHEC : donne l'id du bouton micro de la conversation."
+        val el = snap.byId(d.optInt("id"))
+        if (el == null) return "ÉCHEC : l'élément ${d.optInt("id")} n'existe pas sur l'écran actuel."
+
+        service.stopListening()
+        service.speakAndWait("Je lance l'enregistrement. Parle après le signal.")
+        sleep(250)
+        checkStop()
+
+        val ok = service.holdAndSlideUp(el.bounds.exactCenterX(), el.bounds.exactCenterY())
+        if (!ok) return "ÉCHEC : le geste d'enregistrement n'a pas abouti. Vérifie que c'est bien le bouton micro."
+        sleep(600)
+
+        waitingFor = "voice"
+        TiyaBus.emit(
+            "confirm",
+            "🎙️ Enregistrement en cours. Parle librement, puis choisis Envoyer ou Annuler.",
+            mapOf("yesLabel" to "Envoyer", "noLabel" to "Annuler", "voice" to true)
+        )
+        service.showConfirm(
+            "🎙️ Enregistrement en cours…\nParle librement, puis :",
+            yesLabel = "Envoyer",
+            noLabel = "Annuler"
+        )
+        val r = confirmations.poll(15, TimeUnit.MINUTES)
+        waitingFor = null
+        service.hideQuestion()
+        checkStop()
+        sleep(300)
+
+        val after = service.readScreen()
+        return if (r == true) {
+            val btn = findByWords(after, listOf("envoyer", "send"))
+            if (btn != null && service.tapElement(btn, false) == "OK") {
+                "OK : le vocal a été ENVOYÉ. La tâche est sans doute terminée."
+            } else {
+                skipConfirmOnce = true
+                "L'utilisateur a fini de parler et veut ENVOYER le vocal : touche maintenant le bouton d'envoi (déjà confirmé)."
+            }
+        } else {
+            val btn = findByWords(after, listOf("supprimer", "delete", "annuler", "cancel", "corbeille", "trash", "jeter", "discard"))
+            if (btn != null && service.tapElement(btn, false) == "OK") {
+                "Le vocal a été ANNULÉ à la demande de l'utilisateur. Termine avec done."
+            } else {
+                "L'utilisateur veut ANNULER le vocal : touche le bouton supprimer/corbeille de l'enregistrement, puis termine."
+            }
+        }
+    }
+
+    private fun findByWords(snap: ScreenSnapshot, words: List<String>): ScreenElement? {
+        // On cherche du bas de l'écran vers le haut : les boutons d'enregistrement y sont.
+        return snap.elements.sortedByDescending { it.bounds.centerY() }.firstOrNull { e ->
+            val desc = (e.node.contentDescription?.toString() ?: "") + " " + (e.node.text?.toString() ?: "")
+            val l = desc.lowercase(Locale.ROOT)
+            words.any { l.contains(it) }
         }
     }
 
@@ -331,6 +399,7 @@ class TiyaAgent(private val service: TiyaService) {
             "notifications" -> "J'ouvre les notifications"
             "wait" -> "J'attends"
             "ask_user" -> "Je te pose une question"
+            "voice_note" -> "J'enregistre un message vocal"
             "say" -> "Je te dis quelque chose"
             "done", "finish" -> "Terminé"
             else -> a
@@ -403,6 +472,7 @@ ACTIONS DISPONIBLES :
 - {"action":"scroll","direction":"down"}                  down|up|left|right ; ajoute "id" pour une liste précise
 - {"action":"swipe","x1":540,"y1":1600,"x2":540,"y2":400}
 - {"action":"back"} {"action":"home"} {"action":"recents"} {"action":"notifications"}
+- {"action":"voice_note","id":31}                         enregistre un message VOCAL : id = le bouton micro de la conversation (WhatsApp, Messenger, Telegram…). Tiya verrouille l'enregistrement, l'utilisateur parle puis choisit Envoyer ou Annuler.
 - {"action":"wait","seconds":2}                           attendre un chargement
 - {"action":"ask_user","question":"..."}                  poser une question quand une info manque
 - {"action":"say","message":"..."}                        dire quelque chose sans terminer
@@ -417,7 +487,8 @@ RÈGLES :
 6. Pour lire des messages, lis le texte de l'écran et résume-le fidèlement dans "done". N'invente rien.
 7. Pour la galerie : ouvre "Galerie", "Photos" ou "Google Photos", puis sers-toi de la capture pour repérer la bonne photo.
 8. Si la demande est ambiguë (quel contact ? quelle photo ?), utilise ask_user plutôt que de deviner.
-9. Ignore la petite bulle flottante "Tiya" : c'est toi.
+9. Ignore la petite bulle flottante de Tiya (le logo rond) : c'est toi.
+11. Pour un message vocal / note vocale : ouvre la conversation, repère le bouton micro (desc « Message vocal », « Voice message », « Enregistrer »…) à droite du champ de saisie (il n'apparaît que si le champ est vide), puis utilise voice_note avec son id. N'utilise jamais long_press pour un vocal.
 10. Écris toujours en français, de façon courte et claire. Le "message" de done sera lu à voix haute.
 """.trimIndent()
     }

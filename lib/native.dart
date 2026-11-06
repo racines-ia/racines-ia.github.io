@@ -43,6 +43,22 @@ class Native {
   static Future<void> openAppSettings() => _m.invokeMethod('openAppSettings');
   static Future<void> requestMic() => _m.invokeMethod('requestMic');
 
+  static Future<Map<String, dynamic>> version() async {
+    final r = await _m.invokeMethod('version');
+    return Map<String, dynamic>.from(r as Map);
+  }
+
+  static Future<Map<String, dynamic>> checkUpdate() async {
+    final r = await _m.invokeMethod('checkUpdate');
+    return Map<String, dynamic>.from(r as Map);
+  }
+
+  /// Renvoie "started" ou "permission" (autorisation d'installer à donner).
+  static Future<String> downloadUpdate(String url, String version) async {
+    final r = await _m.invokeMethod('downloadUpdate', {'url': url, 'version': version});
+    return (r ?? '').toString();
+  }
+
   static Future<Map<String, dynamic>> testKey() async {
     final r = await _m.invokeMethod('testKey');
     return Map<String, dynamic>.from(r as Map);

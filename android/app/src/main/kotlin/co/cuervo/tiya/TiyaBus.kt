@@ -41,7 +41,7 @@ object TiyaBus {
         event.putAll(extra)
         val copy: List<(Map<String, Any?>) -> Unit>
         synchronized(this) {
-            if (type != "partial_speech" && type != "status") {
+            if (type != "partial_speech" && type != "status" && !type.startsWith("update")) {
                 history.add(event)
                 while (history.size > 300) history.removeAt(0)
             }

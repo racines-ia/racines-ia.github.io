@@ -87,18 +87,51 @@ class MainActivity : FlutterActivity() {
                     }
                     "testKey" -> {
                         Thread {
-                            val r = try {
-                                val txt = LlmClient(settings).ask(
-                                    "Tu es un test de connexion. Réponds uniquement en JSON.",
-                                    "Réponds {\"ok\": true, \"message\": \"Bonjour, je suis prête\"}",
-                                    null
-                                )
-                                mapOf("ok" to true, "message" to txt.take(200))
-                            } catch (e: Exception) {
-                                mapOf("ok" to false, "message" to (e.message ?: e.toString()))
+                            var r: Map<String, Any> = mapOf("ok" to false, "message" to "Erreur inconnue")
+                            for (attempt in 1..3) {
+                                r = try {
+                                    val txt = LlmClient(settings).ask(
+                                        "Tu es un test de connexion. Réponds uniquement en JSON.",
+                                        "Réponds {\"ok\": true, \"message\": \"Bonjour, je suis prête\"}",
+                                        null
+                                    )
+                                    mapOf("ok" to true, "message" to txt.take(200))
+                                } catch (e: Exception) {
+                                    mapOf("ok" to false, "message" to (e.message ?: e.toString()))
+                                }
+                                val msg = r["message"].toString()
+                                val retry = r["ok"] == false && (msg.contains("surchargé") || msg.contains("(429)") || msg.contains("trop de temps"))
+                                if (!retry) break
+                                Thread.sleep(2500L * attempt)
                             }
+                            val finalR = r
+                            runOnUiThread { result.success(finalR) }
+                        }.start()
+                    }
+                    "version" -> {
+                        val (name, code) = TiyaUpdater.currentVersion(this)
+                        result.success(mapOf("name" to name, "code" to code))
+                    }
+                    "checkUpdate" -> {
+                        Thread {
+                            val r = TiyaUpdater.check(this)
                             runOnUiThread { result.success(r) }
                         }.start()
+                    }
+                    "downloadUpdate" -> {
+                        val url = call.argument<String>("url")
+                        val version = call.argument<String>("version") ?: "maj"
+                        when {
+                            url.isNullOrBlank() -> result.error("NO_URL", "Lien de mise à jour manquant.", null)
+                            !TiyaUpdater.canInstall(this) -> {
+                                TiyaUpdater.openInstallPermission(this)
+                                result.success("permission")
+                            }
+                            else -> {
+                                TiyaUpdater.download(this, url, version)
+                                result.success("started")
+                            }
+                        }
                     }
                     else -> result.notImplemented()
                 }

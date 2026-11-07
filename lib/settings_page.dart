@@ -20,6 +20,12 @@ class _SettingsPageState extends State<SettingsPage> {
   double _maxSteps = 30;
   bool _showKeys = false;
   String _version = '';
+  bool _bubble = true;
+  String _voice = '';
+  double _rate = 1.05;
+  double _pitch = 1.0;
+  bool _contacts = false;
+  List<Map<String, dynamic>> _voices = [];
 
   final _geminiKey = TextEditingController();
   final _geminiModel = TextEditingController();
@@ -41,6 +47,13 @@ class _SettingsPageState extends State<SettingsPage> {
       final r = await Native.version();
       v = (r['name'] ?? '').toString();
     } catch (_) {}
+    List<Map<String, dynamic>> voices = [];
+    bool contacts = false;
+    try {
+      voices = await Native.listVoices();
+      final st = await Native.status();
+      contacts = st['contacts'] == true;
+    } catch (_) {}
     if (!mounted) return;
     setState(() {
       _provider = (s['provider'] ?? 'gemini').toString();
@@ -55,6 +68,13 @@ class _SettingsPageState extends State<SettingsPage> {
       _blocked.text = (s['blockedApps'] ?? '').toString();
       _name.text = (s['userName'] ?? '').toString();
       _version = v;
+      _bubble = s['bubbleEnabled'] != false;
+      _voice = (s['ttsVoice'] ?? '').toString();
+      _rate = ((s['ttsRate'] ?? 1.05) as num).toDouble();
+      _pitch = ((s['ttsPitch'] ?? 1.0) as num).toDouble();
+      _voices = voices;
+      _contacts = contacts;
+      if (_voice.isNotEmpty && !_voices.any((x) => x['name'] == _voice)) _voice = '';
       _loading = false;
     });
   }
@@ -71,6 +91,10 @@ class _SettingsPageState extends State<SettingsPage> {
         'maxSteps': _maxSteps.round(),
         'blockedApps': _blocked.text,
         'userName': _name.text,
+        'bubbleEnabled': _bubble,
+        'ttsVoice': _voice,
+        'ttsRate': _rate,
+        'ttsPitch': _pitch,
       };
 
   Future<void> _save({bool quiet = false}) async {
@@ -188,6 +212,21 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
       ),
     );
+  }
+
+  String _countryLabel(String c) {
+    switch (c) {
+      case 'FR':
+        return 'France';
+      case 'CA':
+        return 'Canada';
+      case 'BE':
+        return 'Belgique';
+      case 'CH':
+        return 'Suisse';
+      default:
+        return c.isEmpty ? 'Français' : c;
+    }
   }
 
   Widget _switch(String title, String? sub, bool v, ValueChanged<bool> onChanged) {
@@ -318,6 +357,152 @@ class _SettingsPageState extends State<SettingsPage> {
                                 ),
                               ),
                             ]),
+                          ),
+                          _section('BULLE FLOTTANTE'),
+                          Glass(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            child: _switch(
+                              'Afficher la bulle Tiya',
+                              'Touche le logo pour parler. Appui long pour la masquer.',
+                              _bubble,
+                              (v) => setState(() => _bubble = v),
+                            ),
+                          ),
+                          _section('VOIX DE TIYA'),
+                          Glass(
+                            padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                DropdownButtonFormField<String>(
+                                  initialValue: _voice,
+                                  isExpanded: true,
+                                  dropdownColor: const Color(0xFF0B1230),
+                                  decoration: _dec('Voix'),
+                                  items: [
+                                    const DropdownMenuItem(value: '', child: Text('Voix par défaut du téléphone')),
+                                    for (var i = 0; i < _voices.length; i++)
+                                      DropdownMenuItem(
+                                        value: _voices[i]['name'].toString(),
+                                        child: Text(
+                                          'Voix ${i + 1} · ${_countryLabel(_voices[i]['country'].toString())}'
+                                          '${_voices[i]['network'] == true ? ' · en ligne' : ''}',
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                  ],
+                                  onChanged: (v) {
+                                    setState(() => _voice = v ?? '');
+                                    Native.previewVoice(_voice, _rate, _pitch);
+                                  },
+                                ),
+                                if (_voices.isEmpty)
+                                  const Padding(
+                                    padding: EdgeInsets.only(top: 8),
+                                    child: Text(
+                                      "Aucune autre voix trouvée. Paramètres du téléphone › Synthèse vocale › Google › Installer les données vocales › Français.",
+                                      style: TextStyle(fontSize: 12, color: TiyaColors.faint),
+                                    ),
+                                  ),
+                                const SizedBox(height: 10),
+                                Row(children: [
+                                  const SizedBox(width: 80, child: Text('Vitesse')),
+                                  Expanded(
+                                    child: Slider(
+                                      value: _rate,
+                                      min: 0.6,
+                                      max: 1.8,
+                                      divisions: 12,
+                                      activeColor: TiyaColors.blueLight,
+                                      label: '${_rate.toStringAsFixed(1)}×',
+                                      onChanged: (v) => setState(() => _rate = v),
+                                    ),
+                                  ),
+                                ]),
+                                Row(children: [
+                                  const SizedBox(width: 80, child: Text('Tonalité')),
+                                  Expanded(
+                                    child: Slider(
+                                      value: _pitch,
+                                      min: 0.6,
+                                      max: 1.6,
+                                      divisions: 10,
+                                      activeColor: TiyaColors.blueLight,
+                                      label: _pitch.toStringAsFixed(1),
+                                      onChanged: (v) => setState(() => _pitch = v),
+                                    ),
+                                  ),
+                                ]),
+                                OutlinedButton.icon(
+                                  style: OutlinedButton.styleFrom(
+                                    foregroundColor: Colors.white,
+                                    side: const BorderSide(color: Color(0x40FFFFFF)),
+                                    minimumSize: const Size.fromHeight(46),
+                                  ),
+                                  onPressed: () => Native.previewVoice(_voice, _rate, _pitch),
+                                  icon: const Icon(Icons.volume_up_rounded),
+                                  label: const Text('Écouter'),
+                                ),
+                              ],
+                            ),
+                          ),
+                          _section('RACCOURCIS RAPIDES (SANS IA)'),
+                          Glass(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Exécutés instantanément, sans attendre l\'IA :',
+                                  style: TextStyle(fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 10),
+                                for (final ex in const [
+                                  '« Ouvre WhatsApp »',
+                                  '« Appelle Maman »',
+                                  '« Écris à Papa sur WhatsApp : j\'arrive »',
+                                  '« Envoie un vocal à Mon amour sur WhatsApp »',
+                                  '« Envoie un SMS à Patrick : je te rappelle »',
+                                  '« Mets une alarme à 6 h 30 »  ·  « Minuteur de 10 minutes »',
+                                  '« Allume la lampe »  ·  « Active le Bluetooth »',
+                                ])
+                                  Padding(
+                                    padding: const EdgeInsets.only(bottom: 6),
+                                    child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                                      const Padding(
+                                        padding: EdgeInsets.only(top: 2),
+                                        child: Icon(Icons.bolt_rounded, size: 16, color: TiyaColors.blueLight),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(ex, style: const TextStyle(fontSize: 13, color: TiyaColors.muted)),
+                                      ),
+                                    ]),
+                                  ),
+                                const SizedBox(height: 8),
+                                if (_contacts)
+                                  const Row(children: [
+                                    Icon(Icons.check_circle_rounded, color: TiyaColors.green, size: 18),
+                                    SizedBox(width: 8),
+                                    Text('Contacts et appels autorisés'),
+                                  ])
+                                else
+                                  FilledButton.icon(
+                                    style: FilledButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: const Color(0xFF0B1640),
+                                      minimumSize: const Size.fromHeight(46),
+                                    ),
+                                    onPressed: () async {
+                                      await Native.requestContacts();
+                                      await Future.delayed(const Duration(milliseconds: 1500));
+                                      final st = await Native.status();
+                                      if (mounted) setState(() => _contacts = st['contacts'] == true);
+                                    },
+                                    icon: const Icon(Icons.contacts_rounded),
+                                    label: const Text('Autoriser contacts et appels'),
+                                  ),
+                              ],
+                            ),
                           ),
                           _section('APPS PROTÉGÉES'),
                           const Padding(

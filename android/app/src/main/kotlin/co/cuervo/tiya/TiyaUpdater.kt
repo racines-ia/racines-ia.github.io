@@ -1,11 +1,9 @@
 package co.cuervo.tiya
 
-import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.Environment
 import android.provider.Settings
 import org.json.JSONObject
 import java.io.BufferedReader
@@ -92,67 +90,79 @@ object TiyaUpdater {
         }
     }
 
-    /** Télécharge l'APK en envoyant la progression à l'interface, puis lance l'installation. */
+    /**
+     * Télécharge l'APK puis l'installe directement avec l'installateur d'Android.
+     * Dès que Tiya s'est mise à jour une fois elle-même, Android 12+ installe les
+     * versions suivantes sans même demander de confirmation.
+     */
     fun download(ctx: Context, url: String, version: String) {
-        val dm = ctx.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        val fileName = "Tiya-$version.apk"
-        ctx.getExternalFilesDir(Environment.DIRECTORY_DOWNLOADS)?.let { dir ->
-            java.io.File(dir, fileName).delete()
-        }
-        val req = DownloadManager.Request(Uri.parse(url))
-            .setTitle("Tiya $version")
-            .setDescription("Mise à jour de Tiya")
-            .setMimeType("application/vnd.android.package-archive")
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
-            .setDestinationInExternalFilesDir(ctx, Environment.DIRECTORY_DOWNLOADS, fileName)
-        val id = dm.enqueue(req)
-
         Thread {
-            var finished = false
-            while (!finished) {
-                Thread.sleep(500)
-                val c = dm.query(DownloadManager.Query().setFilterById(id)) ?: break
-                c.use {
-                    if (!it.moveToFirst()) {
-                        TiyaBus.emit("update_error", "Téléchargement annulé.")
-                        finished = true
-                        return@use
-                    }
-                    val status = it.getInt(it.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS))
-                    val done = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
-                    val total = it.getLong(it.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
-                    when (status) {
-                        DownloadManager.STATUS_SUCCESSFUL -> {
-                            TiyaBus.emit("update_progress", "", mapOf("progress" to 1.0))
-                            install(ctx, dm.getUriForDownloadedFile(id))
-                            finished = true
-                        }
-                        DownloadManager.STATUS_FAILED -> {
-                            TiyaBus.emit("update_error", "Le téléchargement a échoué. Vérifie ta connexion.")
-                            finished = true
-                        }
-                        else -> if (total > 0) {
-                            TiyaBus.emit("update_progress", "", mapOf("progress" to done.toDouble() / total))
+            try {
+                val file = java.io.File(ctx.cacheDir, "tiya-update.apk")
+                var conn = URL(url).openConnection() as HttpURLConnection
+                conn.instanceFollowRedirects = true
+                conn.connectTimeout = 20_000
+                conn.readTimeout = 60_000
+                conn.setRequestProperty("User-Agent", "Tiya-Android")
+                // GitHub redirige vers son stockage : on suit les redirections manuellement si besoin.
+                var hops = 0
+                while (conn.responseCode in 300..399 && hops < 5) {
+                    val loc = conn.getHeaderField("Location") ?: break
+                    conn.disconnect()
+                    conn = URL(loc).openConnection() as HttpURLConnection
+                    conn.setRequestProperty("User-Agent", "Tiya-Android")
+                    hops++
+                }
+                if (conn.responseCode !in 200..299) throw Exception("serveur ${conn.responseCode}")
+                val total = conn.contentLengthLong
+                var done = 0L
+                var lastEmit = 0L
+                conn.inputStream.use { input ->
+                    file.outputStream().use { out ->
+                        val buf = ByteArray(64 * 1024)
+                        while (true) {
+                            val r = input.read(buf)
+                            if (r < 0) break
+                            out.write(buf, 0, r)
+                            done += r
+                            val now = System.currentTimeMillis()
+                            if (total > 0 && now - lastEmit > 300) {
+                                lastEmit = now
+                                TiyaBus.emit("update_progress", "", mapOf("progress" to done.toDouble() / total))
+                            }
                         }
                     }
                 }
+                conn.disconnect()
+                TiyaBus.emit("update_progress", "", mapOf("progress" to 1.0))
+                installFile(ctx, file, version)
+            } catch (e: Exception) {
+                TiyaBus.emit("update_error", "Le téléchargement a échoué (${e.message}). Vérifie ta connexion.")
             }
         }.start()
     }
 
-    private fun install(ctx: Context, uri: Uri?) {
-        if (uri == null) {
-            TiyaBus.emit("update_error", "Fichier de mise à jour introuvable.")
-            return
+    private fun installFile(ctx: Context, file: java.io.File, version: String) {
+        val installer = ctx.packageManager.packageInstaller
+        val params = android.content.pm.PackageInstaller.SessionParams(
+            android.content.pm.PackageInstaller.SessionParams.MODE_FULL_INSTALL
+        )
+        params.setAppPackageName(ctx.packageName)
+        if (Build.VERSION.SDK_INT >= 31) {
+            params.setRequireUserAction(android.content.pm.PackageInstaller.SessionParams.USER_ACTION_NOT_REQUIRED)
         }
-        val i = Intent(Intent.ACTION_VIEW)
-            .setDataAndType(uri, "application/vnd.android.package-archive")
-            .addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION or Intent.FLAG_ACTIVITY_NEW_TASK)
-        try {
-            ctx.startActivity(i)
-            TiyaBus.emit("update_ready", "Installation lancée.")
-        } catch (e: Exception) {
-            TiyaBus.emit("update_error", "Impossible d'ouvrir l'installateur : ${e.message}")
+        val id = installer.createSession(params)
+        installer.openSession(id).use { session ->
+            session.openWrite("tiya.apk", 0, file.length()).use { out ->
+                file.inputStream().use { it.copyTo(out) }
+                session.fsync(out)
+            }
+            val intent = Intent(ctx, TiyaInstallReceiver::class.java).setPackage(ctx.packageName)
+            val flags = android.app.PendingIntent.FLAG_UPDATE_CURRENT or
+                (if (Build.VERSION.SDK_INT >= 31) android.app.PendingIntent.FLAG_MUTABLE else 0)
+            val pi = android.app.PendingIntent.getBroadcast(ctx, id, intent, flags)
+            TiyaBus.emit("update_installing", "Installation de Tiya $version…")
+            session.commit(pi.intentSender)
         }
     }
 }

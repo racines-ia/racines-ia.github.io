@@ -58,7 +58,8 @@ class TiyaService : AccessibilityService() {
                 ttsReady = true
             }
         }
-        overlay = TiyaOverlay(this).also { it.show() }
+        overlay = TiyaOverlay(this)
+        if (TiyaSettings(this).bubbleEnabled) overlay?.show()
         TiyaBus.emit("status", "connected")
     }
 
@@ -145,13 +146,13 @@ class TiyaService : AccessibilityService() {
             main.post { overlay?.setHidden(false) }
         }
         val full = bmp ?: return null
-        val targetW = 720
+        val targetW = 600
         val scale = if (full.width > targetW) targetW.toDouble() / full.width else 1.0
         val scaled = if (scale < 1.0) {
             Bitmap.createScaledBitmap(full, targetW, (full.height * scale).toInt(), true)
         } else full
         val out = ByteArrayOutputStream()
-        scaled.compress(Bitmap.CompressFormat.JPEG, 60, out)
+        scaled.compress(Bitmap.CompressFormat.JPEG, 55, out)
         val shot = Screenshot(
             Base64.encodeToString(out.toByteArray(), Base64.NO_WRAP),
             scaled.width, scaled.height, scale
@@ -378,7 +379,50 @@ class TiyaService : AccessibilityService() {
 
     fun speak(text: String) {
         if (!TiyaSettings(this).speak || !ttsReady || text.isBlank()) return
-        main.post { tts?.speak(text.take(400), TextToSpeech.QUEUE_FLUSH, null, "tiya") }
+        main.post {
+            applyVoice()
+            tts?.speak(text.take(400), TextToSpeech.QUEUE_FLUSH, null, "tiya")
+        }
+    }
+
+    /** Applique la voix, la vitesse et la tonalité choisies dans les réglages. */
+    private fun applyVoice(name: String? = null, rate: Float? = null, pitch: Float? = null) {
+        val t = tts ?: return
+        val s = TiyaSettings(this)
+        val wanted = name ?: s.ttsVoice
+        val v = if (wanted.isNotEmpty()) runCatching { t.voices?.firstOrNull { it.name == wanted } }.getOrNull() else null
+        if (v != null) t.voice = v else t.language = Locale.FRENCH
+        t.setSpeechRate(rate ?: s.ttsRate)
+        t.setPitch(pitch ?: s.ttsPitch)
+    }
+
+    /** Voix françaises disponibles sur le téléphone. */
+    fun listVoices(): List<Map<String, Any>> {
+        val t = tts ?: return emptyList()
+        val voices = runCatching { t.voices?.toList() }.getOrNull() ?: return emptyList()
+        return voices
+            .filter { it.locale.language == "fr" && !it.features.contains("notInstalled") }
+            .sortedWith(compareBy({ it.isNetworkConnectionRequired }, { it.locale.country != "FR" }, { it.name }))
+            .map {
+                mapOf(
+                    "name" to it.name,
+                    "country" to it.locale.country,
+                    "network" to it.isNetworkConnectionRequired,
+                    "quality" to it.quality,
+                )
+            }
+    }
+
+    fun previewVoice(name: String, rate: Float, pitch: Float) {
+        if (!ttsReady) return
+        main.post {
+            applyVoice(name, rate, pitch)
+            tts?.speak("Bonjour, je suis Tiya. Que puis-je faire pour toi ?", TextToSpeech.QUEUE_FLUSH, null, "preview")
+        }
+    }
+
+    fun setBubbleEnabled(on: Boolean) {
+        main.post { if (on) overlay?.show() else overlay?.hide() }
     }
 
     /** Parle et attend la fin de la phrase (avant d'utiliser le micro pour autre chose). */
@@ -394,6 +438,7 @@ class TiyaService : AccessibilityService() {
                 @Deprecated("Deprecated in Java")
                 override fun onError(utteranceId: String?) { done.countDown() }
             })
+            applyVoice()
             t.speak(text, TextToSpeech.QUEUE_FLUSH, null, "tiya_wait")
         }
         done.await(8, TimeUnit.SECONDS)

@@ -26,7 +26,6 @@ class TiyaOverlay(private val service: TiyaService) {
     private val bar = LinearLayout(service)
     private val logo = ImageView(service)
     private val status = TextView(service)
-    private val mic = TextView(service)
     private val stop = TextView(service)
     private val panel = LinearLayout(service)
     private val question = TextView(service)
@@ -60,14 +59,16 @@ class TiyaOverlay(private val service: TiyaService) {
 
         bar.orientation = LinearLayout.HORIZONTAL
         bar.gravity = Gravity.CENTER_VERTICAL
-        bar.background = GradientDrawable().apply { setColor(0xEB0A0C18.toInt()); cornerRadius = dp(30).toFloat(); setStroke(dp(1), 0x593B82F6) }
-        bar.setPadding(dp(6), dp(6), dp(6), dp(6))
-        bar.elevation = dp(6).toFloat()
+        bar.background = null
+        bar.setPadding(dp(4), dp(4), dp(4), dp(4))
 
         logo.setImageResource(R.drawable.tiya_bubble)
         logo.scaleType = ImageView.ScaleType.FIT_CENTER
         logo.contentDescription = "Tiya"
-        bar.addView(logo, LinearLayout.LayoutParams(dp(44), dp(44)))
+        bar.addView(logo, LinearLayout.LayoutParams(dp(52), dp(52)))
+        logo.elevation = dp(6).toFloat()
+        logo.outlineProvider = android.view.ViewOutlineProvider.BACKGROUND
+        logo.background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(0xFF040714.toInt()) }
 
         status.setTextColor(Color.WHITE)
         status.textSize = 13f
@@ -77,8 +78,6 @@ class TiyaOverlay(private val service: TiyaService) {
         status.visibility = View.GONE
         bar.addView(status)
 
-        styleCircle(mic, "🎤", 0xFF1C2033.toInt())
-        bar.addView(mic, LinearLayout.LayoutParams(dp(36), dp(36)).apply { leftMargin = dp(6) })
 
         styleCircle(stop, "■", 0xFFDC2626.toInt())
         stop.visibility = View.GONE
@@ -111,9 +110,6 @@ class TiyaOverlay(private val service: TiyaService) {
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
         ).apply { topMargin = dp(8) })
 
-        mic.setOnClickListener {
-            if (listening) service.stopListening() else service.startListening("bubble")
-        }
         stop.setOnClickListener { service.agent.stop() }
         btnYes.setOnClickListener { onYes() }
         btnNo.setOnClickListener { onNo() }
@@ -158,30 +154,64 @@ class TiyaOverlay(private val service: TiyaService) {
         var touchX = 0f
         var touchY = 0f
         var moved = false
-        logo.setOnTouchListener { _, e ->
+        var longDone = false
+        val longPress = Runnable {
+            if (!moved) {
+                longDone = true
+                hideByUser()
+            }
+        }
+        logo.setOnTouchListener { v, e ->
             when (e.action) {
                 MotionEvent.ACTION_DOWN -> {
                     startX = params.x; startY = params.y
                     touchX = e.rawX; touchY = e.rawY
                     moved = false
+                    longDone = false
+                    v.postDelayed(longPress, 700)
                     true
                 }
                 MotionEvent.ACTION_MOVE -> {
                     val dx = (e.rawX - touchX).toInt()
                     val dy = (e.rawY - touchY).toInt()
-                    if (abs(dx) > dp(4) || abs(dy) > dp(4)) moved = true
+                    if (abs(dx) > dp(6) || abs(dy) > dp(6)) {
+                        if (!moved) v.removeCallbacks(longPress)
+                        moved = true
+                    }
                     params.x = startX + dx
                     params.y = startY + dy
                     if (shown) runCatching { wm.updateViewLayout(root, params) }
                     true
                 }
-                MotionEvent.ACTION_UP -> {
-                    if (!moved) service.openTiyaApp()
+                MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
+                    v.removeCallbacks(longPress)
+                    if (!moved && !longDone && e.action == MotionEvent.ACTION_UP) {
+                        // Un toucher = Tiya t'écoute (ou arrête d'écouter).
+                        if (listening) service.stopListening() else service.startListening("bubble")
+                    }
                     true
                 }
                 else -> false
             }
         }
+    }
+
+    /** Appui long sur la bulle : on la retire (réactivable dans Tiya › Réglages). */
+    private fun hideByUser() {
+        TiyaSettings(service).bubbleEnabled = false
+        hide()
+        android.widget.Toast.makeText(
+            service,
+            "Bulle Tiya masquée. Réactive-la dans Tiya › Réglages.",
+            android.widget.Toast.LENGTH_LONG
+        ).show()
+    }
+
+    private fun refreshBar() {
+        val expanded = status.visibility == View.VISIBLE || stop.visibility == View.VISIBLE
+        bar.background = if (expanded) GradientDrawable().apply {
+            setColor(0xEB0A0C18.toInt()); cornerRadius = dp(32).toFloat(); setStroke(dp(1), 0x593B82F6)
+        } else null
     }
 
     fun show() {
@@ -207,17 +237,25 @@ class TiyaOverlay(private val service: TiyaService) {
             status.visibility = View.VISIBLE
         }
         stop.visibility = if (running) View.VISIBLE else View.GONE
+        refreshBar()
     }
 
     fun setListening(on: Boolean) {
         listening = on
-        styleCircle(mic, if (on) "●" else "🎤", if (on) 0xFFDC2626.toInt() else 0xFF1C2033.toInt())
+        logo.background = GradientDrawable().apply {
+            shape = GradientDrawable.OVAL
+            setColor(0xFF040714.toInt())
+            if (on) setStroke(dp(3), 0xFFF87171.toInt())
+        }
+        logo.setPadding(if (on) dp(3) else 0, if (on) dp(3) else 0, if (on) dp(3) else 0, if (on) dp(3) else 0)
+        logo.animate().scaleX(if (on) 1.12f else 1f).scaleY(if (on) 1.12f else 1f).setDuration(180).start()
         if (on) {
             status.text = "Je t'écoute…"
             status.visibility = View.VISIBLE
         } else if (!service.agent.running) {
             status.visibility = View.GONE
         }
+        refreshBar()
     }
 
     fun showPanel(text: String, confirm: Boolean, yesLabel: String = "Oui", noLabel: String = "Non") {

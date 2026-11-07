@@ -35,20 +35,36 @@ class LlmClient(private val settings: TiyaSettings) {
                 )
             )
         }
-        val body = JSONObject()
-            .put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", system))))
-            .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
-            .put(
-                "generationConfig",
-                JSONObject().put("responseMimeType", "application/json")
-            )
+        fun body(m: String, fast: Boolean): String {
+            val gen = JSONObject().put("responseMimeType", "application/json")
+            // Réflexion courte : réponses beaucoup plus rapides pour piloter le téléphone.
+            if (fast && m.startsWith("gemini-3")) {
+                gen.put("thinkingConfig", JSONObject().put("thinkingLevel", "low"))
+            } else if (fast && m.startsWith("gemini-2.5-flash")) {
+                gen.put("thinkingConfig", JSONObject().put("thinkingBudget", 0))
+            }
+            return JSONObject()
+                .put("systemInstruction", JSONObject().put("parts", JSONArray().put(JSONObject().put("text", system))))
+                .put("contents", JSONArray().put(JSONObject().put("role", "user").put("parts", parts)))
+                .put("generationConfig", gen)
+                .toString()
+        }
+
+        fun call(m: String): String = try {
+            post(geminiUrl(m), body(m, true), mapOf("x-goog-api-key" to key))
+        } catch (e: LlmException) {
+            // Modèle qui refuse le réglage de réflexion : on réessaie sans.
+            if (e.code == 400 && (e.message ?: "").contains("think", ignoreCase = true)) {
+                post(geminiUrl(m), body(m, false), mapOf("x-goog-api-key" to key))
+            } else throw e
+        }
 
         val res = try {
-            post(geminiUrl(model), body.toString(), mapOf("x-goog-api-key" to key))
+            call(model)
         } catch (e: LlmException) {
             // Modèle surchargé, quota du jour épuisé ou modèle retiré : on bascule sur le modèle de secours.
             if (model != FALLBACK_GEMINI && e.code in listOf(404, 429, 500, 503, 504)) {
-                post(geminiUrl(FALLBACK_GEMINI), body.toString(), mapOf("x-goog-api-key" to key))
+                call(FALLBACK_GEMINI)
             } else throw e
         }
         val json = JSONObject(res)

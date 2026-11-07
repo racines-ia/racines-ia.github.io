@@ -43,6 +43,16 @@ class Native {
   static Future<void> openAppSettings() => _m.invokeMethod('openAppSettings');
   static Future<void> requestMic() => _m.invokeMethod('requestMic');
 
+  static Future<void> requestContacts() => _m.invokeMethod('requestContacts');
+
+  static Future<List<Map<String, dynamic>>> listVoices() async {
+    final r = await _m.invokeMethod('listVoices');
+    return ((r as List?) ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+  }
+
+  static Future<void> previewVoice(String name, double rate, double pitch) =>
+      _m.invokeMethod('previewVoice', {'name': name, 'rate': rate, 'pitch': pitch});
+
   static Future<Map<String, dynamic>> version() async {
     final r = await _m.invokeMethod('version');
     return Map<String, dynamic>.from(r as Map);

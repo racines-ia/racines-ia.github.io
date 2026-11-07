@@ -85,17 +85,37 @@ class TiyaAgent(private val service: TiyaService) {
         var sameCount = 0
 
         TiyaBus.emit("status", "running")
+
+        // 1) Raccourci instantané, sans IA.
+        service.setStatus("Un instant…")
+        val quick = try {
+            QuickCommands(service, this).tryHandle(task)
+        } catch (e: InterruptedException) {
+            throw e
+        } catch (e: Exception) {
+            null
+        }
+        if (quick != null) {
+            TiyaBus.emit("step", "⚡ Raccourci rapide")
+            finish(quick)
+            return
+        }
+
+        // 2) Sinon, l'IA prend la main.
         service.setStatus("Je regarde l'écran…")
+        val visualTask = Regex("photo|image|galerie|vid[ée]o|capture|selfie|picture|camera|appareil photo", RegexOption.IGNORE_CASE)
+            .containsMatchIn(task)
+        var forceShot = false
 
         if (fromApp) {
             // Tiya a été lancée depuis son app : on quitte l'app pour laisser la place.
             service.goHome()
-            sleep(900)
+            sleep(600)
         }
 
         for (step in 1..settings.maxSteps) {
             checkStop()
-            sleep(if (step == 1) 300 else 700)
+            sleep(if (step == 1) 200 else 450)
 
             val snap = service.readScreen()
 
@@ -108,7 +128,10 @@ class TiyaAgent(private val service: TiyaService) {
             if (snap.text == lastScreen) sameCount++ else sameCount = 0
             lastScreen = snap.text
 
-            val shot = if (settings.vision) service.screenshotJpegBase64() else null
+            // Captures « auto » : seulement quand c'est utile (photos, écran sans texte, blocage…).
+            val wantShot = settings.vision && (visualTask || forceShot || sameCount >= 1 || snap.elements.size < 6)
+            forceShot = false
+            val shot = if (wantShot) service.screenshotJpegBase64() else null
 
             val prompt = buildPrompt(task, settings, history, notes, snap, shot, sameCount, step)
             service.setStatus("Je réfléchis… (étape $step)")
@@ -130,6 +153,10 @@ class TiyaAgent(private val service: TiyaService) {
                 "done", "finish" -> {
                     finish(decision.optString("message", "C'est fait."))
                     return
+                }
+                "look" -> {
+                    forceShot = true
+                    "Une capture d'écran sera jointe à la prochaine étape."
                 }
                 "ask_user" -> {
                     val q = decision.optString("question", decision.optString("message", "Peux-tu préciser ?"))
@@ -268,6 +295,32 @@ class TiyaAgent(private val service: TiyaService) {
         }
     }
 
+    /** Confirmation utilisée par les raccourcis rapides. */
+    fun quickConfirm(question: String, yes: String, no: String): Boolean {
+        waitingFor = "confirm"
+        TiyaBus.emit("confirm", question, mapOf("yesLabel" to yes, "noLabel" to no))
+        service.showConfirm(question, yesLabel = yes, noLabel = no)
+        val r = confirmations.poll(5, TimeUnit.MINUTES)
+        waitingFor = null
+        service.hideQuestion()
+        checkStop()
+        return r == true
+    }
+
+    /** Vocal lancé par un raccourci (conversation déjà ouverte, micro trouvé). */
+    fun quickVoiceNote(mic: ScreenElement, name: String): String {
+        val snap = service.readScreen()
+        val target = snap.elements.firstOrNull { it.bounds == mic.bounds } ?: mic
+        val d = JSONObject().put("id", target.id)
+        val r = voiceNote(d, if (snap.byId(target.id) != null) snap else ScreenSnapshot(snap.packageName, listOf(mic), ""))
+        return when {
+            r.contains("ENVOYÉ") -> "Vocal envoyé à $name."
+            r.contains("ANNULÉ") -> "Vocal annulé."
+            r.startsWith("ÉCHEC") -> "Je n'ai pas réussi à lancer l'enregistrement. Réessaie ou appuie sur le micro toi-même."
+            else -> "Appuie sur Envoyer dans WhatsApp pour terminer."
+        }
+    }
+
     private fun findByWords(snap: ScreenSnapshot, words: List<String>): ScreenElement? {
         // On cherche du bas de l'écran vers le haut : les boutons d'enregistrement y sont.
         return snap.elements.sortedByDescending { it.bounds.centerY() }.firstOrNull { e ->
@@ -401,6 +454,7 @@ class TiyaAgent(private val service: TiyaService) {
             "ask_user" -> "Je te pose une question"
             "voice_note" -> "J'enregistre un message vocal"
             "say" -> "Je te dis quelque chose"
+            "look" -> "Je regarde l'écran de plus près"
             "done", "finish" -> "Terminé"
             else -> a
         }
@@ -473,6 +527,7 @@ ACTIONS DISPONIBLES :
 - {"action":"swipe","x1":540,"y1":1600,"x2":540,"y2":400}
 - {"action":"back"} {"action":"home"} {"action":"recents"} {"action":"notifications"}
 - {"action":"voice_note","id":31}                         enregistre un message VOCAL : id = le bouton micro de la conversation (WhatsApp, Messenger, Telegram…). Tiya verrouille l'enregistrement, l'utilisateur parle puis choisit Envoyer ou Annuler.
+- {"action":"look"}                                       demander une capture d'écran à l'étape suivante (si le texte de l'écran ne suffit pas)
 - {"action":"wait","seconds":2}                           attendre un chargement
 - {"action":"ask_user","question":"..."}                  poser une question quand une info manque
 - {"action":"say","message":"..."}                        dire quelque chose sans terminer

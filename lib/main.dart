@@ -183,6 +183,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       case 'update_progress':
         setState(() => _updateProgress = (e['progress'] as num?)?.toDouble());
         return;
+      case 'update_installing':
+        setState(() => _updateProgress = 1.0);
+        return;
       case 'update_ready':
         setState(() => _updateProgress = null);
         return;

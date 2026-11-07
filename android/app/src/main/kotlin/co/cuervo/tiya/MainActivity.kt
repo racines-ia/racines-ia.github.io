@@ -31,6 +31,7 @@ class MainActivity : FlutterActivity() {
                             "service" to (svc != null && isServiceEnabled()),
                             "serviceEnabledInSettings" to isServiceEnabled(),
                             "mic" to hasMic(),
+                            "contacts" to (checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED),
                             "running" to (svc?.agent?.running ?: false),
                             "waitingFor" to svc?.agent?.waitingFor,
                             "sdk" to Build.VERSION.SDK_INT,
@@ -48,6 +49,21 @@ class MainActivity : FlutterActivity() {
                         )
                         result.success(true)
                     }
+                    "requestContacts" -> {
+                        val need = arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE)
+                            .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }
+                        if (need.isNotEmpty()) requestPermissions(need.toTypedArray(), 43)
+                        result.success(need.isEmpty())
+                    }
+                    "listVoices" -> result.success(svc?.listVoices() ?: emptyList<Map<String, Any>>())
+                    "previewVoice" -> {
+                        svc?.previewVoice(
+                            call.argument<String>("name") ?: "",
+                            (call.argument<Double>("rate") ?: 1.0).toFloat(),
+                            (call.argument<Double>("pitch") ?: 1.0).toFloat()
+                        )
+                        result.success(svc != null)
+                    }
                     "requestMic" -> {
                         if (!hasMic()) requestPermissions(arrayOf(Manifest.permission.RECORD_AUDIO), 42)
                         result.success(hasMic())
@@ -55,6 +71,7 @@ class MainActivity : FlutterActivity() {
                     "getSettings" -> result.success(settings.toMap())
                     "saveSettings" -> {
                         (call.arguments as? Map<*, *>)?.let { settings.fromMap(it) }
+                        svc?.setBubbleEnabled(settings.bubbleEnabled)
                         result.success(true)
                     }
                     "startTask" -> {

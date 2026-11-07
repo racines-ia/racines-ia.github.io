@@ -52,6 +52,24 @@ class TiyaSettings(context: Context) {
         get() = p.getString("blockedApps", DEFAULT_BLOCKED) ?: DEFAULT_BLOCKED
         set(v) = p.edit().putString("blockedApps", v).apply()
 
+    /** Bulle flottante visible par-dessus les applications. */
+    var bubbleEnabled: Boolean
+        get() = p.getBoolean("bubbleEnabled", true)
+        set(v) = p.edit().putBoolean("bubbleEnabled", v).apply()
+
+    /** Nom de la voix de synthèse choisie (vide = voix par défaut du téléphone). */
+    var ttsVoice: String
+        get() = p.getString("ttsVoice", "") ?: ""
+        set(v) = p.edit().putString("ttsVoice", v).apply()
+
+    var ttsRate: Float
+        get() = p.getFloat("ttsRate", 1.05f)
+        set(v) = p.edit().putFloat("ttsRate", v.coerceIn(0.5f, 2.0f)).apply()
+
+    var ttsPitch: Float
+        get() = p.getFloat("ttsPitch", 1.0f)
+        set(v) = p.edit().putFloat("ttsPitch", v.coerceIn(0.5f, 2.0f)).apply()
+
     var userName: String
         get() = p.getString("userName", "") ?: ""
         set(v) = p.edit().putString("userName", v.trim()).apply()
@@ -71,6 +89,10 @@ class TiyaSettings(context: Context) {
         "maxSteps" to maxSteps,
         "blockedApps" to blockedApps,
         "userName" to userName,
+        "bubbleEnabled" to bubbleEnabled,
+        "ttsVoice" to ttsVoice,
+        "ttsRate" to ttsRate.toDouble(),
+        "ttsPitch" to ttsPitch.toDouble(),
     )
 
     fun fromMap(m: Map<*, *>) {
@@ -85,6 +107,10 @@ class TiyaSettings(context: Context) {
         (m["maxSteps"] as? Number)?.let { maxSteps = it.toInt() }
         (m["blockedApps"] as? String)?.let { blockedApps = it }
         (m["userName"] as? String)?.let { userName = it }
+        (m["bubbleEnabled"] as? Boolean)?.let { bubbleEnabled = it }
+        (m["ttsVoice"] as? String)?.let { ttsVoice = it }
+        (m["ttsRate"] as? Number)?.let { ttsRate = it.toFloat() }
+        (m["ttsPitch"] as? Number)?.let { ttsPitch = it.toFloat() }
     }
 
     companion object {

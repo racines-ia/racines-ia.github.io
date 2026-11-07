@@ -19,7 +19,7 @@ import java.util.Locale
  * sans passer par l'IA (réponse en moins d'une seconde).
  * Renvoie null quand la commande n'est pas reconnue : l'IA prend alors le relais.
  */
-class QuickCommands(private val service: TiyaService, private val agent: TiyaAgent) {
+class QuickCommands(private val service: TiyaService, private val agent: TiyaAgent?) {
 
     class Contact(val name: String, val number: String, val exact: Boolean)
 
@@ -32,6 +32,9 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
         if (Regex("\\b(et|puis|ensuite|apres)\\b").containsMatchIn(n.substringBefore(':')) &&
             !n.contains(':')
         ) return null
+
+        // --- Programme / messages automatiques créés à la voix
+        scheduleByVoice(text, n)?.let { return it }
 
         // --- Lampe torche
         Regex("^(allume|active|ouvre)\\s+(la\\s+)?(lampe|torche|flash|lumiere)").find(n)?.let {
@@ -107,6 +110,71 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
                 r.removePrefix("OK : ").removeSuffix(" ouvert.").let { "J'ai ouvert $it." }
             } else null   // inconnue : l'IA cherchera mieux
         }
+        return null
+    }
+
+    // ------------------------------------------------------------ programme à la voix
+
+    private fun scheduleByVoice(text: String, n: String): String? {
+        val time = "(\\d{1,2})\\s*(?:h|heures?|:)\\s*(\\d{1,2})?"
+        // « Chaque jour à 8h, envoie à ma femme sur WhatsApp : Bonjour mon cœur »
+        Regex("^(chaque jour|tous les jours|chaque matin|chaque soir)\\s*(a|vers)?\\s*$time\\s*,?\\s*(envoie|ecris|envoyer|dis)\\s+(un message\\s+)?(a|au)\\s+(.+?)(\\s+(sur|par|via)\\s+(whatsapp business|whatsapp|sms))?\\s*[:,]\\s*(que\\s+|qu')?")
+            .find(n)?.let { m ->
+                val h = m.groupValues[3].toInt()
+                val min = m.groupValues[4].toIntOrNull() ?: 0
+                val who = m.groupValues[8].trim()
+                val chan = when (m.groupValues[11]) {
+                    "sms" -> "sms"
+                    "whatsapp business" -> "whatsapp_business"
+                    else -> "whatsapp"
+                }
+                val body = bodyAfter(text, m.range.last + 1)
+                if (h !in 0..23 || min !in 0..59 || body.isEmpty()) return null
+                if (!hasContacts()) return needContacts()
+                val c = findContact(who) ?: return "Je ne trouve pas « $who » dans tes contacts."
+                val item = org.json.JSONObject()
+                    .put("name", c.name).put("number", c.number).put("channel", chan)
+                    .put("hour", h).put("minute", min).put("days", org.json.JSONArray())
+                    .put("template", body).put("aiVary", true).put("tone", "chaleureux et naturel")
+                    .put("enabled", true)
+                val saved = TiyaStore(service).saveAutoMessage(item)
+                TiyaScheduler.schedule(service, TiyaScheduler.KIND_MESSAGE, saved)
+                TiyaBus.emit("data_changed", "auto")
+                return "C'est programmé : chaque jour à ${h} h ${"%02d".format(min)}, j'enverrai un message à ${c.name}. " +
+                    "Je le reformulerai un peu chaque jour. Tu peux le modifier dans l'onglet Messages."
+            }
+
+        // « Rappelle-moi demain à 15h d'appeler le directeur » / « Chaque jour à 7h rappelle-moi de prier »
+        Regex("^(chaque jour|tous les jours)?\\s*(a\\s+$time\\s*,?\\s*)?(rappelle[- ]moi|previens[- ]moi|fais[- ]moi penser)\\s+(demain\\s+)?((a|vers)\\s+$time\\s+)?(de |d'|qu'|que |a |pour )?")
+            .find(n)?.let { m ->
+                val daily = m.groupValues[1].isNotEmpty()
+                val h = (m.groupValues[3].ifEmpty { m.groupValues[9] }).toIntOrNull() ?: return null
+                val min = (m.groupValues[4].ifEmpty { m.groupValues[10] }).toIntOrNull() ?: 0
+                val tomorrow = m.groupValues[6].isNotEmpty()
+                val what = bodyAfter(text, m.range.last + 1).trimEnd('.')
+                if (h !in 0..23 || min !in 0..59 || what.isEmpty()) return null
+                val item = org.json.JSONObject()
+                    .put("title", what.replaceFirstChar { it.uppercase() })
+                    .put("note", "").put("hour", h).put("minute", min)
+                    .put("days", org.json.JSONArray()).put("remindBefore", 0)
+                    .put("speak", true).put("enabled", true)
+                if (!daily) {
+                    val c = java.util.Calendar.getInstance()
+                    val passed = c.get(java.util.Calendar.HOUR_OF_DAY) * 60 + c.get(java.util.Calendar.MINUTE) >= h * 60 + min
+                    if (tomorrow || passed) c.add(java.util.Calendar.DAY_OF_YEAR, 1)
+                    item.put("date", java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(c.time))
+                } else item.put("date", "")
+                val saved = TiyaStore(service).saveAgenda(item)
+                TiyaScheduler.schedule(service, TiyaScheduler.KIND_AGENDA, saved)
+                TiyaBus.emit("data_changed", "agenda")
+                val hh = "${h} h ${"%02d".format(min)}"
+                return when {
+                    daily -> "C'est noté : chaque jour à $hh, je te rappellerai « $what »."
+                    item.optString("date") != java.text.SimpleDateFormat("yyyy-MM-dd", Locale.US).format(java.util.Date()) ->
+                        "C'est noté : demain à $hh, je te rappellerai « $what »."
+                    else -> "C'est noté : à $hh, je te rappellerai « $what »."
+                }
+            }
         return null
     }
 
@@ -190,7 +258,7 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
             exact = c.exact
         }
         if (!exact && TiyaSettings(service).confirmSensitive) {
-            if (!agent.quickConfirm("Appeler $label ($number) ?", "Appeler", "Annuler")) return "Appel annulé."
+            if (!(agent?.quickConfirm("Appeler $label ($number) ?", "Appeler", "Annuler") ?: true)) return "Appel annulé."
         }
         val canCall = service.checkSelfPermission(Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED
         val i = Intent(if (canCall) Intent.ACTION_CALL else Intent.ACTION_DIAL, Uri.parse("tel:" + Uri.encode(number)))
@@ -257,9 +325,14 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
         val c = findContact(who) ?: return "Je ne trouve pas « $who » dans tes contacts."
         if (whatsappPackage(business) == null) return "WhatsApp n'est pas installé."
         if (!c.exact && TiyaSettings(service).confirmSensitive) {
-            if (!agent.quickConfirm("Envoyer à ${c.name} sur WhatsApp :\n« $body » ?", "Envoyer", "Annuler"))
+            if (!(agent?.quickConfirm("Envoyer à ${c.name} sur WhatsApp :\n« $body » ?", "Envoyer", "Annuler") ?: true))
                 return "Message annulé."
         }
+        return sendWhatsappDirect(c, body, business)
+    }
+
+    /** Ouvre la conversation avec le texte prêt, puis touche « Envoyer ». Sans confirmation. */
+    fun sendWhatsappDirect(c: Contact, body: String, business: Boolean): String? {
         if (!openWhatsappChat(c, body, business)) return null
         // On attend que la conversation s'ouvre, puis on touche « Envoyer ».
         for (i in 0 until 12) {
@@ -291,7 +364,7 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
                 val d = (it.node.contentDescription?.toString() ?: "").lowercase(Locale.ROOT)
                 d.contains("vocal") || d.contains("voice") || d.contains("enregistr") || d.contains("micro")
             }
-            if (mic != null) return agent.quickVoiceNote(mic, c.name)
+            if (mic != null && agent != null) return agent.quickVoiceNote(mic, c.name)
         }
         return null   // l'IA prendra le relais sur l'écran ouvert
     }
@@ -329,6 +402,13 @@ class QuickCommands(private val service: TiyaService, private val agent: TiyaAge
     fun findContact(query: String): Contact? {
         val q = norm(query).removePrefix("a ").removePrefix("au ").trim()
         if (q.isEmpty()) return null
+        // 1) Surnoms enregistrés dans Tiya (« ma femme », « le directeur »…).
+        val aliases = TiyaStore(service).aliases()
+        val bare = q.replace(Regex("^(ma|mon|mes|la|le|les|l')\\s*"), "").trim()
+        for ((k, v) in aliases) {
+            val kb = k.replace(Regex("^(ma|mon|mes|la|le|les|l')\\s*"), "").trim()
+            if (k == q || kb == bare) return Contact(v.optString("name"), v.optString("number"), true)
+        }
         val cur = service.contentResolver.query(
             ContactsContract.CommonDataKinds.Phone.CONTENT_URI,
             arrayOf(

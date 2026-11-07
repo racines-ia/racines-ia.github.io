@@ -31,6 +31,9 @@ class MainActivity : FlutterActivity() {
                             "service" to (svc != null && isServiceEnabled()),
                             "serviceEnabledInSettings" to isServiceEnabled(),
                             "mic" to hasMic(),
+                            "notifications" to (Build.VERSION.SDK_INT < 33 ||
+                                checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED),
+                            "sms" to (checkSelfPermission(Manifest.permission.SEND_SMS) == PackageManager.PERMISSION_GRANTED),
                             "contacts" to (checkSelfPermission(Manifest.permission.READ_CONTACTS) == PackageManager.PERMISSION_GRANTED),
                             "running" to (svc?.agent?.running ?: false),
                             "waitingFor" to svc?.agent?.waitingFor,
@@ -47,6 +50,77 @@ class MainActivity : FlutterActivity() {
                             Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName"))
                                 .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                         )
+                        result.success(true)
+                    }
+                    // ---------------- contacts et surnoms
+                    "contacts" -> {
+                        Thread {
+                            val list = runCatching { TiyaStore(this).phoneContacts() }.getOrDefault(emptyList())
+                            runOnUiThread { result.success(list) }
+                        }.start()
+                    }
+                    "setAlias" -> {
+                        val store = TiyaStore(this)
+                        val old = call.argument<String>("old")
+                        if (!old.isNullOrBlank()) store.removeAlias(old)
+                        val alias = call.argument<String>("alias") ?: ""
+                        if (alias.isNotBlank()) store.setAlias(alias, call.argument<String>("name") ?: "", call.argument<String>("number") ?: "")
+                        result.success(true)
+                    }
+                    // ---------------- messages automatiques
+                    "autoList" -> result.success(TiyaStore(this).autoMessages().map { jsonToMap(it) })
+                    "autoSave" -> {
+                        val item = mapToJson(call.arguments as Map<*, *>)
+                        val saved = TiyaStore(this).saveAutoMessage(item)
+                        TiyaScheduler.schedule(this, TiyaScheduler.KIND_MESSAGE, saved)
+                        result.success(jsonToMap(saved))
+                    }
+                    "autoDelete" -> {
+                        val id = call.argument<String>("id") ?: ""
+                        TiyaScheduler.cancel(this, TiyaScheduler.KIND_MESSAGE, id)
+                        TiyaStore(this).deleteAutoMessage(id)
+                        result.success(true)
+                    }
+                    "autoSendNow" -> {
+                        val id = call.argument<String>("id") ?: ""
+                        val item = TiyaStore(this).autoMessage(id)
+                        if (item == null) result.success("Message introuvable.")
+                        else Thread {
+                            val r = TiyaAuto.send(this, item, force = true)
+                            runOnUiThread { result.success(r) }
+                        }.start()
+                    }
+                    "autoPreview" -> {
+                        val item = mapToJson(call.arguments as Map<*, *>)
+                        Thread {
+                            val r = TiyaAuto.composeText(this, item)
+                            runOnUiThread { result.success(r) }
+                        }.start()
+                    }
+                    // ---------------- programme
+                    "agendaList" -> result.success(TiyaStore(this).agenda().map { jsonToMap(it) })
+                    "agendaSave" -> {
+                        val item = mapToJson(call.arguments as Map<*, *>)
+                        val saved = TiyaStore(this).saveAgenda(item)
+                        TiyaScheduler.schedule(this, TiyaScheduler.KIND_AGENDA, saved)
+                        result.success(jsonToMap(saved))
+                    }
+                    "agendaDelete" -> {
+                        val id = call.argument<String>("id") ?: ""
+                        TiyaScheduler.cancel(this, TiyaScheduler.KIND_AGENDA, id)
+                        TiyaStore(this).deleteAgenda(id)
+                        result.success(true)
+                    }
+                    "requestNotifications" -> {
+                        if (Build.VERSION.SDK_INT >= 33 &&
+                            checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                        ) requestPermissions(arrayOf(Manifest.permission.POST_NOTIFICATIONS), 44)
+                        TiyaScheduler.ensureChannels(this)
+                        result.success(true)
+                    }
+                    "requestSms" -> {
+                        if (checkSelfPermission(Manifest.permission.SEND_SMS) != PackageManager.PERMISSION_GRANTED)
+                            requestPermissions(arrayOf(Manifest.permission.SEND_SMS), 45)
                         result.success(true)
                     }
                     "requestContacts" -> {
@@ -176,6 +250,31 @@ class MainActivity : FlutterActivity() {
         busListener?.let { TiyaBus.removeListener(it) }
         busListener = null
         super.onDestroy()
+    }
+
+    private fun jsonToMap(o: org.json.JSONObject): Map<String, Any?> {
+        val m = HashMap<String, Any?>()
+        o.keys().forEach { k ->
+            val v = o.opt(k)
+            m[k] = when (v) {
+                is org.json.JSONArray -> (0 until v.length()).map { v.opt(it) }
+                org.json.JSONObject.NULL -> null
+                else -> v
+            }
+        }
+        return m
+    }
+
+    private fun mapToJson(m: Map<*, *>): org.json.JSONObject {
+        val o = org.json.JSONObject()
+        m.forEach { (k, v) ->
+            o.put(k.toString(), when (v) {
+                is List<*> -> org.json.JSONArray(v)
+                null -> org.json.JSONObject.NULL
+                else -> v
+            })
+        }
+        return o
     }
 
     private fun hasMic(): Boolean =

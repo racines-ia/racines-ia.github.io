@@ -8,6 +8,7 @@ import android.content.Intent
 class TiyaUpdatedReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action != Intent.ACTION_MY_PACKAGE_REPLACED) return
+        runCatching { TiyaScheduler.scheduleAll(context) }
         val launch = context.packageManager.getLaunchIntentForPackage(context.packageName) ?: return
         launch.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         launch.putExtra("tiya_updated", true)

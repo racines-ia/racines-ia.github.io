@@ -5,9 +5,40 @@ class Native {
   static const _m = MethodChannel('tiya/native');
   static const _e = EventChannel('tiya/events');
 
-  static Stream<Map<String, dynamic>> events() => _e
+  // Un seul flux partagé : le canal natif n'accepte qu'un abonné à la fois.
+  static final Stream<Map<String, dynamic>> _events = _e
       .receiveBroadcastStream()
-      .map((e) => Map<String, dynamic>.from(e as Map));
+      .map((e) => Map<String, dynamic>.from(e as Map))
+      .asBroadcastStream();
+
+  static Stream<Map<String, dynamic>> events() => _events;
+
+  static List<Map<String, dynamic>> _list(dynamic r) =>
+      ((r as List?) ?? []).map((e) => Map<String, dynamic>.from(e as Map)).toList();
+
+  // ---------------- contacts
+  static Future<List<Map<String, dynamic>>> contacts() async => _list(await _m.invokeMethod('contacts'));
+  static Future<void> setAlias({required String name, required String number, required String alias, String? old}) =>
+      _m.invokeMethod('setAlias', {'name': name, 'number': number, 'alias': alias, 'old': old});
+
+  // ---------------- messages automatiques
+  static Future<List<Map<String, dynamic>>> autoList() async => _list(await _m.invokeMethod('autoList'));
+  static Future<Map<String, dynamic>> autoSave(Map<String, dynamic> item) async =>
+      Map<String, dynamic>.from(await _m.invokeMethod('autoSave', item) as Map);
+  static Future<void> autoDelete(String id) => _m.invokeMethod('autoDelete', {'id': id});
+  static Future<String> autoSendNow(String id) async =>
+      ((await _m.invokeMethod('autoSendNow', {'id': id})) ?? '').toString();
+  static Future<String> autoPreview(Map<String, dynamic> item) async =>
+      ((await _m.invokeMethod('autoPreview', item)) ?? '').toString();
+
+  // ---------------- programme
+  static Future<List<Map<String, dynamic>>> agendaList() async => _list(await _m.invokeMethod('agendaList'));
+  static Future<Map<String, dynamic>> agendaSave(Map<String, dynamic> item) async =>
+      Map<String, dynamic>.from(await _m.invokeMethod('agendaSave', item) as Map);
+  static Future<void> agendaDelete(String id) => _m.invokeMethod('agendaDelete', {'id': id});
+
+  static Future<void> requestNotifications() => _m.invokeMethod('requestNotifications');
+  static Future<void> requestSms() => _m.invokeMethod('requestSms');
 
   static Future<Map<String, dynamic>> status() async {
     final r = await _m.invokeMethod('status');

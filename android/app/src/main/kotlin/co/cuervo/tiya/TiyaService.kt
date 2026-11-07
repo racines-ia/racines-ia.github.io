@@ -58,6 +58,12 @@ class TiyaService : AccessibilityService() {
                 ttsReady = true
             }
         }
+        // Messages en attente envoyés dès que l'utilisateur déverrouille son téléphone.
+        val filter = android.content.IntentFilter(Intent.ACTION_USER_PRESENT)
+        if (Build.VERSION.SDK_INT >= 33) registerReceiver(unlockReceiver, filter, RECEIVER_NOT_EXPORTED)
+        else registerReceiver(unlockReceiver, filter)
+        runCatching { TiyaScheduler.scheduleAll(this) }
+        if (TiyaAuto.phoneUnlocked(this)) TiyaAuto.flushPending(this)
         overlay = TiyaOverlay(this)
         if (TiyaSettings(this).bubbleEnabled) overlay?.show()
         TiyaBus.emit("status", "connected")
@@ -77,7 +83,14 @@ class TiyaService : AccessibilityService() {
         super.onDestroy()
     }
 
+    private val unlockReceiver = object : android.content.BroadcastReceiver() {
+        override fun onReceive(context: android.content.Context, intent: Intent) {
+            TiyaAuto.flushPending(context)
+        }
+    }
+
     private fun cleanup() {
+        runCatching { unregisterReceiver(unlockReceiver) }
         if (instance === this) instance = null
         if (::agent.isInitialized) agent.stop()
         overlay?.hide()

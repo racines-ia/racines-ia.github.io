@@ -3,9 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'agenda_page.dart';
+import 'auto_messages_page.dart';
 import 'brand.dart';
+import 'contacts_page.dart';
 import 'native.dart';
 import 'settings_page.dart';
+import 'ui.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -42,7 +46,83 @@ class TiyaApp extends StatelessWidget {
           contentTextStyle: TextStyle(color: Colors.white),
         ),
       ),
-      home: const HomePage(),
+      home: const TiyaShell(),
+    );
+  }
+}
+
+/// Navigation principale : Tiya · Programme · Messages · Contacts.
+class TiyaShell extends StatefulWidget {
+  const TiyaShell({super.key});
+
+  @override
+  State<TiyaShell> createState() => _TiyaShellState();
+}
+
+class _TiyaShellState extends State<TiyaShell> {
+  int _tab = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    tiyaTabRequest.addListener(_onTab);
+  }
+
+  @override
+  void dispose() {
+    tiyaTabRequest.removeListener(_onTab);
+    super.dispose();
+  }
+
+  void _onTab() {
+    final t = tiyaTabRequest.value;
+    if (t == null) return;
+    tiyaTabRequest.value = null;
+    setState(() => _tab = t);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: IndexedStack(
+        index: _tab,
+        children: const [HomePage(), AgendaPage(), AutoMessagesPage(), ContactsPage()],
+      ),
+      bottomNavigationBar: NavigationBarTheme(
+        data: NavigationBarThemeData(
+          backgroundColor: const Color(0xFF050814),
+          indicatorColor: const Color(0x332563EB),
+          labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+        ),
+        child: NavigationBar(
+          height: 66,
+          selectedIndex: _tab,
+          onDestinationSelected: (i) => setState(() => _tab = i),
+          destinations: const [
+            NavigationDestination(
+              icon: TiyaLogo(size: 22, color: Color(0xFFA3ADC2)),
+              selectedIcon: TiyaLogo(size: 22, glow: Color(0x9960A5FA), glowSigma: 4),
+              label: 'Tiya',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.event_note_outlined),
+              selectedIcon: Icon(Icons.event_note_rounded, color: TiyaColors.ice),
+              label: 'Programme',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.schedule_send_outlined),
+              selectedIcon: Icon(Icons.schedule_send_rounded, color: TiyaColors.ice),
+              label: 'Messages',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.contacts_outlined),
+              selectedIcon: Icon(Icons.contacts_rounded, color: TiyaColors.ice),
+              label: 'Contacts',
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -72,6 +152,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   String _yesLabel = 'Oui';
   String _noLabel = 'Non';
 
+  List<Map<String, dynamic>> _contacts = [];
+  List<Map<String, dynamic>> _suggest = [];
+
   Map<String, dynamic>? _update;
   double? _updateProgress;
   DateTime? _lastUpdateCheck;
@@ -81,7 +164,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _sub = Native.events().listen(_onEvent);
-    _input.addListener(() => setState(() {}));
+    _input.addListener(_onInputChanged);
+    tiyaPrefill.addListener(_onPrefill);
+    _loadContacts();
     _loadHistory();
     _refresh();
     _checkUpdate();
@@ -91,6 +176,7 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    tiyaPrefill.removeListener(_onPrefill);
     _sub?.cancel();
     _poll?.cancel();
     _input.dispose();
@@ -105,10 +191,71 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
       _refresh();
       _loadHistory();
       _checkUpdate();
+      _loadContacts();
     }
   }
 
   // ---------------------------------------------------------------- données
+
+  Future<void> _loadContacts() async {
+    try {
+      final st = await Native.status();
+      if (st['contacts'] != true) return;
+      final c = await Native.contacts();
+      if (mounted) setState(() => _contacts = c);
+    } catch (_) {}
+  }
+
+  void _onPrefill() {
+    final t = tiyaPrefill.value;
+    if (t == null) return;
+    tiyaPrefill.value = null;
+    _input.text = t;
+    _input.selection = TextSelection.collapsed(offset: t.length);
+    _focus.requestFocus();
+  }
+
+  /// Propose les contacts qui correspondent au nom en cours de saisie.
+  void _onInputChanged() {
+    final text = _input.text;
+    List<Map<String, dynamic>> found = [];
+    if (_contacts.isNotEmpty && !text.contains(':')) {
+      final m = RegExp(r"(?:^|\s)(?:à|a|au|appelle|pour)\s+([^\s].*)$", caseSensitive: false).firstMatch(text);
+      String q = m?.group(1) ?? '';
+      q = q.replaceAll(RegExp(r'\s+(sur|par|via)\s+.*$', caseSensitive: false), '').trim();
+      if (q.length >= 2) {
+        final pq = plain(q);
+        final starts = <Map<String, dynamic>>[];
+        final contains = <Map<String, dynamic>>[];
+        for (final c in _contacts) {
+          final name = plain((c['name'] ?? '').toString());
+          final aliases = ((c['aliases'] as List?) ?? []).map((e) => plain(e.toString())).toList();
+          if (name == pq || aliases.contains(pq)) continue;
+          if (name.startsWith(pq) || aliases.any((a) => a.startsWith(pq))) {
+            starts.add(c);
+          } else if (name.contains(pq)) {
+            contains.add(c);
+          }
+          if (starts.length >= 6) break;
+        }
+        found = [...starts, ...contains].take(6).toList();
+      }
+    }
+    setState(() => _suggest = found);
+  }
+
+  void _applySuggestion(Map<String, dynamic> c) {
+    final text = _input.text;
+    final m = RegExp(r"((?:^|\s)(?:à|a|au|appelle|pour)\s+)([^\s].*?)(\s+(?:sur|par|via)\s+.*)?$", caseSensitive: false)
+        .firstMatch(text);
+    if (m == null) return;
+    final name = (c['name'] ?? '').toString();
+    final rest = m.group(3) ?? '';
+    final t = text.substring(0, m.start) + m.group(1)! + name + rest;
+    _input.text = t;
+    _input.selection = TextSelection.collapsed(offset: t.length);
+    setState(() => _suggest = []);
+  }
 
   Future<void> _loadHistory() async {
     try {
@@ -182,6 +329,9 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
         return;
       case 'update_progress':
         setState(() => _updateProgress = (e['progress'] as num?)?.toDouble());
+        return;
+      case 'data_changed':
+        _loadContacts();
         return;
       case 'update_installing':
         setState(() => _updateProgress = 1.0);
@@ -355,6 +505,27 @@ class _HomePageState extends State<HomePage> with WidgetsBindingObserver {
                     await Native.stopTask();
                     _refresh();
                   }),
+                ),
+              if (_suggest.isNotEmpty)
+                SizedBox(
+                  height: 46,
+                  child: ListView(
+                    scrollDirection: Axis.horizontal,
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+                    children: [
+                      for (final c in _suggest)
+                        Padding(
+                          padding: const EdgeInsets.only(right: 8),
+                          child: ActionChip(
+                            avatar: const Icon(Icons.person_rounded, size: 16),
+                            label: Text((c['name'] ?? '').toString()),
+                            backgroundColor: const Color(0x262563EB),
+                            side: const BorderSide(color: Color(0x5960A5FA)),
+                            onPressed: () => _applySuggestion(c),
+                          ),
+                        ),
+                    ],
+                  ),
                 ),
               _InputBar(
                 controller: _input,

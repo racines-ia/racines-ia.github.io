@@ -34,10 +34,19 @@ jobs:
           rm -rf ../tiya_build/test
           cd ../tiya_build
           python3 .ci/patch_gradle.py
-          # Téléchargement de Gradle depuis le serveur officiel (plus fiable), version « bin » plus légère
+          # Gradle : on prend la première source qui répond (GitHub, puis miroirs)
           WP=android/gradle/wrapper/gradle-wrapper.properties
           if [ -f "$WP" ]; then
-            sed -i -E 's#distributionUrl=.*/(gradle-[0-9.]+)-(all|bin)\.zip#distributionUrl=https\\://services.gradle.org/distributions/\1-bin.zip#' "$WP"
+            V=$(grep -oE 'gradle-[0-9.]+' "$WP" | head -1)
+            for U in \
+              "https://services.gradle.org/distributions/$V-bin.zip" \
+              "https://mirrors.cloud.tencent.com/gradle/$V-bin.zip" \
+              "https://mirrors.huaweicloud.com/gradle/$V-bin.zip"; do
+              if curl -sfL -r 0-1023 -o /dev/null --max-time 60 "$U"; then
+                sed -i -E "s#^distributionUrl=.*#distributionUrl=$(echo "$U" | sed 's#:#\\\\:#')#" "$WP"
+                break
+              fi
+            done
             cat "$WP"
           fi
           grep -n "minSdk\|signingConfig" android/app/build.gradle* || true

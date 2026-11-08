@@ -37,6 +37,9 @@ class Native {
       Map<String, dynamic>.from(await _m.invokeMethod('agendaSave', item) as Map);
   static Future<void> agendaDelete(String id) => _m.invokeMethod('agendaDelete', {'id': id});
 
+  static Future<String?> kvGet(String k) async => (await _m.invokeMethod('kvGet', {'k': k})) as String?;
+  static Future<void> kvSet(String k, String? v) => _m.invokeMethod('kvSet', {'k': k, 'v': v});
+
   static Future<void> requestNotifications() => _m.invokeMethod('requestNotifications');
   static Future<void> requestSms() => _m.invokeMethod('requestSms');
 

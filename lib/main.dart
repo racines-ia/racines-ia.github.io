@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'agenda_page.dart';
+import 'agent_page.dart';
 import 'auto_messages_page.dart';
 import 'brand.dart';
 import 'contacts_page.dart';
@@ -87,13 +88,13 @@ class _TiyaShellState extends State<TiyaShell> {
       backgroundColor: Colors.black,
       body: IndexedStack(
         index: _tab,
-        children: const [HomePage(), AgendaPage(), AutoMessagesPage(), ContactsPage()],
+        children: const [HomePage(), AgendaPage(), AutoMessagesPage(), ContactsPage(), AgentPage()],
       ),
       bottomNavigationBar: NavigationBarTheme(
         data: NavigationBarThemeData(
           backgroundColor: const Color(0xFF050814),
           indicatorColor: const Color(0x332563EB),
-          labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+          labelTextStyle: WidgetStateProperty.all(const TextStyle(fontSize: 11, fontWeight: FontWeight.w600)),
         ),
         child: NavigationBar(
           height: 66,
@@ -119,6 +120,11 @@ class _TiyaShellState extends State<TiyaShell> {
               icon: Icon(Icons.contacts_outlined),
               selectedIcon: Icon(Icons.contacts_rounded, color: TiyaColors.ice),
               label: 'Contacts',
+            ),
+            NavigationDestination(
+              icon: Icon(Icons.support_agent_outlined),
+              selectedIcon: Icon(Icons.support_agent_rounded, color: TiyaColors.ice),
+              label: 'Agent IA',
             ),
           ],
         ),

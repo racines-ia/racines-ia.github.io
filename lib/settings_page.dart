@@ -531,6 +531,32 @@ class _SettingsPageState extends State<SettingsPage> {
                             },
                             child: const Text('Enregistrer', style: TextStyle(fontWeight: FontWeight.w700)),
                           ),
+                          const SizedBox(height: 16),
+                          OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: Colors.white,
+                              minimumSize: const Size.fromHeight(48),
+                              side: const BorderSide(color: TiyaColors.glassBorder),
+                            ),
+                            onPressed: () async {
+                              final messenger = ScaffoldMessenger.of(context);
+                              final r = await Native.checkUpdate();
+                              if (r['available'] == true) {
+                                final res = await Native.downloadUpdate(r['url'].toString(), r['latest'].toString());
+                                messenger.showSnackBar(SnackBar(
+                                    content: Text(res == 'permission'
+                                        ? 'Autorise Tiya à installer des applications, puis réessaie.'
+                                        : 'Téléchargement de Tiya ${r['latest']}…')));
+                              } else {
+                                messenger.showSnackBar(SnackBar(
+                                    content: Text(r['error'] != null
+                                        ? 'Vérification impossible : ${r['error']}'
+                                        : 'Tiya est à jour (${r['current'] ?? _version}).')));
+                              }
+                            },
+                            icon: const Icon(Icons.system_update_rounded),
+                            label: const Text('Rechercher une mise à jour'),
+                          ),
                           const SizedBox(height: 26),
                           Center(
                             child: Column(children: [

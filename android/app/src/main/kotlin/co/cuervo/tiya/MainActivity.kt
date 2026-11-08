@@ -123,6 +123,15 @@ class MainActivity : FlutterActivity() {
                             requestPermissions(arrayOf(Manifest.permission.SEND_SMS), 45)
                         result.success(true)
                     }
+                    // ---------------- petit stockage clé/valeur (Agent IA)
+                    "kvGet" -> result.success(
+                        getSharedPreferences("tiya_kv", MODE_PRIVATE).getString(call.argument<String>("k") ?: "", null)
+                    )
+                    "kvSet" -> {
+                        getSharedPreferences("tiya_kv", MODE_PRIVATE).edit()
+                            .putString(call.argument<String>("k") ?: "", call.argument<String>("v")).apply()
+                        result.success(true)
+                    }
                     "requestContacts" -> {
                         val need = arrayOf(Manifest.permission.READ_CONTACTS, Manifest.permission.CALL_PHONE)
                             .filter { checkSelfPermission(it) != PackageManager.PERMISSION_GRANTED }

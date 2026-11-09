@@ -59,21 +59,21 @@ h1,h2,h3{font-family:var(--f-d);margin:0;text-wrap:balance;letter-spacing:-.02em
 .pill:active{transform:scale(.96)}
 
 /* ---------- héros citron ---------- */
-.hero{position:relative;border-radius:34px;padding:30px 0 34px 22px;margin-top:64px;min-height:330px;color:var(--acc-ink);
+.hero{position:relative;padding:24px 0 40px 22px;margin-top:70px;min-height:250px;color:var(--acc-ink)}
+.hero .hbg{position:absolute;inset:0;border-radius:30px 30px 50% 50%/30px 30px 16px 16px;overflow:hidden;pointer-events:none;
   background:repeating-radial-gradient(circle at 105% 105%,rgba(255,255,255,.0) 0 26px,rgba(255,255,255,.028) 27px 28px),linear-gradient(150deg,var(--y4),var(--y5) 45%,var(--y6))}
-.hero .hbg{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none}
 .hero .htx{position:relative;z-index:2;width:57%}.hero .htx p{text-shadow:0 1px 8px rgba(0,0,0,.18)}
-.hero .hph{position:absolute;z-index:1;right:0;bottom:0;width:46%;height:calc(100% + 64px);padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;clip-path:inset(-200px 0 0 -400px round 0 0 34px 0)}
-.hero .hph img{position:absolute;right:-14%;bottom:0;height:100%;width:auto;max-width:none;transform-origin:50% 100%;animation:hfloat 5s ease-in-out infinite;user-select:none}
+.hero .hph{position:absolute;z-index:1;right:0;bottom:0;width:50%;height:calc(100% + 70px);padding:0;border:0;background:none;cursor:pointer;-webkit-tap-highlight-color:transparent;}
+.hero .hph img{position:absolute;right:-12%;bottom:0;height:100%;-webkit-mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.25) 22%,#000 52%);mask-image:linear-gradient(to right,transparent 0%,rgba(0,0,0,.25) 22%,#000 52%);width:auto;max-width:none;transform-origin:50% 100%;animation:hfloat 5s ease-in-out infinite;user-select:none}
 .hero .hph.hop img{animation:hhop .9s cubic-bezier(.3,1.6,.5,1)}
 @keyframes hfloat{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-7px) rotate(-1deg)}}
 @keyframes hhop{0%{transform:translateY(0) scale(1) rotate(0)}25%{transform:translateY(-22px) scale(1.04) rotate(-3deg)}50%{transform:translateY(0) scale(.98) rotate(2deg)}75%{transform:translateY(-8px) scale(1.01) rotate(-1deg)}100%{transform:translateY(0) scale(1) rotate(0)}}
 @media (prefers-reduced-motion:reduce){.hero .hph img{animation:none}}
 .hero .eye{font-size:12.5px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;opacity:.7}
-.hero h1{font-size:clamp(28px,8vw,42px);font-weight:800;margin-top:10px;line-height:1.02}
+.hero h1{font-size:clamp(26px,7.4vw,40px);font-weight:800;margin-top:10px;line-height:1.02}
 .hero h1 em{font-style:normal;color:var(--y1)}
-.hero p{margin:14px 0 0;font-size:14.5px;max-width:30ch;color:rgba(246,245,239,.86)}
-.hero .eye{max-width:16ch;line-height:1.35}
+.hero p{margin:12px 0 0;font-size:13.5px;max-width:30ch;color:rgba(246,245,239,.86)}
+.hero .eye{font-size:11px!important;line-height:1.35}
 .hero .acts{display:flex;flex-wrap:wrap;gap:10px;margin-top:22px}
 .hero .hmk{position:absolute;right:-46px;top:-40px;width:190px;opacity:.07;animation:slow 40s linear infinite}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
@@ -338,7 +338,14 @@ function render(){
   const cur=S.view==='ecole'?'ecoles':S.view;
   $('#nav').innerHTML=[['accueil','Accueil','home'],['ecoles','Écoles','school'],['console','Console','shield']].map(([k,l,i])=>`<button class="nb" data-act="go" data-v="${k}" ${cur===k?'aria-current="page"':''}>${ic(i,20)}<span>${l}</span></button>`).join('');
   const q=$('#q');if(q)q.addEventListener('input',e=>{S.q=e.target.value;const p=e.target.selectionStart;render();const n=$('#q');n.focus();n.setSelectionRange(p,p)});
+  shapeHero();
 }
+/* forme de la carte d'accueil : rectangle aux coins arrondis, bas légèrement tiré vers le bas au milieu */
+function shapeHero(){const hr=$('.hero');if(!hr)return;const W=hr.offsetWidth,H=hr.offsetHeight,r=30,sg=16,Hc=H-sg;
+  const bg=hr.querySelector('.hbg');bg.style.clipPath=`path('M${r} 0H${W-r}Q${W} 0 ${W} ${r}V${Hc-r}Q${W} ${Hc} ${W-r} ${Hc}Q${W/2} ${Hc+2*sg} ${r} ${Hc}Q0 ${Hc} 0 ${Hc-r}V${r}Q0 0 ${r} 0Z')`;
+  const b=hr.querySelector('.hph');if(!b)return;const bw=b.offsetWidth,bh=b.offsetHeight,ox=W-bw,oy=bh-H;
+  b.style.clipPath=`path('M-500 -400H${bw}V${oy+Hc-r}Q${bw} ${oy+Hc} ${bw-r} ${oy+Hc}Q${W/2-ox} ${oy+Hc+2*sg} ${r-ox} ${oy+Hc}L-500 ${oy+Hc}Z')`}
+addEventListener('resize',()=>shapeHero());
 const toast=t=>{const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2600)};
 let sheet=html=>{$('#ov').innerHTML=`<div class="scrim" data-act="close"><div class="sheet" role="dialog" aria-modal="true">${html}</div></div>`};
 let close=()=>$('#ov').innerHTML='';

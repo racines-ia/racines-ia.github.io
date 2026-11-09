@@ -1072,7 +1072,7 @@ const chains={};
 function put(col,id,data){
   if(S.demo){S[COLS[col]]={...S[COLS[col]],[id]:data};onData(COLS[col]);return Promise.resolve()}
   const k=col+'/'+id;
-  chains[k]=(chains[k]||Promise.resolve()).then(()=>db.collection(col).doc(id).set(data)).catch(e=>{toast(e&&e.code==='permission_denied'?'Vous n’avez pas le droit de modifier ceci.':'Enregistrement impossible. Vérifiez la connexion et réessayez.');throw e});
+  chains[k]=(chains[k]||Promise.resolve()).then(()=>db.collection(col).doc(id).set(data)).catch(e=>{toast(/déjà utilisé/.test(e?.message||'')?String(e.message).replace(/^.*?(Le code)/,'$1'):e&&e.code==='permission_denied'?'Vous n’avez pas le droit de modifier ceci.':'Enregistrement impossible. Vérifiez la connexion et réessayez.');throw e});
   return chains[k];
 }
 function del(col,id){

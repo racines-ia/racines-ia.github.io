@@ -896,21 +896,21 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .navb:active{transform:scale(.84)!important;transition-duration:.08s}
 .navb svg.i{overflow:visible;transition:transform .3s cubic-bezier(.2,1.6,.4,1)}
 .navb svg.i *{transform-box:fill-box;transform-origin:center}
-.navb[aria-current="page"]{background:linear-gradient(120deg,#3a1e72,#533989,#8363c6,#533989,#3a1e72);background-size:200% 100%;animation:navShine 6s linear infinite,navGlow 2.8s ease-in-out infinite}
-.nav-in.boot .navb[aria-current="page"]{animation:navIn .6s cubic-bezier(.2,1.5,.4,1) both,navShine 6s linear infinite,navGlow 2.8s ease-in-out infinite;animation-delay:calc(var(--j)*70ms),0s,0s}
+.navb[aria-current="page"]{background:linear-gradient(120deg,#3a1e72,#533989 45%,#8363c6);box-shadow:0 12px 26px rgba(83,57,137,.45)}
+.nav-in.boot .navb[aria-current="page"]{animation:navIn .6s cubic-bezier(.2,1.5,.4,1) both;animation-delay:calc(var(--j)*70ms)}
 .navb.pop svg.i{animation:navPop .55s cubic-bezier(.2,1.4,.4,1)}
-.navb[aria-current="page"].ni-bell svg.i,.navb.ni-bell:has(.nbadge) svg.i{transform-origin:50% 8%;animation:navBell 3.2s ease-in-out infinite}
-.navb[aria-current="page"].ni-users svg.i *{animation:navHop 2.6s ease-in-out infinite}
+.navb[aria-current="page"].ni-bell svg.i,.navb.ni-bell:has(.nbadge) svg.i{transform-origin:50% 8%;animation:navBell 3.2s ease-in-out 2}
+.navb[aria-current="page"].ni-users svg.i *{animation:navHop 2.6s ease-in-out 2}
 .navb[aria-current="page"].ni-users svg.i circle:nth-of-type(2),.navb[aria-current="page"].ni-users svg.i path:nth-of-type(2){animation-delay:.12s}
-.navb[aria-current="page"].ni-home svg.i path:first-child{animation:navRoof 2.8s ease-in-out infinite}
-.navb[aria-current="page"].ni-grid svg.i>*{animation:navSq 3s ease-in-out infinite}
+.navb[aria-current="page"].ni-home svg.i path:first-child{animation:navRoof 2.8s ease-in-out 2}
+.navb[aria-current="page"].ni-grid svg.i>*{animation:navSq 3s ease-in-out 2}
 .navb[aria-current="page"].ni-grid svg.i>*:nth-child(2){animation-delay:.1s}.navb[aria-current="page"].ni-grid svg.i>*:nth-child(3){animation-delay:.2s}.navb[aria-current="page"].ni-grid svg.i>*:nth-child(4){animation-delay:.3s}
 .navb.ni-admin svg .cl{transform-origin:50% 100%}
-.navb[aria-current="page"].ni-admin svg .rf{animation:navRoof 3s ease-in-out infinite}
-.navb[aria-current="page"].ni-admin svg .cl{animation:navCol 3s ease-in-out infinite}
+.navb[aria-current="page"].ni-admin svg .rf{animation:navRoof 3s ease-in-out 2}
+.navb[aria-current="page"].ni-admin svg .cl{animation:navCol 3s ease-in-out 2}
 .navb[aria-current="page"].ni-admin svg .c2{animation-delay:.1s}.navb[aria-current="page"].ni-admin svg .c3{animation-delay:.2s}
-.navb[aria-current="page"].ni-admin svg .st{animation:navStar 1.6s ease-in-out infinite}
-.navb[aria-current="page"].ni-shield svg.i{animation:navHop 2.8s ease-in-out infinite}
+.navb[aria-current="page"].ni-admin svg .st{animation:navStar 1.6s ease-in-out 2}
+.navb[aria-current="page"].ni-shield svg.i{animation:navHop 2.8s ease-in-out 2}
 .navb:not([aria-current="page"]):hover svg.i{transform:translateY(-2px) scale(1.06)}
 .nbadge{animation:navPop .5s cubic-bezier(.2,1.4,.4,1)}
 @media (prefers-reduced-motion:reduce){.navb,.navb *,.nav-in.boot .navb{animation:none!important;transition:none!important}}
@@ -1193,7 +1193,10 @@ function keepSelected(prev,key){
   els.forEach(el=>{const sel=el.querySelector(':scope > [aria-pressed="true"],:scope > [aria-current="page"],:scope > [aria-current="true"]');if(sel)reveal(el,sel,prev&&prev.key===key)});
   const rw=document.getElementById('regwrap'),td=rw?.querySelector('th.today');if(rw&&td&&!(prev&&prev.key===key)){const c=rw.getBoundingClientRect(),r=td.getBoundingClientRect();rw.scrollLeft+=r.left-c.left-(c.width-r.width)/2-60}
 }
-function render(){
+let LOGO_DONE=false;function calmLogos(){document.querySelectorAll('#view .band-anim svg.logo-anim').forEach(sv=>{if(sv.dataset.calm)return;sv.dataset.calm=1;const stop=()=>{try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}};if(LOGO_DONE)stop();else setTimeout(()=>{LOGO_DONE=true;stop()},6500)})}
+document.addEventListener('visibilitychange',()=>{document.querySelectorAll('svg.logo-anim').forEach(sv=>{try{document.hidden||sv.dataset.calm?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}})});
+let renderQ=0;function renderSoon(){if(renderQ)return;renderQ=requestAnimationFrame(()=>{renderQ=0;render()})}
+function render(){if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
   const key=S.view+'|'+S.ctab+'|'+S.cid;const prevSc={key:lastKey,pos:[...document.querySelectorAll('#view :is('+SCR+')')].map(el=>[el.scrollLeft,el.scrollTop])};
   const keep={};['regwrap','egridw'].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.scrollLeft});
   const ae=document.activeElement,aid=ae&&ae.id&&$('#view').contains(ae)?ae.id:null,selS=ae&&ae.selectionStart;
@@ -1202,7 +1205,7 @@ function render(){
   for(const id in keep){const el=document.getElementById(id);if(el)el.scrollLeft=keep[id]}
   keepSelected(prevSc,key);lastKey=key;
   autoRegistre();
-  applyFit();
+  applyFit();calmLogos();
   if(aid){const el=document.getElementById(aid);if(el){el.focus({preventScroll:true});try{if(selS!=null)el.setSelectionRange(selS,selS)}catch(e){}}}
 }
 function gated(){return !S.ready||(!S.demo&&!S.me.id)||(!isDir()&&(!S.inscr[meId()]||!mesClasses().length))}
@@ -2366,7 +2369,7 @@ async function cartePDF(ids,mode){
 const MODES=[['especes','Espèces'],['mobile','Mobile money'],['banque','Banque']];
 const PAR=()=>S.frais._param||{};
 const DEV=()=>PAR().devise||'FC';
-const fmtM=n=>{const v=Math.round((+n||0)*100)/100;return v.toLocaleString('fr-FR',{maximumFractionDigits:2}).replace(/ | /g,' ')+' '+DEV()};
+const NF2=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2});const fmtM=n=>{const v=Math.round((+n||0)*100)/100;return NF2.format(v).replace(/ | /g,' ')+' '+DEV()};
 const numM=v=>{const x=Number(String(v??'').replace(/\s/g,'').replace(',','.'));return isNaN(x)?0:x};
 const fraisOf=cid=>S.frais['c_'+cid]||null;
 const tranchesOf=cid=>{const f=fraisOf(cid);if(!f)return[];const tr=(f.tranches||[]).filter(t=>numM(t.montant)>0);return tr.length?tr:[{nom:'Frais scolaires',montant:numM(f.montant),echeance:''}]};
@@ -2734,7 +2737,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;if(location.hash==='#apercu-enseignant')startPreview();else render();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -2936,7 +2939,7 @@ function onData(key){
   if(!S.ready)return;
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
   if(key==='notes'&&S.view==='classe'&&(S.ctab==='cotes'||S.ctab==='bul')){S.ctab==='cotes'?refreshCotes():refreshBul();return}
-  render();
+  renderSoon();
 }
 /* Fond de l'intro : petites fournitures d'école qui flottent */
 const SCHOOL_ICONS={
@@ -2963,8 +2966,9 @@ function startIntro(){
   el.hidden=false;const sv=el.querySelector('svg');try{sv.pauseAnimations();sv.setCurrentTime(0)}catch(e){}
   let first=true;try{first=localStorage.getItem('clr-intro')!==today();localStorage.setItem('clr-intro',today())}catch(e){}
   el.onclick=endIntro;el.ontouchstart=()=>endIntro();
-  setTimeout(endIntro,10000);
+  INTRO_MIN=Date.now()+(first?3800:1300);setTimeout(endIntro,first?6000:2600);
 }
+let INTRO_MIN=0;function introReady(){const w=INTRO_MIN-Date.now();w>0?setTimeout(endIntro,w):endIntro()}
 let dustRAF=0;
 function papers(cv){
   const ctx=cv.getContext('2d');const dpr=Math.min(2,devicePixelRatio||1);let W=0,H=0;

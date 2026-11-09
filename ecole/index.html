@@ -1508,7 +1508,11 @@ function vGestion(){
 
   <button class="gcta" data-act="new-ens"><span><b>${sec?'Créer un profil titulaire ou professeur':'Créer un profil enseignant'}</b><small>Nom, matricule, photo depuis votre téléphone et classe attribuée.</small></span><i>${ic('plus',22)}</i></button>
   ${ensT.length?`<div class="card list">${ensT.map(p=>{const cl=clsOfEns(p.id).filter(c=>S.classes[c]);return `<button class="li" data-act="prof" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${cl.length?h(cl.map(c=>S.classes[c].nom).join(', ')):'Aucune classe attribuée'}${p.prepare?` · pas encore relié${p.code?' · code '+h(p.code):p.hasCode?' · code donné':' · sans code'}`:''}</span></span>${cl.length?'':'<span class="pill warn">À attribuer</span>'}</button>`}).join('')}</div>`:`<div class="card pad small muted">Aucun enseignant pour l’instant.</div>`}
-  <div class="card pad small"><b>Relier un enseignant à son compte :</b> donnez-lui le lien de l’application, le code de l’école <b>${h(ECO().code)}</b> et son code personnel à 4 chiffres. Il touche « Première fois », saisit les deux codes, son téléphone et un mot de passe : son téléphone est relié à son profil et il ne voit que sa classe.</div></section>`}`:''}`);
+  <div class="card pad small"><b>Relier un enseignant à son compte :</b> donnez-lui le lien de l’application, le code de l’école <b>${h(ECO().code)}</b> et son code personnel à 4 chiffres. Il touche « Première fois », saisit les deux codes, son téléphone et un mot de passe : son téléphone est relié à son profil et il ne voit que sa classe.</div></section>`}`:''}
+  ${canStaff()||(sec&&mp==='discipline')?(()=>{const AG=Object.entries(S.agents).sort((x,y)=>(x[1].nom||'').localeCompare(y[1].nom||''));return `<section class="sec"><div class="sec-h"><h2 class="h2">Travailleurs et sentinelles</h2><span class="pill num">${AG.length}</span></div>
+   <div class="simch"><button class="btn" data-act="new-agent" data-f="Travailleur"><b>${ic('plus',16)} Travailleur</b><small>Entretien, courses, aide</small></button><button class="btn" data-act="new-agent" data-f="Sentinelle"><b>${ic('plus',16)} Sentinelle</b><small>Garde de l’école</small></button></div>
+   ${AG.length?`<div class="card list">${AG.map(([id,a])=>`<button class="li" data-act="edit-agent" data-id="${h(id)}">${a.photo?`<img class="av ph" src="${h(a.photo)}" alt="">`:`<span class="av g">${h(initials({nom:a.nom||'?'}))}</span>`}<span class="grow"><span class="ttl" style="display:block">${h(a.nom||'')}</span><span class="muted small">${h(a.fonction||'Travailleur')}${S.presence[pid2(today(),id)]?' · présent aujourd’hui':''}</span></span><span class="chev">${ic('chev',18)}</span></button>`).join('')}</div>`:''}
+   <div class="card pad small">Ils n’ont pas besoin de compte ni de code : leur profil sert à <b>signer leur présence</b> chaque matin dans « Présence du personnel ». Touchez un nom pour modifier ou retirer.</div></section>`})():''}`);
 }
 
 /* ---------- registre d'appel ---------- */
@@ -1975,7 +1979,7 @@ function signSheet(eid){
 function sigData(){const cv=$('#sigc');if(!cv||cv.dataset.ink!=='1')return null;const out=document.createElement('canvas');out.width=360;out.height=Math.round(360*cv.height/cv.width);const o=out.getContext('2d');o.drawImage(cv,0,0,out.width,out.height);return out.toDataURL('image/png')}
 
 /* ---------- Présence du personnel ---------- */
-const FONCTIONS_AGENT=['Travailleur','Sentinelle'];
+const FONCTIONS_AGENT=['Travailleur','Sentinelle','Huissier','Nettoyeur','Cuisinier','Chauffeur','Jardinier'];
 const pid2=(d,id)=>d+'__'+id;
 function personnel(){
   const ens=ensList();

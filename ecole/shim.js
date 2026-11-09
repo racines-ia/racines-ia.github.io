@@ -297,7 +297,14 @@
     }
   };
 
-  const API = { db, user, sample, downloads };
+  /* ---------- Corbeille (direction) ---------- */
+  const corbeille = {
+    async list() { const { data, error } = await sb.rpc('ecole_trash_list'); if (error) throw { message: error.message }; return data || []; },
+    async restore(tid) { const { data, error } = await sb.rpc('ecole_trash_restore', { p_tid: tid }); if (error) throw { message: error.message }; return data; },
+    async forget(tid) { const { error } = await sb.rpc('ecole_trash_forget', { p_tid: tid }); if (error) throw { message: error.message }; }
+  };
+
+  const API = { db, user, sample, downloads, corbeille };
   window.claude = { use: name => API[name] ? ready.then(() => API[name]) : Promise.reject({ code: 'not_available' }) };
 
   /* ---------- Écran de connexion ---------- */

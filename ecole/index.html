@@ -820,6 +820,7 @@ table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .rp-t.sm td.b{font-weight:800;background:#f1ebfc}
 .rp-sig{height:42px;max-width:150px;margin-top:4px}
 .sigprev{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.trli{flex-wrap:wrap;align-items:flex-start}.trli>.grow{flex:1 1 200px;min-width:0}.trli>.btns{width:100%;justify-content:flex-end;gap:8px}.trd{margin:14px 4px 8px;font-family:var(--f-d,'Anton'),sans-serif;font-weight:400;font-size:18px;text-transform:capitalize}
 /* carte d'élève : 380 × 539 px = format A5 (148 × 210 mm) ; couleurs en CSS pour suivre le thème de l'école */
 .idc{position:relative;width:380px;height:539px;background:#ffffff;color:#1d0f3d;font-family:"Outfit",system-ui,sans-serif;overflow:hidden;border-radius:18px;letter-spacing:0;line-height:1.15;text-transform:none;display:flex;flex-direction:column}
 .idc.print{border-radius:0}
@@ -1027,6 +1028,7 @@ const avatar=(p,cls='')=>p.photo?`<img class="av ph ${cls}" src="${h(p.photo)}" 
 function elevesOf(cid){return Object.entries(S.eleves).filter(([,e])=>!cid||e.classeId===cid).map(([id,e])=>({id,...e})).sort((a,b)=>coll.compare(nomComplet(a),nomComplet(b)))}
 function teachersOf(cid){return ensList().filter(p=>clsOfEns(p.id).includes(cid))}
 const ICONS={
+ trash:'<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/>',
  card:'<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><circle cx="12" cy="9" r="2.6"/><path d="M8.5 15.5c.7-1.6 2-2.4 3.5-2.4s2.8.8 3.5 2.4M9 18.5h6"/>',
  pen:'<path d="M4 20l4.2-1 10.6-10.6a2.1 2.1 0 0 0-3-3L5.2 16 4 20z"/><path d="M14 7l3 3"/>',
  home:'<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M10 21v-6h4v6"/>',
@@ -1076,7 +1078,8 @@ function put(col,id,data){
   return chains[k];
 }
 function del(col,id){
-  if(S.demo){const m={...S[COLS[col]]};delete m[id];S[COLS[col]]=m;onData(COLS[col]);return Promise.resolve()}
+  if(S.demo){const m={...S[COLS[col]]};if(m[id]){S.demoTrash=S.demoTrash||[];S.demoTrash.unshift({tid:Date.now()+Math.random(),col,doc_id:id,data:m[id],at:new Date().toISOString(),par:'Simulation'})}delete m[id];S[COLS[col]]=m;onData(COLS[col]);return Promise.resolve()}
+  S.trash=null;
   return db.collection(col).doc(id).delete().catch(e=>{toast('Suppression refusée.');throw e});
 }
 
@@ -1213,7 +1216,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='corbeille'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1236,7 +1239,7 @@ function screen(){
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1509,6 +1512,7 @@ function vGestion(){
   <button class="gcta" data-act="new-ens"><span><b>${sec?'Créer un profil titulaire ou professeur':'Créer un profil enseignant'}</b><small>Nom, matricule, photo depuis votre téléphone et classe attribuée.</small></span><i>${ic('plus',22)}</i></button>
   ${ensT.length?`<div class="card list">${ensT.map(p=>{const cl=clsOfEns(p.id).filter(c=>S.classes[c]);return `<button class="li" data-act="prof" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${cl.length?h(cl.map(c=>S.classes[c].nom).join(', ')):'Aucune classe attribuée'}${p.prepare?` · pas encore relié${p.code?' · code '+h(p.code):p.hasCode?' · code donné':' · sans code'}`:''}</span></span>${cl.length?'':'<span class="pill warn">À attribuer</span>'}</button>`}).join('')}</div>`:`<div class="card pad small muted">Aucun enseignant pour l’instant.</div>`}
   <div class="card pad small"><b>Relier un enseignant à son compte :</b> donnez-lui le lien de l’application, le code de l’école <b>${h(ECO().code)}</b> et son code personnel à 4 chiffres. Il touche « Première fois », saisit les deux codes, son téléphone et un mot de passe : son téléphone est relié à son profil et il ne voit que sa classe.</div></section>`}`:''}
+  ${canTrash()?`<section class="sec"><button class="gcta" data-act="corb"><span><b>${ic('trash',18)} Corbeille</b><small>Retrouvez et restaurez ce qui a été supprimé par erreur : élèves, enseignants, travailleurs, présences… (60 jours)</small></span><i>${ic('chev',22)}</i></button></section>`:''}
   ${canStaff()||(sec&&mp==='discipline')?(()=>{const AG=Object.entries(S.agents).sort((x,y)=>(x[1].nom||'').localeCompare(y[1].nom||''));return `<section class="sec"><div class="sec-h"><h2 class="h2">Travailleurs et sentinelles</h2><span class="pill num">${AG.length}</span></div>
    <div class="simch"><button class="btn" data-act="new-agent" data-f="Travailleur"><b>${ic('plus',16)} Travailleur</b><small>Entretien, courses, aide</small></button><button class="btn" data-act="new-agent" data-f="Sentinelle"><b>${ic('plus',16)} Sentinelle</b><small>Garde de l’école</small></button></div>
    ${AG.length?`<div class="card list">${AG.map(([id,a])=>`<button class="li" data-act="edit-agent" data-id="${h(id)}">${a.photo?`<img class="av ph" src="${h(a.photo)}" alt="">`:`<span class="av g">${h(initials({nom:a.nom||'?'}))}</span>`}<span class="grow"><span class="ttl" style="display:block">${h(a.nom||'')}</span><span class="muted small">${h(a.fonction||'Travailleur')}${S.presence[pid2(today(),id)]?' · présent aujourd’hui':''}</span></span><span class="chev">${ic('chev',18)}</span></button>`).join('')}</div>`:''}
@@ -1920,6 +1924,47 @@ function tabPalm(){
   ${isSec()?'<p class="muted small" style="margin:0"><b>Français</b> et <b>Mathématiques</b> : ces deux cours. <b>Autres branches</b> : tous les autres cours du bulletin. Les points viennent directement du cahier de cotes de chaque professeur.</p>':`<p class="muted small" style="margin:0"><b>Français</b> : branches de français et lecture-écriture en langue française. <b>Mathématiques</b> : numération, opérations, grandeurs, formes géométriques, problèmes. <b>Culture générale</b> : toutes les autres branches du bulletin. Les points viennent directement du cahier de cotes.</p>`}`;
 }
 
+/* ---------- Corbeille : tout ce qui est supprimé reste 60 jours, restaurable ---------- */
+const canTrash=()=>isDir()&&(!isSec()||['promoteur','prefet'].includes(myPoste()));
+async function trashApi(){return window.claude?.use?claude.use('corbeille').catch(()=>null):null}
+async function loadTrash(){if(S.demo){S.trash=S.demoTrash||[];return}const api=await trashApi();if(!api){S.trash=[];S.trashErr='La corbeille n’est pas disponible ici.';return}
+  try{S.trash=await api.list();S.trashErr=''}catch(e){S.trash=[];S.trashErr=e?.message||'Impossible de charger la corbeille.'}}
+const TR_KIND={eleves:'el',inscriptions:'pe',personnel:'pe',presence:'pr',paiements:'au',frais:'au',sante:'au',signatures:'au',classes:'au',rapports:'au',notes:'au',appel:'pr',journal:'au',registres:'au'};
+function trLabel(r){const d=r.data||{};const el=id=>S.eleves[id]?nomComplet(S.eleves[id]):'';const cl=id=>S.classes[id]?.nom||'';
+  switch(r.col){
+   case 'eleves':return['Élève',nomComplet(d),cl(d.classeId)||'Classe supprimée','users'];
+   case 'inscriptions':return[d.role==='gestionnaire'?(isSec()?POSTE_LBL[d.poste]||'Direction':'Direction'):(isSec()?POSTE_LBL[d.poste]||'Professeur':'Enseignant'),d.nom||'Profil',d.matiere||'','users'];
+   case 'personnel':return['Travailleur',d.nom||'',d.fonction||'','users'];
+   case 'presence':return['Présence du personnel',d.nom||'','signée le '+(d.date||'').split('-').reverse().join('/')+(d.at?' à '+hm(d.at):''),'cal'];
+   case 'paiements':return['Paiement',d.nom||el(d.eleveId),fmtM(d.montant)+(d.recu?' · reçu '+d.recu:''),'money'];
+   case 'sante':return['Fiche santé',el(d.eleveId)||d.nom||'',d.motif||'','shield'];
+   case 'signatures':return d.type==='bul'?['Signature de bulletin',d.nom||'',cl(d.classeId)+' · '+keyName(d.key),'pen']:['Signature du parent',d.nom||'',el(d.eleveId)+' · '+keyName(d.key||'t1'),'pen'];
+   case 'classes':return['Classe',d.nom||'','','grid'];
+   case 'frais':return['Frais scolaires',r.doc_id.startsWith('r_')?'Réduction · '+el(r.doc_id.slice(2)):'Frais · '+cl(r.doc_id.slice(2)),'','money'];
+   case 'notes':return['Cotes',el(d.eleveId),cl(d.classeId),'chart'];
+   case 'rapports':return['Rapport',el(d.eleveId),keyName(d.key||''),'doc'];
+   case 'appel':return['Appel',cl(d.classeId),(d.date||'').split('-').reverse().join('/'),'cal'];
+   default:return[r.col,r.doc_id,'','doc']}}
+function trVisible(L){const el=new Set(L.filter(r=>r.col==='eleves').map(r=>r.doc_id)),ins=new Set(L.filter(r=>r.col==='inscriptions').map(r=>r.doc_id));
+  const kids={};const vis=L.filter(r=>{if(r.col==='affectations'||r.col==='config')return false;const p=r.col==='notes'||r.col==='rapports'?r.data?.eleveId:r.col==='inscriptions'&&r.data?.profil&&ins.has(r.data.profil)?r.data.profil:null;
+    if(p&&(el.has(p)||ins.has(p))){kids[p]=(kids[p]||0)+1;return false}return true});return{vis,kids}}
+function vCorbeille(){
+  if(!canTrash()){S.view='accueil';return vAccueil()}
+  if(S.trash==null){loadTrash().then(()=>{if(S.view==='corbeille')render()});return band({back:'gestion',kicker:'Gestion',title:'Corbeille',sub:'Chargement…'})+page('<div class="card pad muted">Chargement de la corbeille…</div>')}
+  const {vis,kids}=trVisible(S.trash);const f=S.trF||'tout';const L=vis.filter(r=>f==='tout'||(TR_KIND[r.col]||'au')===f);
+  const n={tout:vis.length};vis.forEach(r=>{const k=TR_KIND[r.col]||'au';n[k]=(n[k]||0)+1});
+  const day=a=>{const d=a.slice(0,10);return d===today()?'Aujourd’hui':d===(()=>{const x=new Date(today()+'T12:00:00');x.setDate(x.getDate()-1);return x.toISOString().slice(0,10)})()?'Hier':new Date(a).toLocaleDateString('fr-FR',{weekday:'long',day:'numeric',month:'long'})};
+  let last='',out='';for(const r of L){const dl=day(r.at);if(dl!==last){if(last)out+='</div>';out+=`<h3 class="trd">${h(dl)}</h3><div class="card list">`;last=dl}
+    const [t,nm,sub,icn]=trLabel(r);const k=kids[r.doc_id];
+    out+=`<div class="li trli"><span class="ib g">${ic(ICONS[icn]?icn:'doc',18)}</span><span class="grow"><span class="muted small" style="display:block">${h(t)}</span><span class="ttl" style="display:block">${h(nm||'—')}</span><span class="muted small">${h(sub)}${sub?' · ':''}supprimé à ${hm(r.at)}${r.par?' par '+h(r.par):''}${k?` · avec ${k} élément${k>1?'s':''} lié${k>1?'s':''}`:''}</span></span><span class="btns"><button class="btn grad sm" data-act="tr-back" data-id="${r.tid}">Restaurer</button><button class="x" data-act="tr-forget" data-id="${r.tid}" aria-label="Supprimer définitivement">×</button></span></div>`}
+  if(last)out+='</div>';
+  const chips=[['tout','Tout'],['el','Élèves'],['pe','Personnel'],['pr','Présences et appels'],['au','Autres']].map(([k,l])=>`<button class="chipb" data-act="tr-f" data-v="${k}" aria-pressed="${f===k}">${l}${n[k]?` <b class="num">${n[k]}</b>`:''}</button>`).join('');
+  return band({back:'gestion',kicker:'Gestion',title:'Corbeille',sub:`${vis.length} élément${vis.length>1?'s':''} · gardés 60 jours`})+page(`
+   <div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('trash',20)}</span><span>Tout ce qui est supprimé dans l’école arrive ici : élèves (avec leurs cotes), enseignants, travailleurs, présences, paiements, fiches… <b>Restaurer</b> le remet exactement à sa place. Après 60 jours, l’élément est effacé pour de bon.</span></div>
+   ${S.trashErr?`<div class="card pad" style="color:var(--bad,#e5484d)">${h(S.trashErr)}</div>`:''}
+   <div class="chips" role="group" aria-label="Filtrer">${chips}</div>
+   ${L.length?out:`<div class="card empty"><h3>La corbeille est vide</h3><p class="muted small">Rien n’a été supprimé${f==='tout'?'':' dans cette catégorie'} ces 60 derniers jours.</p></div>`}`);
+}
 /* ---------- Situation des palmarès (toutes les classes) ---------- */
 const canPalmSit=()=>isDir()&&(!isSec()||['promoteur','prefet','etudes'].includes(myPoste()));
 function vPalmSit(){
@@ -2876,6 +2921,15 @@ const A={
   demorole:b=>{S.demoRole=b.dataset.v;if(S.view==='gestion'&&b.dataset.v!=='dir')S.view='accueil';render()},
   'sim-start':b=>startSim(b.dataset.v==='sec'),
   bsign:b=>bulSign(b.dataset.k,b.dataset.r),
+  corb:()=>{S.trash=null;S.trF='tout';S.view='corbeille';render();scrollTo(0,0)},
+  'tr-f':b=>{S.trF=b.dataset.v;render()},
+  'tr-back':async b=>{const tid=b.dataset.id;b.disabled=true;
+    if(S.demo){const i=(S.demoTrash||[]).findIndex(r=>String(r.tid)===tid);if(i<0)return;const r=S.demoTrash[i];const {vis}=trVisible(S.demoTrash);const grp=S.demoTrash.filter(x=>x===r||(Math.abs(new Date(x.at)-new Date(r.at))<6e5&&(x.data?.eleveId===r.doc_id||x.data?.profil===r.doc_id||(x.col==='affectations'&&x.doc_id===r.doc_id))));
+      grp.forEach(x=>{const k=COLS[x.col];if(k)S[k]={...S[k],[x.doc_id]:x.data}});S.demoTrash=S.demoTrash.filter(x=>!grp.includes(x));S.trash=null;Object.values(COLS).forEach(k=>onData(k));render();toast('Restauré');return}
+    const api=await trashApi();try{const n=await api.restore(+tid);toast(n>1?`Restauré avec ${n-1} élément${n>2?'s':''} lié${n>2?'s':''}`:'Restauré : il est de retour à sa place');S.trash=null;render()}catch(e){b.disabled=false;toast(e?.message||'Restauration impossible.')}},
+  'tr-forget':async b=>{if(!arm(b))return;const tid=b.dataset.id;
+    if(S.demo){S.demoTrash=(S.demoTrash||[]).filter(r=>String(r.tid)!==tid);S.trash=null;render();return}
+    const api=await trashApi();try{await api.forget(+tid);S.trash=null;render();toast('Supprimé définitivement')}catch(e){toast(e?.message||'Impossible.')}},
   carte:b=>carteSheet(b.dataset.id),
   cartepdf:b=>cartePDF([b.dataset.id]),
   cartescls:b=>{const ids=elevesOf(b.dataset.id).map(e=>e.id);if(ids.length)cartePDF(ids)},

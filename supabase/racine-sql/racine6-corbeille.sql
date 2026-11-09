@@ -1,0 +1,3 @@
+-- Corbeille (appliquée le 2026-11-09) : table ecole_trash (60 jours),
+-- trigger ecole_a_trash (after delete on ecole_docs, garde aussi le code personnel),
+-- fonctions ecole_trash_list(), ecole_trash_restore(tid) (restaure aussi les éléments liés), ecole_trash_forget(tid).

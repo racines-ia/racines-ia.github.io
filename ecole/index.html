@@ -234,7 +234,7 @@ table.t td.name,table.t th.name{text-align:left}
 .tp[aria-pressed="true"] small{color:rgba(255,255,255,.82)}
 .cotes-grid{display:grid;gap:16px;grid-template-columns:minmax(0,1fr);align-items:start}
 @media (min-width:900px){.cotes-grid{grid-template-columns:250px minmax(0,1fr)}.cotes-grid .bulpane{grid-column:1/-1}}
-@media (max-width:520px){.etab td .gi{width:44px;height:38px}table.etab th.nm,table.etab td.nm{min-width:96px;max-width:112px;padding-left:6px}.etab td.nm i{display:none}.entry{padding:12px}}
+@media (max-width:520px){.etab td .gi{width:44px;height:38px}table.etab th.nm,table.etab td.nm{min-width:112px;max-width:124px;padding-left:6px}.etab td.nm button{font-size:12.5px}.etab td .gi{width:42px}.etab td.nm i{display:none}.entry{padding:12px}}
 @media (min-width:1280px){.cotes-grid{grid-template-columns:230px minmax(440px,1fr) minmax(0,1.2fr)}.cotes-grid .bulpane{grid-column:auto;position:sticky;top:84px}}
 .courses{padding:10px;display:none;flex-direction:column;gap:2px;max-height:calc(100vh - 130px);overflow:auto;position:sticky;top:84px}
 @media (min-width:900px){.courses{display:flex}.mcourse{display:none!important}}
@@ -269,7 +269,8 @@ table.t td.name,table.t th.name{text-align:left}
 .etab th.nm,.etab td.nm{text-align:left;position:sticky;left:0;background:var(--surface);z-index:1;min-width:118px;max-width:160px;padding-left:8px}
 .etab thead th.nm{background:var(--sunk)}
 .etab thead tr:first-child th.nm{background:#3a1e72}
-.etab td.nm button{border:0;background:none;padding:4px 2px;cursor:pointer;font-weight:600;text-align:left;width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:flex;gap:8px;align-items:center}
+.etab td.nm button{border:0;background:none;padding:4px 2px;cursor:pointer;font-weight:600;text-align:left;width:100%;white-space:normal;overflow-wrap:anywhere;line-height:1.15;font-size:13.5px;display:flex;gap:8px;align-items:center}
+.etab td.nm{white-space:normal}
 .etab td.nm i{font-style:normal;color:var(--muted);font-size:12px;width:18px;flex:none}
 .etab tr.sel td{background:var(--soft)}
 .etab tr.sel td.nm{background:var(--soft)}

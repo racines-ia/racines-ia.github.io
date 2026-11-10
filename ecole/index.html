@@ -312,6 +312,28 @@ table.t td.name,table.t th.name{text-align:left}
 #camfs .cam-b .shot{width:74px;height:74px;min-width:74px;padding:0;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #000,0 0 0 7px #fff}
 #camfs .cam-b .shot:active{transform:scale(.94)}
 #camfs .cam-m{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;color:#fff;font-weight:600;font-size:14px;text-shadow:0 1px 6px #000;padding:0 20px}
+/* Cahier de cotes : fiche par élève */
+.cotes-grid.fe{grid-template-columns:minmax(0,1fr)}
+.cmode{margin:0}
+.fnav{display:flex;gap:8px;align-items:center}
+.fnav select{flex:1;min-width:0}
+.fiche{border:1.5px solid var(--line);border-radius:20px;overflow:hidden;background:var(--surface)}
+.fiche .fh{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:14px 16px;background:var(--grad);color:#fff}
+.fiche .fh small{display:block;font-size:11.5px;font-weight:600;opacity:.85}
+.fiche .fh b{display:block;font-family:var(--f-d);font-weight:400;font-size:20px;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;overflow-wrap:anywhere}
+.fiche .fh span{font-size:13.5px;font-weight:600;opacity:.9}
+.fiche .fh .av{flex:none;box-shadow:0 0 0 3px rgba(255,255,255,.35)}
+.ftab{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums}
+.ftab thead th{background:var(--sunk);color:var(--muted);font-size:12px;font-weight:700;padding:9px 12px;text-align:center}
+.ftab th.nm,.ftab td.nm{text-align:left}
+.ftab td{padding:6px 12px;border-top:1px solid var(--line)}
+.ftab td.nm{font-weight:600;font-size:14.5px;border-right:1px solid var(--line)}
+.ftab td.ct{width:118px;text-align:center;white-space:nowrap}
+.ftab td.ct small{display:inline-block;width:34px;text-align:left;margin-left:6px;color:var(--muted);font-weight:700;font-size:12px}
+.ftab tr.fd th{background:var(--soft);color:var(--ink);text-align:left;padding:8px 12px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;border-top:1px solid var(--line)}
+.ftab tr.fb th{text-align:left;padding:7px 12px 3px;font-size:12px;font-weight:700;color:var(--muted);border-top:1px solid var(--line)}
+.ftab tfoot td{background:var(--sunk);font-weight:700}
+.ftab tfoot b{font-family:var(--f-d);font-weight:400;font-size:17px;color:var(--accent)}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -329,6 +351,8 @@ table.t td.name,table.t th.name{text-align:left}
 .pa:hover{background:var(--sunk)}
 .pa.P{background:var(--good-soft);color:var(--good)}
 .pa.A{background:var(--bad-soft);color:var(--bad)}
+.pa.M{background:var(--warn-soft);color:var(--warn)}
+td.ml .pc{background:var(--warn-soft);color:var(--warn)}
 .reg td.sx{width:30px;font-weight:700;color:var(--muted)}
 .reg td.sum,.reg th.sum{min-width:38px;font-weight:700;padding:0 4px}
 .reg td.sum.P{color:var(--good)} .reg td.sum.A{color:var(--bad)}
@@ -1360,12 +1384,37 @@ function tabCotes(){
   if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3><p class="muted small">La direction applique le modèle du bulletin dans Gestion.</p></div>`;
   if(S.cours!=='vie'&&!cours.find(c=>c.id===S.cours))S.cours=cours[0].id;
   if(!es.find(e=>e.id===S.sel))S.sel=es[0]?.id||'';
-  return `${triPick()}${barCotes(cid)}
+  const modeSeg=`<div class="seg full cmode" role="group" aria-label="Façon d’encoder"><button data-act="cmode" data-v="cours" aria-pressed="${S.cMode!=='eleve'}">Par cours</button><button data-act="cmode" data-v="eleve" aria-pressed="${S.cMode==='eleve'}">Par élève</button></div>`;
+  if(S.cMode==='eleve')return `${triPick()}${barCotes(cid)}${modeSeg}
+  <div class="cotes-grid fe"><section class="card entry">${es.length?ficheHtml(cls,es):`<div class="empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`}</section>${es.length?bulPane(false):''}</div>`;
+  return `${triPick()}${barCotes(cid)}${modeSeg}
   <div class="cotes-grid">
    <aside class="card courses" aria-label="Liste des cours">${courseList(cls,cid)}</aside>
    <section class="card entry">${mobileCourse(cls)}${es.length?entryHtml(cls,es):`<div class="empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`}</section>
    ${es.length?bulPane(true):''}
   </div>`;
+}
+function ficheTot(){const el=document.getElementById('fe-tot');if(!el)return;const cls=S.classes[S.cid],k=el.dataset.k,eid=el.dataset.e;let tot=0,mx=0,n=0;for(const c of cls.cours||[]){const v=V(eid,c,k);mx+=MX(c,k);if(v!=null){tot+=v;n++}}el.textContent=n?`${fmt(tot)} / ${fmt(mx)}`:`– / ${fmt(mx)}`}
+function ficheHtml(cls,es){
+  const t=S.tri;
+  if(!PER[t])return `<div class="empty"><h3>Choisissez un ${triMot()}</h3><p class="muted small">La fiche par élève sert à encoder les points d’une période ou d’un examen.</p></div>`;
+  const ks=[...PER[t],EXK[t]];if(!ks.includes(S.cPer))S.cPer=ks[0];const k=S.cPer;
+  const i=es.findIndex(e=>e.id===S.sel),e=es[i];const kl=x=>x.startsWith('ex')?'Examen':perLong(x);
+  let rows='',tot=0,mx=0,n=0;
+  for(const r of grilleOf(cls)){
+    if(r.t==='dom')rows+=`<tr class="fd"><th colspan="2">${h(r.nom)}</th></tr>`;
+    else if(r.t==='br')rows+=`<tr class="fb"><th colspan="2">${h(r.nom)}</th></tr>`;
+    else if(r.t==='c'){const v=V(e.id,r,k),m=MX(r,k),lk=cellLocked(e.id,r.id,k);mx+=m;if(v!=null){tot+=v;n++}
+      rows+=`<tr><td class="nm">${h(r.nom)}</td><td class="ct"><input class="gi${lk?' lock':''}" ${lk?'readonly title="Clôturé : ne se modifie plus"':''} id="f_${h(r.id)}" data-e="${h(e.id)}" data-k="${k}" data-c="${h(r.id)}" inputmode="decimal" autocomplete="off" aria-label="${h(r.nom)}, ${kl(k)}, ${h(nomComplet(e))}, maximum ${fmt(m)}" value="${v==null?'':fmt(v)}"><small class="num">/${fmt(m)}</small></td></tr>`}
+  }
+  return `<div class="eh"><span class="path">${TRI[t]}</span><h3>${kl(k)}</h3>
+    <div class="seg" role="group" aria-label="Période">${ks.map(x=>`<button data-act="cper" data-v="${x}" aria-pressed="${x===k}">${kl(x)}</button>`).join('')}</div></div>
+   <div class="fnav"><button class="x" data-act="fnav" data-v="-1" ${i<=0?'disabled':''} aria-label="Élève précédent">${ic('left',18)}</button><select class="inp" data-act="fsel" aria-label="Élève">${es.map((x,j)=>`<option value="${h(x.id)}" ${x.id===e.id?'selected':''}>${j+1}. ${h(nomComplet(x))}</option>`).join('')}</select><button class="x" data-act="fnav" data-v="1" ${i>=es.length-1?'disabled':''} aria-label="Élève suivant">${ic('chev',18)}</button></div>
+   <div class="fiche"><div class="fh"><div><small>${kl(k)} · élève ${i+1} sur ${es.length}</small><b>${h(e.nom)} ${h(e.postnom||'')}</b><span>${h(e.prenom||'')}</span></div>${avEl(e,'lg')}</div>
+    <table class="ftab"><thead><tr><th class="nm">Branches</th><th>Cotes</th></tr></thead><tbody>${rows}</tbody>
+    <tfoot><tr><td class="nm">Total ${kl(k).toLowerCase()}</td><td class="ct"><b class="num" id="fe-tot" data-k="${k}" data-e="${h(e.id)}">${n?fmt(tot):'–'} / ${fmt(mx)}</b></td></tr></tfoot></table></div>
+   <div class="btns" style="justify-content:space-between"><button class="btn sm" data-act="fnav" data-v="-1" ${i<=0?'disabled':''}>${ic('left',16)} Précédent</button><button class="btn sm grad" data-act="fnav" data-v="1" ${i>=es.length-1?'disabled':''}>Élève suivant ${ic('chev',16)}</button></div>
+   <div class="ehint"><span>Tapez la cote de chaque branche. Elle se reporte tout de suite dans le bulletin.</span><span class="saved" id="saved"></span></div>`;
 }
 function entryHtml(cls,es){
   const t=S.tri;
@@ -1412,6 +1461,7 @@ function refreshBul(){
 }
 function refreshCotes(){
   const cls=S.classes[S.cid];if(!cls)return;
+  document.querySelectorAll('.ftab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,inp.dataset.k);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});ficheTot();
   if(S.cours!=='vie'&&PER[S.tri]){const c=(cls.cours||[]).find(x=>x.id===S.cours);if(c){
     document.querySelectorAll('.etab input.gi:not(.vi)').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const v=V(inp.dataset.e,c,inp.dataset.k);const s=v==null?'':fmt(v);if(inp.value!==s)inp.value=s});
     elevesOf(S.cid).forEach(e=>{const t=document.getElementById('tt_'+e.id);if(t)t.textContent=fmt(V(e.id,c,S.tri))});}}
@@ -1430,7 +1480,7 @@ function gradeInput(inp){
     if(inp.dataset.f==='enafep'){const raw=inp.value.trim().replace(',','.');const v=raw===''?null:Number(raw);if(raw!==''&&(isNaN(v)||v<0||v>50)){inp.classList.add('bad');$('#saved').textContent='Maximum 50';return}inp.classList.remove('bad');if(v==null)delete doc.enafep;else doc.enafep=v}
     else{const f=inp.dataset.f,k=inp.dataset.k,v=inp.value.trim();doc[f]=doc[f]||{};if(v)doc[f][k]=v;else delete doc[f][k]}
     S.notes={...S.notes,[id]:doc};saveNote(id);refreshBul();return}
-  const c=(cls.cours||[]).find(x=>x.id===S.cours);if(!c)return;
+  const c=(cls.cours||[]).find(x=>x.id===(inp.dataset.c||S.cours));if(!c)return;
   const key=inp.dataset.k,t=TOF[key],k=key.startsWith('ex')?'ex':key,max=MX(c,key);
   const raw=inp.value.trim().replace(',','.');const v=raw===''?null:Number(raw);
   if(raw!==''&&(isNaN(v)||v<0||v>max)){inp.classList.add('bad');const s=$('#saved');if(s)s.textContent=`Maximum ${fmt(max)} pour cette case`;return}
@@ -1439,7 +1489,7 @@ function gradeInput(inp){
   doc[t]=doc[t]||{};if(v==null)delete doc[t][k];else doc[t][k]=v;
   if(!isDir()||!doc.log?.[key])doc.log={...(doc.log||{}),[key]:today()};doc.by=meId();
   S.notes={...S.notes,[id]:doc};
-  const tt=document.getElementById('tt_'+eid);if(tt)tt.textContent=fmt(V(eid,c,t));
+  const tt=document.getElementById('tt_'+eid);if(tt)tt.textContent=fmt(V(eid,c,t));ficheTot();
   saveNote(id);refreshBul();
   const cb=$('#cbarC');if(cb){const t2=document.createElement('div');t2.innerHTML=barCotes(S.cid);cb.replaceWith(t2.firstElementChild)}
 }
@@ -1550,7 +1600,7 @@ function archAppel(cid,es){
   const nP=faits.reduce((a,d)=>a+es.filter(e=>M(e,d)==='P').length,0),nT=faits.reduce((a,d)=>a+es.filter(e=>M(e,d)).length,0);
   const gs=[['Garçons',es.filter(e=>e.sexe!=='F')],['Filles',es.filter(e=>e.sexe==='F')]].map(([l,g])=>{const p=faits.reduce((a,d)=>a+g.filter(e=>M(e,d)==='P').length,0),t=faits.reduce((a,d)=>a+g.filter(e=>M(e,d)).length,0);return `<span class="pill num">${l} : ${t?Math.round(p/t*100):'–'} %</span>`}).join('');
   const weeks=[];for(const x of days){const l=lundi(x);let w=weeks.find(v=>v.l===l);if(!w)weeks.push(w={l,d:[]});w.d.push(x)}
-  const cell=(e,x)=>{const v=M(e,x);return v==='P'?'<td class="ok"><span class="pc">P</span></td>':v==='A'?'<td class="ab"><span class="pc">A</span></td>':`<td class="fu">${x<=td?'<span class="pc">·</span>':''}</td>`};
+  const cell=(e,x)=>{const v=M(e,x);return v==='P'?'<td class="ok"><span class="pc">P</span></td>':v==='A'?'<td class="ab"><span class="pc">A</span></td>':v==='M'?'<td class="ml"><span class="pc">M</span></td>':`<td class="fu">${x<=td?'<span class="pc">·</span>':''}</td>`};
   const week=w=>`<div class="tblwrap"><table class="t parch"><thead><tr><th class="name">Semaine du ${dfr(w.d[0])}</th>${w.d.map(x=>{const dd=D(x);return `<th><button class="ph${x===td?' td':''}" data-act="ajour" data-v="${x}">${JLONG[dd.getUTCDay()].slice(0,3)}<b class="num">${dd.getUTCDate()}</b></button></th>`}).join('')}</tr></thead><tbody>
    ${es.map(e=>`<tr><td class="name"><span class="nm">${h(e.nom)} ${h(e.postnom||'')}</span><small class="muted">${h(e.prenom||'')} · ${e.sexe==='F'?'F':'G'}</small></td>${w.d.map(x=>cell(e,x)).join('')}</tr>`).join('')}
    <tr class="tot"><td class="name">Présents</td>${w.d.map(x=>{const n=es.filter(e=>M(e,x)==='P').length;return `<td class="num">${Object.keys(S.appel[aid(cid,x)]?.p||{}).length?n:''}</td>`}).join('')}</tr></tbody></table></div>`;
@@ -1563,12 +1613,12 @@ function archAppel(cid,es){
    ${weeks.slice().reverse().map(w=>`<section class="sec">${week(w)}</section>`).join('')}`;
 }
 function ajourSheet(cid,d){
-  const es=elevesOf(cid);const a=S.appel[aid(cid,d)]?.p||{};const P=es.filter(e=>a[e.id]==='P'),A=es.filter(e=>a[e.id]==='A'),N=es.filter(e=>!a[e.id]);
+  const es=elevesOf(cid);const a=S.appel[aid(cid,d)]?.p||{};const P=es.filter(e=>a[e.id]==='P'),A=es.filter(e=>a[e.id]==='A'),ML=es.filter(e=>a[e.id]==='M'),N=es.filter(e=>!a[e.id]);
   const dd=D(d);const J=JR(cid,d)?.appel;
-  const lst=(t,l,cls)=>l.length?`<h3 class="h2" style="font-size:17px;margin-top:6px">${t} · ${l.length}</h3><div class="card list">${l.map(e=>`<div class="li">${avEl(e)}<span class="grow"><span class="ttl">${h(nomComplet(e))}</span></span><span class="pill ${cls}">${cls==='good'?'P':cls==='bad'?'A':'–'}</span></div>`).join('')}</div>`:'';
+  const lst=(t,l,cls)=>l.length?`<h3 class="h2" style="font-size:17px;margin-top:6px">${t} · ${l.length}</h3><div class="card list">${l.map(e=>`<div class="li">${avEl(e)}<span class="grow"><span class="ttl">${h(nomComplet(e))}</span></span><span class="pill ${cls}">${cls==='good'?'P':cls==='bad'?'A':cls==='warn'?'M':'–'}</span></div>`).join('')}</div>`:'';
   openSheet(`${JLONG[dd.getUTCDay()]} ${dfr(d)} · ${S.classes[cid]?.nom||''}`,`<div class="stack">
-   <div class="btns"><span class="pill good num">${P.length} présent${P.length>1?'s':''}</span><span class="pill bad num">${A.length} absent${A.length>1?'s':''}</span>${J?`<span class="pill num">Appel clôturé à ${hm(J.at)}</span>`:''}</div>
-   ${lst('Absents',A,'bad')}${lst('Présents',P,'good')}${lst('Non marqués',N,'')}</div>`);
+   <div class="btns"><span class="pill good num">${P.length} présent${P.length>1?'s':''}</span><span class="pill bad num">${A.length} absent${A.length>1?'s':''}</span>${ML.length?`<span class="pill warn num">${ML.length} malade${ML.length>1?'s':''}</span>`:''}${J?`<span class="pill num">Appel clôturé à ${hm(J.at)}</span>`:''}</div>
+   ${lst('Absents',A,'bad')}${lst('Malades',ML,'warn')}${lst('Présents',P,'good')}${lst('Non marqués',N,'')}</div>`);
 }
 function tabAppel(){
   const cid=S.cid,regs=regsOf(cid);
@@ -1584,11 +1634,11 @@ function tabAppel(){
 }
 function registre(cid,jours,es){
   const td=today();
-  return `${barAppel(cid,jours)}<div class="legend"><span>${isDir()?'La direction peut corriger n’importe quel jour.':'Seule la colonne d’aujourd’hui est modifiable.'} Touchez une case : <b>P</b> présent, puis <b>A</b> absent, puis vide.</span><span>Touchez une date pour marquer présents tous les élèves pas encore notés ce jour-là.</span></div>
+  return `${barAppel(cid,jours)}<div class="legend"><span>${isDir()?'La direction peut corriger n’importe quel jour.':'Seule la colonne d’aujourd’hui est modifiable.'} Touchez une case : <b>P</b> présent, puis <b>A</b> absent, puis <b>M</b> malade, puis vide.</span><span>Touchez une date pour marquer présents tous les élèves pas encore notés ce jour-là.</span></div>
   <div class="tblwrap" id="regwrap"><table class="reg"><thead><tr><th class="n">N°</th><th class="name">Nom et postnom</th><th>Sexe</th>
   ${jours.map((d,i)=>{const w=D(d).getUTCDay();return `<th class="d${w===1&&i?' wk':''}${d===td?' today':''}" data-act="jour" data-v="${d}" title="Tous présents le ${dfr(d)}">${JOURS[w]}<b>${D(d).getUTCDate()}</b>${String(D(d).getUTCMonth()+1).padStart(2,'0')}</th>`}).join('')}
   <th class="sum">P</th><th class="sum">A</th><th class="sum">%</th></tr></thead><tbody>
-  ${es.map((e,n)=>{let p=0,a=0;const cells=jours.map((d,i)=>{const m=marque(cid,d,e.id);if(m==='P')p++;if(m==='A')a++;const w=D(d).getUTCDay();return `<td class="cell${w===1&&i?' wk':''}"><button class="pa ${m}" ${canEditAppel(cid,d)?'':'disabled'} data-act="pa" data-e="${h(e.id)}" data-d="${d}" aria-label="${h(nomComplet(e))}, ${dfr(d)} : ${m==='P'?'présent':m==='A'?'absent':'non marqué'}">${m}</button></td>`}).join('');
+  ${es.map((e,n)=>{let p=0,a=0;const cells=jours.map((d,i)=>{const m=marque(cid,d,e.id);if(m==='P')p++;if(m==='A'||m==='M')a++;const w=D(d).getUTCDay();return `<td class="cell${w===1&&i?' wk':''}"><button class="pa ${m}" ${canEditAppel(cid,d)?'':'disabled'} data-act="pa" data-e="${h(e.id)}" data-d="${d}" aria-label="${h(nomComplet(e))}, ${dfr(d)} : ${m==='P'?'présent':m==='A'?'absent':m==='M'?'malade':'non marqué'}">${m}</button></td>`}).join('');
    return `<tr><td class="n num">${n+1}</td><td class="name">${h(e.nom)} ${h(e.postnom||'')}</td><td class="sx">${e.sexe==='F'?'F':'M'}</td>${cells}<td class="sum P num">${p}</td><td class="sum A num">${a}</td><td class="sum num">${p+a?Math.round(p/(p+a)*100):'–'}</td></tr>`}).join('')}
   </tbody></table></div>
   <p class="muted small num" style="margin:0">${jours.length} jours de classe · du ${dfr(jours[0])} au ${dfr(jours[29])} · ${es.length} élèves (${es.filter(e=>e.sexe!=='F').length} G, ${es.filter(e=>e.sexe==='F').length} F)</p>`;
@@ -1598,11 +1648,11 @@ function statsAppel(cid,jours,es){
   if(S.aMois&&!mois.includes(S.aMois))S.aMois='';
   const js=S.aMois?jours.filter(d=>d.startsWith(S.aMois)):jours;
   const tenus=js.filter(d=>es.some(e=>marque(cid,d,e.id)));
-  const par=es.map(e=>{let p=0,a=0;for(const d of js){const m=marque(cid,d,e.id);if(m==='P')p++;else if(m==='A')a++}return{e,p,a,t:p+a?p/(p+a)*100:null}});
+  const par=es.map(e=>{let p=0,a=0;for(const d of js){const m=marque(cid,d,e.id);if(m==='P')p++;else if(m==='A'||m==='M')a++}return{e,p,a,t:p+a?p/(p+a)*100:null}});
   const P=sum(par.map(x=>x.p)),A=sum(par.map(x=>x.a));
   const taux=f=>{const s=par.filter(x=>f(x.e));const p=sum(s.map(x=>x.p)),a=sum(s.map(x=>x.a));return{p,a,t:p+a?p/(p+a)*100:null,n:s.length}};
   const G=taux(e=>e.sexe!=='F'),F=taux(e=>e.sexe==='F');
-  const jourTaux=tenus.map(d=>{let p=0,a=0;for(const e of es){const m=marque(cid,d,e.id);if(m==='P')p++;else if(m==='A')a++}return{d,p,a,t:p+a?p/(p+a)*100:0}});
+  const jourTaux=tenus.map(d=>{let p=0,a=0;for(const e of es){const m=marque(cid,d,e.id);if(m==='P')p++;else if(m==='A'||m==='M')a++}return{d,p,a,t:p+a?p/(p+a)*100:0}});
   const surv=par.filter(x=>x.t!=null&&x.t<80).sort((a,b)=>a.t-b.t);
   const nomMois=m=>MOIS[+m.slice(5)-1];const cap=m=>nomMois(m).replace(/^./,c=>c.toUpperCase());
   const chips=`<div class="chips" role="group" aria-label="Mois"><button class="chipb" data-act="amois" data-v="" aria-pressed="${!S.aMois}">Tout le registre</button>${mois.map(m=>`<button class="chipb" data-act="amois" data-v="${m}" aria-pressed="${S.aMois===m}">${cap(m)}</button>`).join('')}</div>`;
@@ -1633,7 +1683,7 @@ function formRegistre(){
 const aTimers={};
 function marquer(cid,d,eids,val){
   const id=aid(cid,d);const doc=JSON.parse(JSON.stringify(S.appel[id]||{classeId:cid,date:d,p:{}}));
-  for(const e of eids){if(val==null){const cur=doc.p[e]||'';const nx=cur===''?'P':cur==='P'?'A':'';if(nx)doc.p[e]=nx;else delete doc.p[e]}else if(!doc.p[e])doc.p[e]=val}
+  for(const e of eids){if(val==null){const cur=doc.p[e]||'';const nx=cur===''?'P':cur==='P'?'A':cur==='A'?'M':'';if(nx)doc.p[e]=nx;else delete doc.p[e]}else if(!doc.p[e])doc.p[e]=val}
   doc.by=meId();S.appel={...S.appel,[id]:doc};render();
   clearTimeout(aTimers[id]);aTimers[id]=setTimeout(()=>put('appel',id,S.appel[id]).catch(()=>{}),500);
 }
@@ -1654,6 +1704,9 @@ function ficheEleve(id){
    <div class="card pad"><div class="eyebrow" style="margin-bottom:10px">Famille et contact</div><dl class="kv">${kv('Père',e.pere)}${kv('Mère',e.mere)}${kv('Tuteur',e.tuteur)}${kv('Téléphone',e.telephone)}${kv('Adresse',e.adresse)}</dl></div>
    <button class="btn danger" data-act="del-eleve" data-id="${h(id)}">Supprimer cet élève</button></div>`);
 }
+const isoToDmy=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v||'');return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'')};
+function dmyToIso(v){v=String(v||'').trim();if(!v)return '';const m=/^(\d{1,2})\D+(\d{1,2})\D+(\d{4})$/.exec(v);if(!m)return null;const d=+m[1],mo=+m[2],y=+m[3];const t=new Date(y,mo-1,d);if(t.getFullYear()!==y||t.getMonth()!==mo-1||t.getDate()!==d||y<1950||t>new Date())return null;return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
+document.addEventListener('input',ev=>{const i=ev.target;if(!i.matches||!i.matches('[data-dmy]'))return;if(ev.inputType&&ev.inputType.startsWith('delete'))return;const n=i.value.replace(/\D/g,'').slice(0,8);i.value=n.length>4?n.slice(0,2)+'/'+n.slice(2,4)+'/'+n.slice(4):n.length>2?n.slice(0,2)+'/'+n.slice(2):n});
 function formEleve(id){
   const e=id?S.eleves[id]:{classeId:S.view==='classe'?S.cid:(S.fCls||mesClasses()[0]),nationalite:'Congolaise',sexe:'M'};
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
@@ -1664,7 +1717,7 @@ function formEleve(id){
    <div class="eyebrow">Identité</div>
    <div class="grid2">${f('nom','Nom',{req:1})}${f('postnom','Postnom')}</div>
    <div class="grid2">${f('prenom','Prénom',{req:1})}<div class="field"><label for="e-sexe">Sexe</label><select class="inp" id="e-sexe" name="sexe"><option value="M" ${e.sexe!=='F'?'selected':''}>Masculin</option><option value="F" ${e.sexe==='F'?'selected':''}>Féminin</option></select></div></div>
-   <div class="grid2">${f('lieuNaissance','Né(e) à')}${f('dateNaissance','le',{type:'date'})}</div>
+   <div class="grid2">${f('lieuNaissance','Né(e) à')}<div class="field"><label for="e-dateNaissance">le (jour/mois/année)</label><input class="inp" id="e-dateNaissance" name="dateNaissance" data-dmy inputmode="numeric" maxlength="10" placeholder="JJ/MM/AAAA" autocomplete="off" value="${h(isoToDmy(e.dateNaissance))}"></div></div>
    <div class="grid2">${f('matricule','N° Perm.')}${f('numId','N° ID')}</div>
    ${f('nationalite','Nationalité')}
    <div class="eyebrow">Famille et contact</div>
@@ -1750,7 +1803,7 @@ function anniversaires(es){const n=new Date();const t0=Date.UTC(n.getFullYear(),
 function profHello(p,cid,es,mine){
   const td=today();const now=new Date();const hr=now.getHours();const dd=D(td);const w=dd.getUTCDay();const we=w===0||w===6;
   const salut=hr<12?'Bonjour':hr<18?'Bon après-midi':'Bonsoir';const pr=prenomDe(p.nom);
-  const a=S.appel[aid(cid,td)]?.p||{};const nM=Object.keys(a).filter(k=>es.some(e=>e.id===k)).length;const nA=Object.values(a).filter(x=>x==='A').length;
+  const a=S.appel[aid(cid,td)]?.p||{};const nM=Object.keys(a).filter(k=>es.some(e=>e.id===k)).length;const nA=Object.values(a).filter(x=>x==='A'||x==='M').length;
   const t1=es.length>0&&nM>=es.length,t2=appelClos(cid,td);const done=(t1?1:0)+(t2?1:0);
   const pz=PENSEES[(Math.floor(Date.UTC(now.getFullYear(),now.getMonth(),now.getDate())/864e5))%PENSEES.length];
   const ann=anniversaires(es);const hasReg=regsOf(cid).some(r=>{const j=joursOuvres(r.debut);return td>=j[0]&&td<=j[29]});
@@ -1772,7 +1825,7 @@ function vProf(){
   const short=n=>(n||'').replace(' année primaire',' année');
   const linked=!p.prepare;const td=today();
   const sem=semaineCourante();
-  const jour=d=>{const a=cid?S.appel[aid(cid,d)]?.p||{}:{};const v=Object.values(a);return{n:v.length,P:v.filter(x=>x==='P').length,A:v.filter(x=>x==='A').length}};
+  const jour=d=>{const a=cid?S.appel[aid(cid,d)]?.p||{}:{};const v=Object.values(a);return{n:v.length,P:v.filter(x=>x==='P').length,A:v.filter(x=>x==='A'||x==='M').length}};
   const faits=sem.filter(d=>cid&&appelClos(cid,d)).length;
   const photo=p.photo?`<img src="${h(p.photo)}" alt="Photo de ${h(p.nom)}">`:`<span class="pf-ini">${h(initials({nom:p.nom}))}</span>`;
   const backV=S.pBack&&S.pBack!=='prof'?S.pBack:(isDir()?'gestion':'accueil');
@@ -2197,7 +2250,7 @@ function rapportData(eid,k){
   const e=S.eleves[eid];const cid=e.classeId;const cls=S.classes[cid];const gm=groupes(cls);
   const [d0,d1]=rangeOf(k);const lim=d1<today()?d1:today();
   const days=Object.values(S.appel).filter(a=>a.classeId===cid&&a.date>=d0&&a.date<=d1&&a.p?.[eid]).sort((a,b)=>a.date.localeCompare(b.date));
-  const P=days.filter(a=>a.p[eid]==='P').length,A=days.filter(a=>a.p[eid]==='A');
+  const P=days.filter(a=>a.p[eid]==='P').length,A=days.filter(a=>a.p[eid]==='A'||a.p[eid]==='M');
   const {mx,MT,list}=palmData(cid,k);const me=list.find(r=>r.e.id===eid)||{g:{}};
   const g={};for(const [gk] of GRP)g[gk]={t:me.g?.[gk]??null,mx:mx[gk],pct:me.g?.[gk]==null?null:me.g[gk]/mx[gk]*100};
   const ranked=list.filter(r=>r.p);
@@ -2612,7 +2665,7 @@ const cotesClos=(cid,d)=>!!JR(cid,d)?.cotes;
 const hm=iso=>{try{const d=new Date(iso);return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')}catch(e){return ''}};
 function canEditAppel(cid,d){if(isDir())return true;return d===today()&&!appelClos(cid,d)}
 function cellLocked(eid,cid,key){if(isDir())return false;const n=S.notes[nid(eid,cid)];const d=n?.log?.[key];if(!d)return false;if(d<today())return true;const cls=S.eleves[eid]?.classeId;return cotesClos(cls,d)}
-function appelResume(cid,d){const a=S.appel[aid(cid,d)]?.p||{};const es=elevesOf(cid);const P=es.filter(e=>a[e.id]==='P').length,A=es.filter(e=>a[e.id]==='A');return{P,A:A.length,absents:A.map(e=>nomComplet(e)),reste:es.filter(e=>!a[e.id]).length,n:es.length}}
+function appelResume(cid,d){const a=S.appel[aid(cid,d)]?.p||{};const es=elevesOf(cid);const P=es.filter(e=>a[e.id]==='P').length,A=es.filter(e=>a[e.id]==='A'||a[e.id]==='M');return{P,A:A.length,absents:A.map(e=>nomComplet(e)+(a[e.id]==='M'?' (malade)':'')),reste:es.filter(e=>!a[e.id]).length,n:es.length}}
 function cotesDuJour(cid,d){const cls=S.classes[cid];if(!cls)return[];const items={};
   for(const n of Object.values(S.notes)){if(n.classeId!==cid||!n.log)continue;const e=S.eleves[n.eleveId];if(!e)continue;const c=(cls.cours||[]).find(x=>x.id===n.coursId);if(!c)continue;
     for(const [k,dd] of Object.entries(n.log)){if(dd!==d)continue;const ik=c.id+'|'+k;(items[ik]=items[ik]||{cours:c.id,nom:c.nom,key:k,max:MX(c,k),eleves:[]}).eleves.push({nom:nomComplet(e),pts:V(n.eleveId,c,k)})}}
@@ -2692,7 +2745,7 @@ function daySheet(cid){
   const d=today(),c=S.classes[cid];if(!c)return;const t=teachersOf(cid)[0];const r=appelResume(cid,d);const ja=JR(cid,d);
   const items=ja?.cotes?ja.cotes.items:cotesDuJour(cid,d);const es=elevesOf(cid);
   const a=S.appel[aid(cid,d)]?.p||{};
-  const pres=es.filter(e=>a[e.id]==='P'),abs=es.filter(e=>a[e.id]==='A'),rest=es.filter(e=>!a[e.id]);
+  const pres=es.filter(e=>a[e.id]==='P'),abs=es.filter(e=>a[e.id]==='A'||a[e.id]==='M'),rest=es.filter(e=>!a[e.id]);
   const cotes=new Set(items.flatMap(i=>i.eleves.map(e=>e.nom)));
   const allPts=items.flatMap(i=>i.eleves.filter(e=>e.pts!=null).map(e=>e.pts/i.max*100));
   const moyG=allPts.length?sum(allPts)/allPts.length:null;
@@ -2863,6 +2916,9 @@ const A={
   cours:b=>{S.cours=b.dataset.id;render();if(innerWidth<1280)$('.entry')?.scrollIntoView({block:'start',behavior:'smooth'})},
   cnav:b=>{const cls=S.classes[S.cid];const all=[...(cls.cours||[]).map(c=>c.id),'vie'];const i=all.indexOf(S.cours)+ +b.dataset.v;if(all[i]){S.cours=all[i];render()}},
   viemode:b=>{S.vieMode=b.dataset.v;render()},
+  cmode:b=>{S.cMode=b.dataset.v;render()},
+  cper:b=>{S.cPer=b.dataset.v;render()},
+  fnav:b=>{const es=elevesOf(S.cid);const i=es.findIndex(e=>e.id===S.sel)+ +b.dataset.v;if(es[i]){S.sel=es[i].id;render();document.querySelector('.fiche')?.scrollIntoView({block:'start',behavior:'smooth'})}},
   selel:b=>{S.sel=b.dataset.id;if(S.ctab==='bul'||S.ctab==='cotes')refreshBul();else render()},
   bnav:b=>{const es=elevesOf(S.cid);const i=es.findIndex(e=>e.id===S.sel)+ +b.dataset.v;if(es[i]){S.sel=es[i].id;refreshBul()}},
   btri:b=>{S.bTri=b.dataset.v;render()},
@@ -2999,8 +3055,8 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('[data-act]');i
 document.addEventListener('focusin',ev=>{const t=ev.target;if(t.classList?.contains('gi')&&t.dataset.e&&t.dataset.e!==S.sel){S.sel=t.dataset.e;refreshBul()}const b=t.closest&&t.closest('.bars .b');if(b&&$('#tip'))$('#tip').textContent=b.dataset.tip});
 document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.target.closest('.bars .b');if(b&&$('#tip'))$('#tip').textContent=b.dataset.tip});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
-  if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
-document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}});
+  if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}});
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
@@ -3019,7 +3075,7 @@ document.addEventListener('submit',async ev=>{
     if(!doc.symptomes.length&&!doc.motif){toast('Indiquez le motif de la sortie.');return}
     await put('sante',id,doc);toast(f.dataset.id?'Fiche mise à jour':'Sortie enregistrée');santeFiche(id);render();return}
   if(f.id==='f-ins'){await put('inscriptions',meId(),{nom:fd.nom.trim(),tel:fd.tel.trim(),matiere:fd.matiere.trim(),date:new Date().toISOString()});toast('Demande envoyée à la direction')}
-  if(f.id==='f-eleve'){const id=f.dataset.id||uid();for(const k in fd)fd[k]=fd[k].trim();const old=S.eleves[id]||{};if(elvPhoto===null){if(old.photo)fd.photo=old.photo}else if(elvPhoto)fd.photo=elvPhoto;fd.nom=fd.nom.toUpperCase();fd.postnom=fd.postnom.toUpperCase();const isNew=!f.dataset.id;await put('eleves',id,fd);draftClear();toast(isNew?'Élève inscrit':'Fiche mise à jour');ficheEleve(id);render()}
+  if(f.id==='f-eleve'){const id=f.dataset.id||uid();for(const k in fd)fd[k]=fd[k].trim();{const iso=dmyToIso(fd.dateNaissance);if(iso===null){toast('Date de naissance : écrivez jour/mois/année, par exemple 05/03/2015.');f.dateNaissance.focus();return}fd.dateNaissance=iso}const old=S.eleves[id]||{};if(elvPhoto===null){if(old.photo)fd.photo=old.photo}else if(elvPhoto)fd.photo=elvPhoto;fd.nom=fd.nom.toUpperCase();fd.postnom=fd.postnom.toUpperCase();const isNew=!f.dataset.id;await put('eleves',id,fd);draftClear();toast(isNew?'Élève inscrit':'Fiche mise à jour');ficheEleve(id);render()}
   if(f.id==='f-cls'){const grille=ed.grille.filter(r=>r.t!=='c'||(r.nom||'').trim()).map(r=>r.t==='c'?Object.assign({t:'c',id:r.id,nom:r.nom.trim(),max:+r.max||10},r.big?{big:true}:{}):r.t==='st'?{t:'st'}:{t:r.t,nom:(r.nom||'').trim()});const id=ed.id||uid();await put('classes',id,{nom:ed.nom.trim(),degre:ed.degre||'',grille,cours:grille.filter(r=>r.t==='c')});closeSheet();toast('Classe enregistrée')}
   if(f.id==='f-ecole'){for(const k in fd)fd[k]=fd[k].trim();await put('config','ecole',fd);closeSheet();toast('Informations enregistrées')}
   if(f.id==='f-reg'){const debut=lundi(fd.debut);const ex=regsOf(S.cid).find(r=>r.debut===debut);const id=ex?ex.id:uid();if(!ex)await put('registres',id,{classeId:S.cid,debut});S.aReg=id;S.aVue='reg';closeSheet();toast(ex?'Ce registre existe déjà, il est ouvert.':'Registre ouvert')}

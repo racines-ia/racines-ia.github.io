@@ -271,3 +271,6 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
 .prog .pt{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
 .prog .pf{height:100%;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform 200ms linear}
 .prog button{background:none;border:0;color:var(--muted);font:600 12px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start;padding:0;min-height:24px}
+
+.vid.v916{aspect-ratio:9/16;max-width:300px;margin:0 auto}
+.fmt{flex:none;min-height:32px;padding:0 10px;border-radius:var(--r-pill);border:1px solid var(--line);background:var(--surface-2);color:var(--green);font:700 12px var(--f-body);cursor:pointer}

@@ -46,7 +46,9 @@ function errMsg(e) {
   if (/Invalid login/i.test(m)) return 'Numéro ou mot de passe incorrect.';
   if (/already registered/i.test(m)) return 'Ce numéro a déjà un compte. Connecte-toi.';
   if (/Password should/i.test(m)) return 'Le mot de passe doit avoir au moins 6 caractères.';
-  if (/mime|size|exceeded|too large/i.test(m)) return 'Fichier refusé : trop lourd ou format non accepté.';
+  if (/NotReadable|not.?readable|could not be read|espace|space|ENOSPC/i.test(m) || (e && e.name === 'NotReadableError')) return 'Ton téléphone n\'a pas pu lire ce fichier : il manque sans doute d\'espace. Libère un peu de place (ou vide le cache de Chrome), puis réessaie.';
+  if (/mime|invalid_mime|type.*not supported/i.test(m)) return 'Format de fichier non accepté.';
+  if (/size|exceeded|too large|Payload/i.test(m)) return 'Fichier trop lourd : 50 Mo maximum.';
   if (/fetch|network/i.test(m)) return 'Connexion internet instable. Réessaie.';
   return m || 'Une erreur est survenue. Réessaie.';
 }
@@ -83,20 +85,32 @@ function header() {
 
 /* ---------- Photos et fichiers ---------- */
 function toJpeg(file, W, H, crop) {
-  return new Promise(function (res, rej) {
-    var url = URL.createObjectURL(file), im = new Image();
-    im.onload = function () {
-      var w = W, h = H, s;
-      if (crop) s = Math.max(W / im.width, H / im.height);
-      else { s = Math.min(1, W / im.width, H / im.height); w = Math.round(im.width * s); h = Math.round(im.height * s); }
-      var c = document.createElement('canvas'); c.width = w; c.height = h;
-      c.getContext('2d').drawImage(im, (w - im.width * s) / 2, (h - im.height * s) / 2, im.width * s, im.height * s);
-      URL.revokeObjectURL(url);
-      c.toBlob(function (b) { b ? res(b) : rej(new Error('Image illisible')); }, 'image/jpeg', .84);
-    };
-    im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Image illisible')); };
-    im.src = url;
-  });
+  function draw(src, iw, ih) {
+    var w = W, h = H, s;
+    if (crop) s = Math.max(W / iw, H / ih);
+    else { s = Math.min(1, W / iw, H / ih); w = Math.round(iw * s); h = Math.round(ih * s); }
+    var c = document.createElement('canvas'); c.width = w; c.height = h;
+    c.getContext('2d').drawImage(src, (w - iw * s) / 2, (h - ih * s) / 2, iw * s, ih * s);
+    return new Promise(function (res, rej) { c.toBlob(function (b) { c.width = c.height = 0; b ? res(b) : rej(new Error('Image illisible')); }, 'image/jpeg', .84); });
+  }
+  if (!file || !file.size) return Promise.reject(Object.assign(new Error('NotReadable'), { name: 'NotReadableError' }));
+  var viaImg = function () {
+    return new Promise(function (res, rej) {
+      var url = URL.createObjectURL(file), im = new Image();
+      im.onload = function () { draw(im, im.naturalWidth, im.naturalHeight).then(res, rej).then(function () { URL.revokeObjectURL(url); }); };
+      im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('Image illisible : choisis une photo JPG ou PNG.')); };
+      im.src = url;
+    });
+  };
+  if (!window.createImageBitmap) return viaImg();
+  // Décode à une taille réduite : évite de charger une grosse photo entière en mémoire
+  return createImageBitmap(file).then(function (full) {
+    var k = Math.max(W / full.width, H / full.height) * 1.5, iw = full.width, ih = full.height;
+    if (k >= 1) return draw(full, iw, ih).then(function (b) { full.close(); return b; });
+    full.close();
+    return createImageBitmap(file, { resizeWidth: Math.round(iw * k), resizeHeight: Math.round(ih * k), resizeQuality: 'high' })
+      .then(function (bm) { return draw(bm, bm.width, bm.height).then(function (b) { bm.close(); return b; }); });
+  }).catch(function (e) { if (e && e.name === 'NotReadableError') throw e; return viaImg(); });
 }
 function rnd() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
 var XHR = null;
@@ -108,11 +122,46 @@ function progress(label, pct) {
   el.querySelector('.pp').textContent = Math.round(pct) + ' %';
   el.querySelector('.pf').style.transform = 'scaleX(' + Math.max(0, Math.min(1, pct / 100)) + ')';
 }
+function loadTus() {
+  if (window.tus) return Promise.resolve(window.tus);
+  return new Promise(function (res, rej) {
+    var sc = document.createElement('script'); sc.src = 'https://cdn.jsdelivr.net/npm/tus-js-client@4/dist/tus.min.js';
+    sc.onload = function () { window.tus ? res(window.tus) : rej(new Error('Envoi indisponible')); };
+    sc.onerror = function () { rej(new Error('Connexion internet instable. Réessaie.')); };
+    document.head.appendChild(sc);
+  });
+}
+async function uploadBig(bucket, path, blob, type, label, tok) {
+  var tus = await loadTus();
+  progress(label, 0);
+  await new Promise(function (res, rej) {
+    var up = new tus.Upload(blob, {
+      endpoint: SB_URL.replace('.supabase.co', '.storage.supabase.co') + '/storage/v1/upload/resumable',
+      retryDelays: [0, 2000, 5000, 10000, 20000, 30000],
+      headers: { authorization: 'Bearer ' + tok, apikey: SB_KEY, 'x-upsert': 'false' },
+      uploadDataDuringCreation: true, removeFingerprintOnSuccess: true,
+      metadata: { bucketName: bucket, objectName: path, contentType: type || 'application/octet-stream', cacheControl: '31536000' },
+      chunkSize: 6 * 1024 * 1024,
+      onProgress: function (sent, total) { progress(label + ' · reprise auto', sent / total * 99); },
+      onError: function (err) { var m = String(err && err.message || err); rej(new Error(/413|exceeded|too large/i.test(m) ? 'size exceeded' : /mime/i.test(m) ? 'invalid_mime' : 'Connexion interrompue : réessaie, l\'envoi reprendra où il s\'est arrêté.')); },
+      onSuccess: function () { res(); }
+    });
+    XHR = { abort: function () { up.abort(true).catch(function () {}); rej(new Error('Envoi annulé.')); } };
+    up.findPreviousUploads().then(function (prev) { if (prev.length) up.resumeFromPreviousUpload(prev[0]); up.start(); });
+  });
+}
 async function upload(bucket, path, blob, type, label) {
+  if (!blob || !blob.size) throw Object.assign(new Error('NotReadable'), { name: 'NotReadableError' });
   var ses = (await sb.auth.getSession()).data.session, tok = ses ? ses.access_token : SB_KEY;
   label = label || 'Envoi en cours';
   progress(label, 0);
   try {
+    var big = false;
+    if (blob.size > 6 * 1024 * 1024) {
+      try { await uploadBig(bucket, path, blob, type, label, tok); big = true; }
+      catch (e) { if (/annulé|size|mime/i.test(e.message)) throw e; console.warn('tus', e); progress(label, 0); }
+    }
+    if (big) { progress(label, 100); return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl; }
     await new Promise(function (res, rej) {
       var x = XHR = new XMLHttpRequest();
       x.open('POST', SB_URL + '/storage/v1/object/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'));
@@ -150,6 +199,46 @@ function download(url, name) {
   x.send();
 }
 async function upImage(file, W, H, crop) { var b = await toJpeg(file, W, H, crop); return upload('mk-media', S.user.id + '/' + rnd() + '.jpg', b, 'image/jpeg', 'Envoi de la photo'); }
+
+function videoMeta(f) {
+  return new Promise(function (res) {
+    var v = document.createElement('video'), u = URL.createObjectURL(f), fin = false, done = function (r) { if (fin) return; fin = true; URL.revokeObjectURL(u); res(r); };
+    v.preload = 'metadata'; v.muted = true;
+    v.onloadedmetadata = function () { done({ ok: true, w: v.videoWidth, h: v.videoHeight, d: v.duration }); };
+    v.onerror = function () { done({ ok: false, w: 16, h: 9, d: 0 }); };
+    setTimeout(function () { done({ ok: false, w: 16, h: 9, d: 0 }); }, 8000);
+    v.src = u;
+  });
+}
+// Compression dans le téléphone : relit la vidéo et la réenregistre à un débit plus faible (dure à peu près la longueur de la vidéo)
+function compressVideo(f, meta) {
+  return new Promise(function (res, rej) {
+    var types = ['video/mp4;codecs=avc1,mp4a', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'];
+    var mime = window.MediaRecorder && types.filter(function (t) { return MediaRecorder.isTypeSupported(t); })[0];
+    var v = document.createElement('video');
+    if (!mime || !v.captureStream) return rej(new Error('Vidéo trop lourde : 50 Mo maximum, et ce téléphone ne peut pas la compresser. Mets-la sur YouTube et colle le lien.'));
+    if (meta.d > 600) return rej(new Error('Vidéo trop longue pour être compressée ici (10 min max). Mets-la sur YouTube et colle le lien.'));
+    var bits = Math.max(400000, Math.min(2500000, Math.floor((40 * 8 * 1024 * 1024) / Math.max(1, meta.d)) - 96000));
+    var u = URL.createObjectURL(f), chunks = [], rec, cancelled = false;
+    v.src = u; v.playsInline = true; v.volume = 0.0001;
+    v.style.cssText = 'position:fixed;left:-9999px;width:2px;height:2px';
+    document.body.appendChild(v);
+    var clean = function () { URL.revokeObjectURL(u); v.remove(); XHR = null; };
+    XHR = { abort: function () { cancelled = true; try { rec && rec.stop(); } catch (e) {} v.pause(); clean(); progress(null, null); rej(new Error('Compression annulée.')); } };
+    progress('Compression de la vidéo', 0);
+    v.onloadeddata = function () {
+      var st = v.captureStream();
+      rec = new MediaRecorder(st, { mimeType: mime, videoBitsPerSecond: bits, audioBitsPerSecond: 96000 });
+      rec.ondataavailable = function (e) { if (e.data && e.data.size) chunks.push(e.data); };
+      rec.onstop = function () { if (cancelled) return; clean(); res(new Blob(chunks, { type: mime.split(';')[0] })); };
+      v.ontimeupdate = function () { if (meta.d) progress('Compression de la vidéo', v.currentTime / meta.d * 100); };
+      v.onended = function () { try { rec.stop(); } catch (e) {} };
+      rec.start(1000);
+      v.play().catch(function () { clean(); progress(null, null); rej(new Error('Impossible de lire la vidéo pour la compresser.')); });
+    };
+    v.onerror = function () { clean(); progress(null, null); rej(new Error('Vidéo illisible sur ce téléphone.')); };
+  });
+}
 
 /* ---------- Navigation ---------- */
 function nav(q) { history.pushState({}, '', q || location.pathname); route(); }
@@ -210,9 +299,9 @@ async function pageHome(alive) {
 function ytId(u) { var m = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{11})/.exec(u); return m ? m[1] : ''; }
 function videoHtml(v) {
   var u = safeUrl(v && v.url); if (!u) return '';
-  var y = ytId(u), t = v.titre ? '<p class="vt">' + esc(v.titre) + '</p>' : '';
-  if (y) return '<div><div class="vid"><iframe src="https://www.youtube-nocookie.com/embed/' + y + '" allowfullscreen loading="lazy" title="Vidéo"></iframe></div>' + t + '</div>';
-  if (/\.(mp4|webm|mov)(\?|$)/i.test(u)) return '<div><div class="vid"><video controls playsinline preload="metadata" src="' + esc(u) + '"></video></div>' + t + '</div>';
+  var y = ytId(u), t = v.titre ? '<p class="vt">' + esc(v.titre) + '</p>' : '', vc = v.format === '9:16' ? 'vid v916' : 'vid';
+  if (y) return '<div><div class="' + vc + '"><iframe src="https://www.youtube-nocookie.com/embed/' + y + '" allowfullscreen loading="lazy" title="Vidéo"></iframe></div>' + t + '</div>';
+  if (/\.(mp4|webm|mov|3gp|mkv)(\?|$)/i.test(u)) return '<div><div class="' + vc + '"><video controls playsinline preload="metadata" src="' + esc(u) + '"></video></div>' + t + '</div>';
   return '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(u) + '">' + ico('i-play') + esc(v.titre || 'Voir la vidéo') + '</a>';
 }
 function shareRow(url, text) {
@@ -387,12 +476,13 @@ var A = {
     closeSheet(); toast('Produit supprimé'); await loadDash(); renderDash();
   },
   edRmEx: function (el) { edRead(); E.p.exemples.splice(Number(el.dataset.i), 1); edRender(); },
+  edVidFmt: function (el) { edRead(); var v = E.p.videos[Number(el.dataset.i)]; if (v) { v.format = v.format === '9:16' ? '16:9' : '9:16'; edRender(); } },
   edRmVid: function (el) { edRead(); E.p.videos.splice(Number(el.dataset.i), 1); edRender(); },
   edAddVidLink: function () {
     edRead(); var u = safeUrl($('e-vurl').value);
     if (!u) return toast('Colle un lien complet qui commence par https://');
     if (E.p.videos.length >= 3) return toast('3 vidéos maximum');
-    E.p.videos.push({ url: u, titre: $('e-vtitre').value.trim() }); edRender();
+    E.p.videos.push({ url: u, titre: $('e-vtitre').value.trim(), format: /youtube\.com\/shorts\//.test(u) ? '9:16' : $('e-vfmt').value }); edRender();
   },
   edAddLink: async function (el) {
     var u = safeUrl($('e-furl').value), n = $('e-fnom').value.trim();
@@ -682,10 +772,10 @@ function edRender() {
     '<div class="box"><h3>Photo du produit (carrée)</h3><div style="width:160px">' + upBox('pimg', p.image_url, 'Photo du produit', 'sq') + '</div></div>' +
     '<div class="box"><h3>Photos d\'exemples</h3><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
     (p.exemples.length < 4 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
-    '<div class="box"><h3>Vidéos explicatives</h3><p class="note">Comment utiliser ou installer le produit. 3 vidéos maximum, 50 Mo par vidéo, ou un lien YouTube.</p>' +
-    p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
-    (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/mp4,video/webm,video/quicktime" data-up="pvid"></label>' +
-      '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
+    '<div class="box"><h3>Vidéos explicatives</h3><p class="note">Comment utiliser ou installer le produit. 3 vidéos maximum. Une vidéo de plus de 50 Mo est compressée automatiquement. Formats : horizontale 16:9 ou verticale 9:16 (touche le format pour le changer).</p>' +
+    p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="fmt" type="button" data-act="edVidFmt" data-i="' + i + '" title="Changer le format">' + (v.format === '9:16' ? '9:16' : '16:9') + '</button><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
+    (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +
+      '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><label>Format de la vidéo<select id="e-vfmt"><option value="16:9">Horizontale (16:9)</option><option value="9:16">Verticale (9:16)</option></select></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
     '<div class="box"><h3>Fichiers remis au client</h3><p class="note">PDF, archives, ou liens de téléchargement. Le client y accède dès que tu confirmes son paiement.</p>' +
     E.files.map(function (f) { return '<div class="item">' + ico('i-file') + '<span class="grow">' + esc(f.nom) + '</span><button class="xs" type="button" data-act="edRmFile" data-id="' + f.id + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
     '<label class="btn btn-ghost btn-sm filebtn"><span>Envoyer un fichier (50 Mo max)</span><input type="file" data-up="pfile"></label>' +
@@ -719,11 +809,16 @@ document.addEventListener('change', async function (e) {
     else if (k === 'pimg') { edRead(); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
     else if (k === 'pex') { edRead(); E.p.exemples.push({ url: await upImage(f, 800, 800, true), legende: '' }); edRender(); toast('Exemple ajouté : pense à enregistrer'); }
     else if (k === 'pvid') {
-      if (f.size > 50 * 1024 * 1024) return toast('Vidéo trop lourde : 50 Mo maximum');
-      edRead(); var t = $('e-vtitre').value.trim(); 
-      var ext = (/\.(mp4|webm|mov)$/i.exec(f.name) || [0, 'mp4'])[1].toLowerCase();
-      var vu = await upload('mk-media', S.user.id + '/' + rnd() + '.' + ext, f, f.type || 'video/mp4', 'Envoi de la vidéo');
-      if (!E) return; E.p.videos.push({ url: vu, titre: t }); edRender(); toast('Vidéo ajoutée : pense à enregistrer');
+      edRead(); var t = $('e-vtitre').value.trim();
+      var meta = await videoMeta(f), src = f;
+      if (f.size > 48 * 1024 * 1024) {
+        if (!meta.ok) throw new Error('Vidéo trop lourde : 50 Mo maximum. Raccourcis-la ou mets-la sur YouTube.');
+        src = await compressVideo(f, meta);
+        if (src.size > 48 * 1024 * 1024) throw new Error('Même compressée, la vidéo dépasse 50 Mo. Raccourcis-la ou mets-la sur YouTube et colle le lien.');
+      }
+      var ext = /webm/.test(src.type) ? 'webm' : /quicktime/.test(src.type) ? 'mov' : /3gp/.test(src.type) ? '3gp' : /matroska/.test(src.type) ? 'mkv' : 'mp4';
+      var vu = await upload('mk-media', S.user.id + '/' + rnd() + '.' + ext, src, (src.type || 'video/mp4').split(';')[0], 'Envoi de la vidéo');
+      if (!E) return; E.p.videos.push({ url: vu, titre: t, format: meta.h > meta.w ? '9:16' : '16:9' }); edRender(); toast('Vidéo ajoutée : pense à enregistrer');
     } else if (k === 'pfile') {
       if (f.size > 50 * 1024 * 1024) return toast('Fichier trop lourd : 50 Mo maximum');
       

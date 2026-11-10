@@ -136,7 +136,7 @@
     for (const r of rows) (fresh[r.col] = fresh[r.col] || new Map()).set(r.id, r.data);
     for (const col of new Set([...Object.keys(cache), ...Object.keys(fresh)])) {
       const m = fresh[col] || new Map();
-      for (const [id, d] of mapOf(col)) if (pending[col + '/' + id]) m.set(id, d);   // écriture locale en cours
+      for (const [id, d] of mapOf(col)) if (busyKey(col + '/' + id)) m.set(id, d);   // écriture locale en cours
       cache[col] = m;
     }
     since = rows.reduce((a, r) => (r.updated_at > a ? r.updated_at : a), since || '1970-01-01T00:00:00Z');
@@ -147,8 +147,8 @@
     const rows = await fetchRows(after);
     const { data: gone, error } = await sb.from('ecole_deleted').select('col,id,at').eq('school_id', sid).gt('at', after).limit(5000);
     if (error) throw error;
-    for (const g of gone) if (!pending[g.col + '/' + g.id]) mapOf(g.col).delete(g.id);
-    for (const r of rows) if (!pending[r.col + '/' + r.id]) mapOf(r.col).set(r.id, r.data);
+    for (const g of gone) if (!busyKey(g.col + '/' + g.id)) mapOf(g.col).delete(g.id);
+    for (const r of rows) if (!busyKey(r.col + '/' + r.id)) mapOf(r.col).set(r.id, r.data);
     since = rows.reduce((a, r) => (r.updated_at > a ? r.updated_at : a), since);
   }
 
@@ -186,20 +186,84 @@
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ecole_docs', filter: 'school_id=eq.' + sid }, p => {
         const row = p.eventType === 'DELETE' ? p.old : p.new;
         if (!row || !row.col) return;
-        if (pending[row.col + '/' + row.id]) return;
+        if (busyKey(row.col + '/' + row.id)) return;
         if (p.eventType === 'DELETE') mapOf(row.col).delete(row.id);
         else mapOf(row.col).set(row.id, row.data);
         if (row.updated_at && since && row.updated_at > since) since = row.updated_at;
         emit(row.col); saveSoon();
       })
       .subscribe(st => {
-        if (st === 'SUBSCRIBED') { if (!first) loadAll().catch(() => {}); first = false; }
+        if (st === 'SUBSCRIBED') { if (!first) { loadAll().catch(() => {}); flush(); } first = false; }
       });
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { hiddenAt = Date.now(); return; }
+    if (ME && loaded) flush();
     if (ME && loaded && hiddenAt && Date.now() - hiddenAt > 45000) loadAll().catch(() => {});
   });
+
+
+  /* ---------- boîte d'envoi : ce qui est saisi sans connexion est gardé puis envoyé au retour du réseau ---------- */
+  const outbox = new Map();   // 'col/id' -> { col, id, op: 'set' | 'del', data, t }
+  const busyKey = k => !!pending[k] || outbox.has(k);
+  const okey = () => ckey() + ':out';
+  const isNet = e => (typeof navigator !== 'undefined' && navigator.onLine === false) || (!!e && (!e.code || /^5\d\d$/.test(String(e.code))) && /fetch|network|load failed|abort|timed? ?out|connection/i.test((e.name || '') + ' ' + (e.message || '') + ' ' + (e.details || '')));
+  const tmo = () => { try { return AbortSignal.timeout(20000); } catch (e) { return undefined; } };
+  const withTmo = q => { const s = tmo(); return s && q.abortSignal ? q.abortSignal(s) : q; };
+  function saveOut() { IDB.set(okey(), [...outbox.values()]); saveSoon(); bar(); }
+  function hold(col, id, op, data) { outbox.set(col + '/' + id, { col, id, op, data, t: Date.now() }); saveOut(); }
+  function unhold(col, id) { if (outbox.delete(col + '/' + id)) saveOut(); }
+  async function restoreOut() {
+    const a = await IDB.get(okey());
+    if (Array.isArray(a)) for (const o of a) if (o && o.col && o.id) {
+      outbox.set(o.col + '/' + o.id, o);
+      if (o.op === 'del') mapOf(o.col).delete(o.id); else mapOf(o.col).set(o.id, o.data);
+    }
+    bar();
+  }
+  let barEl = null, flushing = false;
+  function bar() {
+    const n = outbox.size, off = typeof navigator !== 'undefined' && navigator.onLine === false;
+    if (!n && !off) { if (barEl) barEl.hidden = true; return; }
+    if (!barEl) {
+      barEl = document.createElement('div'); barEl.id = 'netbar';
+      barEl.style.cssText = 'position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 8px);transform:translateX(-50%);z-index:99999;max-width:92vw;padding:7px 14px;border-radius:999px;background:rgba(17,17,17,.92);color:#fff;font:600 12.5px/1.25 system-ui,sans-serif;box-shadow:0 6px 20px rgba(0,0,0,.28);text-align:center;pointer-events:auto';
+      barEl.addEventListener('click', () => flush());
+      document.body.appendChild(barEl);
+    }
+    const m = n > 1 ? n + ' modifications gardées' : n === 1 ? '1 modification gardée' : '';
+    barEl.textContent = flushing && n ? 'Envoi de ' + n + ' modification' + (n > 1 ? 's' : '') + '…' : off ? 'Hors connexion' + (n ? ' · ' + m + ' sur ce téléphone' : '') : m + ' · envoi dès que le réseau revient';
+    barEl.hidden = false;
+  }
+  async function flush() {
+    if (flushing || !ME || !outbox.size) { bar(); return; }
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) { bar(); return; }
+    flushing = true; bar();
+    let refused = 0, sent = 0;
+    try {
+      for (const o of [...outbox.values()].sort((a, b) => a.t - b.t)) {
+        const k = o.col + '/' + o.id;
+        if (pending[k] || outbox.get(k) !== o) continue;
+        const sid = ME.member.school_id;
+        let error = null;
+        try {
+          const r = o.op === 'del'
+            ? await withTmo(sb.from('ecole_docs').delete().eq('school_id', sid).eq('col', o.col).eq('id', o.id))
+            : await withTmo(sb.from('ecole_docs').upsert({ school_id: sid, col: o.col, id: o.id, data: o.data, updated_by: ME.uid }));
+          error = r.error;
+        } catch (e) { error = e; }
+        if (error && isNet(error)) break;            // toujours pas de réseau : on réessaiera
+        if (outbox.get(k) === o) { outbox.delete(k); IDB.set(okey(), [...outbox.values()]); }
+        if (error) refused++; else sent++;
+      }
+    } finally { flushing = false; bar(); }
+    if (refused) { since = null; try { window.toast && window.toast(refused > 1 ? refused + ' modifications faites hors connexion ont été refusées.' : 'Une modification faite hors connexion a été refusée.'); } catch (e) {} }
+    else if (sent && !outbox.size) { try { window.toast && window.toast(sent > 1 ? sent + ' modifications envoyées.' : 'Modification envoyée.'); } catch (e) {} }
+    if (sent || refused) { try { await loading; } catch (e) {} loadAll().catch(() => {}); }
+  }
+  window.addEventListener('online', () => { bar(); flush(); if (ME && loaded) loadAll().catch(() => {}); });
+  window.addEventListener('offline', bar);
+  setInterval(() => { if (outbox.size) flush(); }, 20000);
 
   const errCode = e => ({ code: e && (e.code === '42501' || /row-level security|permission/i.test(e.message || '')) ? 'permission_denied' : 'unavailable', message: e && e.message });
   const rid = () => { const a = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789', b = crypto.getRandomValues(new Uint8Array(20)); return [...b].map(x => a[x % 62]).join(''); };
@@ -213,14 +277,17 @@
         const clean = JSON.parse(JSON.stringify(data ?? {}));
         m.set(id, clean); pending[key()] = (pending[key()] || 0) + 1; emit(col);
         try {
-          const { data: out, error } = await sb.from('ecole_docs')
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) throw { message: 'network offline' };
+          const { data: out, error } = await withTmo(sb.from('ecole_docs')
             .upsert({ school_id: ME.member.school_id, col, id, data: clean, updated_by: ME.uid })
-            .select('data').maybeSingle();
+            .select('data')).maybeSingle();
           if (error) throw error;
           if (out && pending[key()] === 1) m.set(id, out.data);
+          unhold(col, id);
           saveSoon();
         } catch (e) {
-          if (pending[key()] === 1) { had ? m.set(id, prev) : m.delete(id); }
+          if (isNet(e)) { if (pending[key()] === 1) hold(col, id, 'set', clean); return; }   // gardé, envoyé plus tard
+          if (pending[key()] === 1) { unhold(col, id); had ? m.set(id, prev) : m.delete(id); }
           throw errCode(e);
         } finally { pending[key()]--; if (!pending[key()]) delete pending[key()]; emit(col); }
       },
@@ -229,10 +296,15 @@
         const m = mapOf(col), had = m.has(id), prev = m.get(id);
         m.delete(id); pending[key()] = (pending[key()] || 0) + 1; emit(col);
         try {
-          const { error } = await sb.from('ecole_docs').delete().eq('school_id', ME.member.school_id).eq('col', col).eq('id', id);
+          if (typeof navigator !== 'undefined' && navigator.onLine === false) throw { message: 'network offline' };
+          const { error } = await withTmo(sb.from('ecole_docs').delete().eq('school_id', ME.member.school_id).eq('col', col).eq('id', id));
           if (error) throw error;
+          unhold(col, id);
           saveSoon();
-        } catch (e) { if (had) m.set(id, prev); throw errCode(e); }
+        } catch (e) {
+          if (isNet(e)) { if (pending[key()] === 1) hold(col, id, 'del'); return; }
+          unhold(col, id); if (had) m.set(id, prev); throw errCode(e);
+        }
         finally { pending[key()]--; if (!pending[key()]) delete pending[key()]; emit(col); }
       }
     };
@@ -435,7 +507,11 @@
   async function start() {
     const { data: { session } } = await sb.auth.getSession();
     if (!session) { box.hidden = false; return; }
-    const { data: member, error } = await sb.from('ecole_members').select('*').eq('user_id', session.user.id).maybeSingle();
+    let { data: member, error } = await sb.from('ecole_members').select('*').eq('user_id', session.user.id).maybeSingle();
+    const mkey = 'racine-membre';
+    if (error && isNet(error)) {   // pas de réseau : on rouvre avec le dernier accès connu de ce téléphone
+      try { const c = JSON.parse(localStorage.getItem(mkey) || 'null'); if (c && c.user_id === session.user.id) { member = c; error = null; } } catch (x) {}
+    } else if (member) { try { localStorage.setItem(mkey, JSON.stringify(member)); } catch (x) {} }
     if (error) {
       box.hidden = false;
       return msg(/does not exist|relation/i.test(error.message) ? 'La base de données de l’école n’est pas encore installée.' : 'Connexion au serveur impossible. Vérifiez internet puis rouvrez l’application.');
@@ -467,10 +543,11 @@
     ME = { uid: session.user.id, member, phone: session.user.email.split('@')[0] };
     box.hidden = true;
     const had = await restoreLocal();
-    if (had) { readyResolve(); loadAll().catch(() => {}); listen(); return; }
+    await restoreOut();
+    if (had) { emitAll(); readyResolve(); loadAll().catch(() => {}).then(flush); listen(); return; }
     try { await loadAll(); } catch (e) { loaded = true; emitAll(); }
     listen();
-    readyResolve();
+    readyResolve(); flush();
   }
 
   async function backup() {
@@ -482,8 +559,10 @@
   }
 
   window.appLogout = async () => {
+    if (outbox.size) { await flush(); if (outbox.size && !window.__outWarn) { window.__outWarn = 1; try { window.toast && window.toast(outbox.size + ' modification(s) pas encore envoyées. Attendez le réseau, ou touchez encore pour vous déconnecter et les perdre.'); } catch (e) {} return; } }
     try { if (channel) await sb.removeChannel(channel); } catch (e) {}
     await IDB.clear();
+    try { localStorage.removeItem('racine-membre'); } catch (e) {}
     try { localStorage.removeItem('racine-ecole'); sessionStorage.removeItem('racine-reload'); } catch (e) {}
     await sb.auth.signOut();
     try { localStorage.removeItem('clr-intro'); } catch (e) {}

@@ -303,6 +303,15 @@ table.t td.name,table.t th.name{text-align:left}
 .rrow .rk{width:32px;height:32px;border-radius:50%;display:grid;place-items:center;font-family:var(--f-d);font-weight:400;font-size:13px;background:var(--sunk);flex:none}
 .rrow:nth-child(-n+3) .rk{background:var(--grad);color:#fff}
 
+/* Appareil photo dans l'application */
+#camfs{position:fixed;inset:0;z-index:100000;background:#000;display:flex;flex-direction:column}
+#camfs video{flex:1;min-height:0;width:100%;object-fit:cover;background:#000}
+#camfs video.front{transform:scaleX(-1)}
+#camfs .cam-b{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 22px calc(18px + env(safe-area-inset-bottom,0px));background:#000}
+#camfs .cam-b button{border:0;background:rgba(255,255,255,.14);color:#fff;font:600 14px/1 inherit;padding:13px 16px;border-radius:999px;min-width:92px;cursor:pointer}
+#camfs .cam-b .shot{width:74px;height:74px;min-width:74px;padding:0;border-radius:50%;background:#fff;box-shadow:0 0 0 4px #000,0 0 0 7px #fff}
+#camfs .cam-b .shot:active{transform:scale(.94)}
+#camfs .cam-m{position:absolute;left:0;right:0;top:calc(14px + env(safe-area-inset-top,0px));text-align:center;color:#fff;font-weight:600;font-size:14px;text-shadow:0 1px 6px #000;padding:0 20px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1631,7 +1640,7 @@ function marquer(cid,d,eids,val){
 
 /* ---------- feuilles ---------- */
 function openSheet(title,body,onMount){const s=$('#sheet');s.innerHTML=`<div class="sheet" data-act="closebg"><div class="panel" role="dialog" aria-modal="true" aria-label="${h(title)}"><div class="grab"></div><div class="panel-h"><h2>${h(title)}</h2><button class="x" data-act="close" aria-label="Fermer">×</button></div>${body}</div></div>`;s.hidden=false;onMount&&onMount(s)}
-function closeSheet(){$('#sheet').hidden=true;$('#sheet').innerHTML='';render()}
+function closeSheet(){if(document.getElementById('f-eleve'))draftClear();$('#sheet').hidden=true;$('#sheet').innerHTML='';render()}
 function ficheEleve(id){
   const e=S.eleves[id];if(!e)return closeSheet();
   const kv=(l,v)=>`<dt>${l}</dt><dd>${v?h(v):'<span class="muted">—</span>'}</dd>`;
@@ -1650,7 +1659,7 @@ function formEleve(id){
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
   elvPhoto=null;
   openSheet(id?'Modifier l’élève':'Inscrire un élève',`<form id="f-eleve" class="stack" data-id="${h(id||'')}">
-   <div class="phpick"><span id="elv-ph">${avEl({nom:e.nom||'?',photo:e.photo},'xl')}</span><div class="stack" style="gap:8px"><label class="btn sm" for="elv-file">${e.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="elv-file" accept="image/*" hidden><label class="btn sm" for="elv-cam">Prendre une photo</label><input type="file" id="elv-cam" data-fwd="elv-file" accept="image/*" capture="environment" hidden>${e.photo?'<button type="button" class="btn sm" data-act="elv-nophoto">Retirer la photo</button>':''}</div></div>
+   <div class="phpick"><span id="elv-ph">${avEl({nom:e.nom||'?',photo:e.photo},'xl')}</span><div class="stack" style="gap:8px"><label class="btn sm" for="elv-file">${e.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="elv-file" accept="image/*" hidden><button type="button" class="btn sm" data-cam="elv">Prendre une photo</button><input type="file" id="elv-cam" data-fwd="elv-file" accept="image/*" capture="environment" hidden>${e.photo?'<button type="button" class="btn sm" data-act="elv-nophoto">Retirer la photo</button>':''}</div></div>
    <div class="field"><label for="e-classeId">Classe</label><select class="inp" id="e-classeId" name="classeId" required>${mesClasses().map(c=>`<option value="${h(c)}" ${c===e.classeId?'selected':''}>${h(S.classes[c].nom)}</option>`).join('')}</select></div>
    <div class="eyebrow">Identité</div>
    <div class="grid2">${f('nom','Nom',{req:1})}${f('postnom','Postnom')}</div>
@@ -1703,7 +1712,7 @@ function editEns(id,preCls,role0,preMat,poste0){
    ${isSec()&&p.poste!=='promoteur'?`<input type="hidden" name="poste" value="${h(pz)}"><div class="field fposte"><label>Poste</label>
     <div class="seg" role="group" data-g="g" ${p.role==='gestionnaire'?'':'hidden'}>${(promo?[['prefet','Préfet']]:pG).map(([k,l])=>`<button type="button" data-act="fposte" data-v="${k}" aria-pressed="${pz===k}">${l}</button>`).join('')}</div>
     <div class="seg" role="group" data-g="e" ${p.role==='gestionnaire'?'hidden':''}>${POSTES_E.map(([k,l])=>`<button type="button" data-act="fposte" data-v="${k}" aria-pressed="${pz===k}">${l}</button>`).join('')}</div></div>`:''}
-   <div class="phpick"><span id="ens-ph">${avatar(p,'xl')}</span><div class="stack" style="gap:8px"><label class="btn sm" for="ens-file">${p.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="ens-file" accept="image/*" hidden><label class="btn sm" for="ens-cam">Prendre une photo</label><input type="file" id="ens-cam" data-fwd="ens-file" accept="image/*" capture="environment" hidden>${p.photo?'<button type="button" class="btn sm" data-act="ens-nophoto">Retirer la photo</button>':''}</div></div>
+   <div class="phpick"><span id="ens-ph">${avatar(p,'xl')}</span><div class="stack" style="gap:8px"><label class="btn sm" for="ens-file">${p.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="ens-file" accept="image/*" hidden><button type="button" class="btn sm" data-cam="ens">Prendre une photo</button><input type="file" id="ens-cam" data-fwd="ens-file" accept="image/*" capture="environment" hidden>${p.photo?'<button type="button" class="btn sm" data-act="ens-nophoto">Retirer la photo</button>':''}</div></div>
    <div class="field"><label for="n-code">Code d’accès personnel (4 chiffres)</label><div class="btns"><input class="inp num" id="n-code" name="code" inputmode="numeric" maxlength="4" pattern="[0-9]{4}" placeholder="${p.hasCode?'••••':''}" title="${p.hasCode?'Code déjà donné : laissez vide pour le garder, ou tapez un nouveau code':''}" style="max-width:9rem;letter-spacing:.3em;font-weight:800;text-align:center" value="${h(p.code||(id?'':String(Math.floor(1000+Math.random()*9000))))}"><span class="muted small">Donnez ce code à la personne. Il lui sera demandé pour relier son compte à ce profil.</span></div></div>
    <div class="field"><label for="n-nom">Nom complet (nom, postnom, prénom)</label><input class="inp" id="n-nom" name="nom" required value="${h(p.nom)}" placeholder="Ex. KABONGO MUKENDI Jean"></div>
    <div class="field"><label for="n-sexe">Sexe</label><select class="inp" id="n-sexe" name="sexe"><option value="M" ${p.sexe!=='F'?'selected':''}>Masculin</option><option value="F" ${p.sexe==='F'?'selected':''}>Féminin</option></select></div>
@@ -1810,6 +1819,47 @@ function autoRegistre(){if(S.view!=='classe'||S.ctab!=='appel'||!S.cid||autoRegD
 /* ---------- photos des élèves ---------- */
 const avEl=(e,cls='')=>e.photo?`<img class="av ph ${cls}" src="${h(e.photo)}" alt="">`:`<span class="av ${cls}">${h(initials(e))}</span>`;
 document.addEventListener('change',ev=>{const c=ev.target;if(!c||!c.dataset||!c.dataset.fwd||!c.files||!c.files[0])return;const d=document.getElementById(c.dataset.fwd);if(!d)return;try{const dt=new DataTransfer();dt.items.add(c.files[0]);d.files=dt.files;d.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){toast('La photo n’a pas pu être prise. Utilisez « Ajouter une photo ».')}c.value=''});
+/* ---------- Appareil photo dans l'application (on ne quitte pas l'app, donc pas de redémarrage) ---------- */
+let camS=null,camFace='environment';
+function camStop(){try{camS&&camS.getTracks().forEach(t=>t.stop())}catch(e){}camS=null}
+function camClose(){camStop();document.getElementById('camfs')?.remove()}
+async function camStart(){const v=document.querySelector('#camfs video');if(!v)return;camStop();
+  try{camS=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:camFace},width:{ideal:1280},height:{ideal:960}},audio:false})}
+  catch(e){try{camS=await navigator.mediaDevices.getUserMedia({video:true,audio:false})}catch(e2){throw e2}}
+  if(!document.getElementById('camfs')){camStop();return}
+  v.srcObject=camS;v.classList.toggle('front',camFace==='user');try{await v.play()}catch(e){}}
+function camFallback(k,why){camClose();if(why)toast(why);try{document.getElementById(k+'-cam')?.click()}catch(e){}}
+async function camOpen(k){
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))return camFallback(k);
+  camClose();const d=document.createElement('div');d.id='camfs';d.dataset.k=k;
+  d.innerHTML='<video autoplay playsinline muted></video><div class="cam-m">Placez le visage au centre</div><div class="cam-b"><button type="button" data-cb="x">Annuler</button><button type="button" class="shot" data-cb="shot" aria-label="Prendre la photo"></button><button type="button" data-cb="flip">Retourner</button></div>';
+  document.body.appendChild(d);
+  try{await camStart()}catch(e){camFallback(k,e&&e.name==='NotAllowedError'?'Autorisez l’appareil photo pour l’application, puis réessayez.':'')}}
+document.addEventListener('click',ev=>{const o=ev.target.closest('[data-cam]');if(o){ev.preventDefault();camOpen(o.dataset.cam);return}
+  const b=ev.target.closest('#camfs [data-cb]');if(!b)return;const k=document.getElementById('camfs').dataset.k,a=b.dataset.cb;
+  if(a==='x')return camClose();
+  if(a==='flip'){camFace=camFace==='user'?'environment':'user';camStart().catch(()=>{});return}
+  const v=document.querySelector('#camfs video');if(!v||!v.videoWidth)return;
+  const m=Math.min(1,900/Math.max(v.videoWidth,v.videoHeight)),cv=document.createElement('canvas');cv.width=Math.round(v.videoWidth*m);cv.height=Math.round(v.videoHeight*m);
+  const g=cv.getContext('2d');if(camFace==='user'){g.translate(cv.width,0);g.scale(-1,1)}g.drawImage(v,0,0,cv.width,cv.height);
+  cv.toBlob(bl=>{camClose();if(!bl)return toast('La photo n’a pas pu être prise.');const dst=document.getElementById(k+'-file');if(!dst)return;
+    try{const dt=new DataTransfer();dt.items.add(new File([bl],'photo.jpg',{type:'image/jpeg'}));dst.files=dt.files;dst.dispatchEvent(new Event('change',{bubbles:true}))}catch(e){toast('La photo n’a pas pu être prise. Utilisez « Ajouter une photo ».')}},'image/jpeg',.9)});
+document.addEventListener('visibilitychange',()=>{if(document.hidden)camClose()});
+
+/* ---------- Brouillon de la fiche élève : si l'application redémarre, la saisie n'est pas perdue ---------- */
+const DRK='clr-brouillon-eleve';
+function draftSave(){const f=document.getElementById('f-eleve');if(!f||S.sim)return;try{const fd=Object.fromEntries(new FormData(f));localStorage.setItem(DRK,JSON.stringify({id:f.dataset.id||'',t:Date.now(),fd,photo:elvPhoto||''}))}catch(e){}}
+function draftClear(){try{localStorage.removeItem(DRK)}catch(e){}}
+document.addEventListener('input',ev=>{if(ev.target.closest&&ev.target.closest('#f-eleve'))draftSave()});
+document.addEventListener('change',ev=>{if(ev.target.closest&&ev.target.closest('#f-eleve'))setTimeout(draftSave,700)});
+(function(){let n=0;const iv=setInterval(()=>{if(++n>90)return clearInterval(iv);
+  try{if(S.sim||!Object.keys(S.classes||{}).length)return;const it=document.getElementById('intro');if(it&&!it.hidden)return;if(document.querySelector('#sheet .panel'))return clearInterval(iv);
+    clearInterval(iv);const d=JSON.parse(localStorage.getItem(DRK)||'null');if(!d||Date.now()-d.t>3*3600000||(d.id&&!S.eleves[d.id])){draftClear();return}
+    if(!Object.values(d.fd||{}).some(v=>String(v).trim())&&!d.photo)return draftClear();
+    formEleve(d.id||undefined);const f=document.getElementById('f-eleve');if(!f)return;
+    for(const[k,v]of Object.entries(d.fd||{})){const el=f.elements[k];if(el&&el.type!=='file')el.value=v}
+    if(d.photo){elvPhoto=d.photo;const ph=f.querySelector('#elv-ph');if(ph)ph.innerHTML=avEl({nom:'',photo:d.photo},'xl')}
+    toast('Fiche en cours retrouvée : continuez la saisie.')}catch(e){}},1000)})();
 function resizePhoto(file,cb){const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const z=240,cv=document.createElement('canvas');cv.width=cv.height=z;const m=Math.min(img.width,img.height);const sx=(img.width-m)/2,sy=Math.max(0,(img.height-m)*.3);cv.getContext('2d').drawImage(img,sx,sy,m,m,0,0,z,z);URL.revokeObjectURL(url);cb(cv.toDataURL('image/jpeg',.8))};img.onerror=()=>toast('Cette image ne peut pas être lue. Essayez une photo JPG ou PNG.');img.src=url}
 let elvPhoto=null;
 /* portraits illustrés pour la simulation (dessins, pas de vraies personnes) */
@@ -2126,7 +2176,7 @@ let agPhoto=null;
 function agentSheet(id,f0){
   const a=id?S.agents[id]:{nom:'',sexe:'M',fonction:f0||'Travailleur'};if(id&&!a)return;agPhoto=null;
   openSheet(id?'Modifier le travailleur':'Ajouter un travailleur',`<form id="f-agent" class="stack" data-id="${h(id||'')}">
-   <div class="phpick"><span id="ag-ph">${a.photo?`<img class="av ph xl" src="${h(a.photo)}" alt="">`:`<span class="av xl g">${h(initials({nom:a.nom||'?'}))}</span>`}</span><div class="stack" style="gap:8px"><label class="btn sm" for="ag-file">${a.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="ag-file" accept="image/*" hidden><label class="btn sm" for="ag-cam">Prendre une photo</label><input type="file" id="ag-cam" data-fwd="ag-file" accept="image/*" capture="environment" hidden></div></div>
+   <div class="phpick"><span id="ag-ph">${a.photo?`<img class="av ph xl" src="${h(a.photo)}" alt="">`:`<span class="av xl g">${h(initials({nom:a.nom||'?'}))}</span>`}</span><div class="stack" style="gap:8px"><label class="btn sm" for="ag-file">${a.photo?'Changer la photo':'Ajouter une photo'}</label><input type="file" id="ag-file" accept="image/*" hidden><button type="button" class="btn sm" data-cam="ag">Prendre une photo</button><input type="file" id="ag-cam" data-fwd="ag-file" accept="image/*" capture="environment" hidden></div></div>
    <div class="field"><label for="ag-nom">Nom, postnom et prénom</label><input class="inp" id="ag-nom" name="nom" required value="${h(a.nom)}"></div>
    <div class="grid2"><div class="field"><label for="ag-sexe">Sexe</label><select class="inp" id="ag-sexe" name="sexe"><option value="M" ${a.sexe!=='F'?'selected':''}>Masculin</option><option value="F" ${a.sexe==='F'?'selected':''}>Féminin</option></select></div>
    <div class="field"><label for="ag-fn">Fonction</label><select class="inp" id="ag-fn" name="fonction">${[...new Set([...FONCTIONS_AGENT,a.fonction].filter(Boolean))].map(f=>`<option ${f===a.fonction?'selected':''}>${h(f)}</option>`).join('')}</select></div></div>
@@ -2969,7 +3019,7 @@ document.addEventListener('submit',async ev=>{
     if(!doc.symptomes.length&&!doc.motif){toast('Indiquez le motif de la sortie.');return}
     await put('sante',id,doc);toast(f.dataset.id?'Fiche mise à jour':'Sortie enregistrée');santeFiche(id);render();return}
   if(f.id==='f-ins'){await put('inscriptions',meId(),{nom:fd.nom.trim(),tel:fd.tel.trim(),matiere:fd.matiere.trim(),date:new Date().toISOString()});toast('Demande envoyée à la direction')}
-  if(f.id==='f-eleve'){const id=f.dataset.id||uid();for(const k in fd)fd[k]=fd[k].trim();const old=S.eleves[id]||{};if(elvPhoto===null){if(old.photo)fd.photo=old.photo}else if(elvPhoto)fd.photo=elvPhoto;fd.nom=fd.nom.toUpperCase();fd.postnom=fd.postnom.toUpperCase();const isNew=!f.dataset.id;await put('eleves',id,fd);toast(isNew?'Élève inscrit':'Fiche mise à jour');ficheEleve(id);render()}
+  if(f.id==='f-eleve'){const id=f.dataset.id||uid();for(const k in fd)fd[k]=fd[k].trim();const old=S.eleves[id]||{};if(elvPhoto===null){if(old.photo)fd.photo=old.photo}else if(elvPhoto)fd.photo=elvPhoto;fd.nom=fd.nom.toUpperCase();fd.postnom=fd.postnom.toUpperCase();const isNew=!f.dataset.id;await put('eleves',id,fd);draftClear();toast(isNew?'Élève inscrit':'Fiche mise à jour');ficheEleve(id);render()}
   if(f.id==='f-cls'){const grille=ed.grille.filter(r=>r.t!=='c'||(r.nom||'').trim()).map(r=>r.t==='c'?Object.assign({t:'c',id:r.id,nom:r.nom.trim(),max:+r.max||10},r.big?{big:true}:{}):r.t==='st'?{t:'st'}:{t:r.t,nom:(r.nom||'').trim()});const id=ed.id||uid();await put('classes',id,{nom:ed.nom.trim(),degre:ed.degre||'',grille,cours:grille.filter(r=>r.t==='c')});closeSheet();toast('Classe enregistrée')}
   if(f.id==='f-ecole'){for(const k in fd)fd[k]=fd[k].trim();await put('config','ecole',fd);closeSheet();toast('Informations enregistrées')}
   if(f.id==='f-reg'){const debut=lundi(fd.debut);const ex=regsOf(S.cid).find(r=>r.debut===debut);const id=ex?ex.id:uid();if(!ex)await put('registres',id,{classeId:S.cid,debut});S.aReg=id;S.aVue='reg';closeSheet();toast(ex?'Ce registre existe déjà, il est ouvert.':'Registre ouvert')}

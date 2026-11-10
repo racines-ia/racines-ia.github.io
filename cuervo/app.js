@@ -12,7 +12,12 @@ var $ = function (id) { return document.getElementById(id); };
 var app = $('app');
 (function () {
   var sp = $('splash'); if (!sp) return;
-  var seen = false; try { seen = sessionStorage.getItem('cv_splash') === '1'; sessionStorage.setItem('cv_splash', '1'); } catch (e) {}
+  var seen = false, now = Date.now();
+  try {
+    var nv = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+    seen = (nv && nv.type === 'reload') || now - Number(localStorage.getItem('cv_splash') || 0) < 6 * 3600 * 1000 || !!localStorage.getItem('cv_draft');
+    localStorage.setItem('cv_splash', String(now));
+  } catch (e) {}
   if (seen) { sp.remove(); return; }
   var t, done = function () { clearTimeout(t); sp.classList.add('out'); setTimeout(function () { sp.remove(); }, 650); };
   t = setTimeout(done, 10000);
@@ -55,6 +60,10 @@ function errMsg(e) {
 function setBar(html) { $('bar').classList.toggle('hide', !html); document.body.classList.toggle('has-bar', !!html); $('barIn').innerHTML = html || ''; }
 function sheet(html) { $('sheetBody').innerHTML = html; $('sheetRoot').classList.add('open'); $('sheetRoot').querySelector('.sheet').scrollTop = 0; }
 function closeSheet() { $('sheetRoot').classList.remove('open'); E = null; }
+function keepDraft() { try { if (E) { edRead(); localStorage.setItem('cv_draft', JSON.stringify({ t: Date.now(), id: E.id, p: E.p })); window.addEventListener('focus', function () { setTimeout(dropDraft, 2500); }, { once: true }); } } catch (e) {} }
+function dropDraft() { try { localStorage.removeItem('cv_draft'); } catch (e) {} }
+function takeDraft() { try { var d = JSON.parse(localStorage.getItem('cv_draft') || 'null'); dropDraft(); return d && Date.now() - d.t < 20 * 60 * 1000 ? d : null; } catch (e) { return null; } }
+document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('input[type=file]') && E) keepDraft(); }, true);
 function page(html) { app.innerHTML = '<div class="page">' + html + '</div>'; window.scrollTo(0, 0); tick(); countUp(); }
 function skeleton() { setBar(null); app.innerHTML = '<div class="page g16"><div class="sk" style="aspect-ratio:16/9"></div><div class="sk" style="height:28px;width:70%"></div><div class="sk" style="height:16px;width:90%"></div><div class="grid"><div class="sk" style="aspect-ratio:3/4"></div><div class="sk" style="aspect-ratio:3/4"></div></div></div>'; }
 function notFound(msg) { setBar(null); page('<div class="empty" style="margin-top:40px"><h2 style="margin-bottom:8px">Introuvable</h2><p>' + esc(msg) + '</p><a class="btn btn-ghost btn-sm" style="margin-top:16px" href="./" data-nav>Retour à l\'accueil</a></div>'); }
@@ -247,6 +256,7 @@ async function route() {
   var my = ++rid, alive = function () { return my === rid; };
   clearInterval(pollT); closeSheet(); armed = '';
   var q = new URLSearchParams(location.search), v = q.get('v');
+  try { if (v !== 'compte' && localStorage.getItem('cv_draft')) { history.replaceState({}, '', '?v=compte'); v = 'compte'; q = new URLSearchParams('?v=compte'); } } catch (e) {}
   try {
     if (q.get('p')) return await pageProduct(q.get('p'), alive);
     if (q.get('b')) return await pageShop(q.get('b'), alive);
@@ -378,7 +388,7 @@ function payInfo(o) {
     '<p class="note center">Dès que le vendeur confirme ton paiement, tes fichiers s\'affichent ici même.</p>';
 }
 var A = {
-  closeSheet: closeSheet,
+  closeSheet: function () { closeSheet(); dropDraft(); },
   dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
   cancelXfer: function () { if (XHR) XHR.abort(); },
   toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView({ behavior: 'smooth' }); },
@@ -469,7 +479,7 @@ var A = {
     await openEditor(r.data);
   },
   editProduct: function (el) { openEditor(S.products.filter(function (p) { return p.id === el.dataset.id; })[0]); },
-  edSave: async function (el) { busy(el, true); try { await edSave(); toast('Produit enregistré'); edRender(); if (new URLSearchParams(location.search).get('p')) { closeSheet(); route(); return; } await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
+  edSave: async function (el) { busy(el, true); try { await edSave(); dropDraft(); toast('Produit enregistré'); edRender(); if (new URLSearchParams(location.search).get('p')) { closeSheet(); route(); return; } await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
   edDelete: async function (el) {
     if (armed !== 'del') { armed = 'del'; el.textContent = 'Confirmer la suppression'; return; }
     var r = await sb.from('mk_products').delete().eq('id', E.id); if (r.error) return toast(errMsg(r.error));
@@ -655,7 +665,17 @@ function shopStatus(v) {
 async function pageAccount(alive) {
   skeleton(); await loadMe(); if (!alive()) return; header();
   if (!S.user || !S.vendor) { if (!S.settings) { var h = await sb.rpc('mk_home'); S.settings = { loyer: (h.data || {}).loyer || 10 }; if (!alive()) return; } if (S.user && !S.vendor) S.ctx.auth = 'register'; return renderAuth(); }
-  await loadDash(); if (!alive()) return; renderDash();
+  await loadDash(); if (!alive()) return;
+  var dr = takeDraft();
+  if (dr) {
+    S.tab = 'produits'; renderDash();
+    var base = dr.id && S.products.filter(function (x) { return x.id === dr.id; })[0];
+    await openEditor(base || null); if (!E) return;
+    E.p = Object.assign({}, E.p, dr.p); edRender();
+    sheet($('sheetBody').innerHTML.replace('<div class="g12">', '<div class="g12"><div class="banner" style="margin:0"><b>Ton téléphone a rechargé la page</b>Ça arrive quand il manque de mémoire pendant le choix d\'un fichier. Tes informations sont gardées : choisis à nouveau ton fichier, ou mets-le sur Google Drive et colle le lien plus bas.</div>'));
+    return;
+  }
+  renderDash();
 }
 function renderDash(keepScroll) {
   var v = S.vendor, st = shopStatus(v), y = window.scrollY;
@@ -778,7 +798,8 @@ function edRender() {
       '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><label>Format de la vidéo<select id="e-vfmt"><option value="16:9">Horizontale (16:9)</option><option value="9:16">Verticale (9:16)</option></select></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
     '<div class="box"><h3>Fichiers remis au client</h3><p class="note">PDF, archives, ou liens de téléchargement. Le client y accède dès que tu confirmes son paiement.</p>' +
     E.files.map(function (f) { return '<div class="item">' + ico('i-file') + '<span class="grow">' + esc(f.nom) + '</span><button class="xs" type="button" data-act="edRmFile" data-id="' + f.id + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
-    '<label class="btn btn-ghost btn-sm filebtn"><span>Envoyer un fichier (50 Mo max)</span><input type="file" data-up="pfile"></label>' +
+    '<label class="btn btn-ghost btn-sm filebtn"><span>Envoyer un fichier (50 Mo max)</span><input type="file" data-up="pfile" accept=".pdf,.zip,.rar,.7z,.apk,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.epub,.psd,.ai,.svg,.png,.jpg,.jpeg,.mp3,.mp4,.mov,.webm,.m4a,.wav,application/pdf,application/zip,application/octet-stream"></label>' +
+    '<p class="note">Si la page se recharge pendant le choix du fichier, c\'est que le téléphone manque de mémoire : mets le fichier sur Google Drive (partage « Tous les utilisateurs disposant du lien ») et colle le lien ci-dessous.</p>' +
     '<label>Ou un lien de téléchargement<input id="e-furl" type="url" inputmode="url" placeholder="https://…"></label><label>Nom affiché au client<input id="e-fnom" placeholder="Ex. Cours complet (PDF)"></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddLink"><span>Ajouter ce lien</span></button></div>' +
     '<button class="btn btn-primary" type="button" data-act="edSave"><span>Enregistrer le produit</span></button>' +
     (E.id ? '<button class="btn btn-danger btn-sm" type="button" data-act="edDelete">Supprimer ce produit</button>' : '') + '</div>');
@@ -826,7 +847,7 @@ document.addEventListener('change', async function (e) {
       var safe = f.name.normalize('NFD').replace(/[^\w.\-]+/g, '_').slice(-80) || 'fichier';
       var fu = await upload('mk-files', S.user.id + '/' + rnd() + rnd() + '/' + safe, f, f.type || 'application/octet-stream', 'Envoi de ' + f.name.slice(0, 40));
       var ins = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: f.name.slice(0, 150), url: fu, kind: 'fichier' }); if (ins.error) throw ins.error;
-      edRead(); await edLoadFiles(); edRender(); toast('Fichier ajouté');
+      edRead(); await edLoadFiles(); edRender(); dropDraft(); toast('Fichier ajouté');
     }
   } catch (err) { toast(errMsg(err)); }
 });

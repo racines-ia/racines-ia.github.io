@@ -69,7 +69,7 @@ svg.i{width:20px;height:20px;flex:none}
 .band h1{font-size:clamp(30px,8vw,46px);line-height:1.02;text-transform:uppercase}
 .band.home h1{font-size:clamp(36px,10.5vw,60px)}
 .band-sub{margin:0;opacity:.92;font-size:15.5px;font-weight:500}
-.band.home .band-sub{font-size:16.5px;margin-top:8px;white-space:nowrap}
+.band.home .band-sub{font-size:16.5px;margin-top:8px}
 .band-row{display:flex;align-items:center;gap:16px;justify-content:space-between}
 .band-anim{width:clamp(126px,36vw,210px);aspect-ratio:1;flex:none;filter:drop-shadow(0 8px 22px rgba(0,0,0,.45))}
 .band.home .band-row{gap:18px;align-items:center}
@@ -853,7 +853,8 @@ table.pres small.hrm{display:block;color:var(--good);font-weight:800;font-size:1
 table.pres td.fn{white-space:normal;min-width:110px}
 table.pres tr.grp td{background:var(--sunk);font-weight:800;text-transform:uppercase;font-size:11.5px;color:var(--muted);text-align:left}
 table.pres tr.ok td{background:color-mix(in srgb,var(--good-soft) 55%,transparent)}
-table.pres td.sigc{min-width:150px}
+@media (min-width:700px){table.pres td.sigc{min-width:150px}}
+table.pres td.sigc{width:1%;white-space:nowrap;text-align:center}
 table.pres td.hr{white-space:nowrap}
 table.pres td.hr b{color:var(--good);font-size:15px;margin-right:6px}
 .x.xs{width:26px;height:26px;font-size:15px;display:inline-grid;vertical-align:middle}
@@ -950,7 +951,7 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .sn-sym{flex-wrap:wrap;overflow:visible}
 .sn-dec{display:flex;border-radius:20px}.sn-dec button{flex:1 1 auto}
 .sn-li{align-items:flex-start}.sn-li .pill{flex:none;margin-top:2px}
-.sn-motif{display:block;margin-top:4px;font-size:13px;color:var(--ink);opacity:.85;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sn-motif{display:block;margin-top:4px;font-size:13px;color:var(--ink);opacity:.85;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
 .sn-k b{font-size:17px!important}.sn-k b.sn-dc{font-size:13.5px!important;line-height:1.25;padding-top:3px}
 .aiprop{background:var(--sunk);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
 .aiprop p{margin:0;line-height:1.4}
@@ -990,7 +991,7 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .nbadge{animation:navPop .5s cubic-bezier(.2,1.4,.4,1)}
 @media (prefers-reduced-motion:reduce){.navb,.navb *,.nav-in.boot .navb{animation:none!important;transition:none!important}}
 .t.pres tr.vide td{opacity:.85}.t.pres tr.vide .av{border:1.5px dashed var(--line);background:transparent}
-.t.parch{min-width:0;width:100%;table-layout:fixed}.t.parch th,.t.parch td{padding:6px 3px;text-align:center}.t.parch .name{text-align:left;width:34%;padding-left:10px;line-height:1.2}.t.parch .name .nm,.t.parch .name small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.t.parch .name .nm{font-size:13px;font-weight:600}.t.parch .name small{font-size:11px}.t.parch tr.grp td{text-align:left;padding-left:10px}.t.parch td.fu .pc{background:var(--sunk);color:var(--muted)}
+.t.parch{min-width:0;width:100%;table-layout:fixed}.t.parch th,.t.parch td{padding:6px 3px;text-align:center}.t.parch .name{text-align:left;width:34%;padding-left:10px;line-height:1.2}.t.parch .name .nm,.t.parch .name small{display:block;white-space:normal;overflow-wrap:anywhere}.t.parch .name .nm{font-size:13px;font-weight:600}.t.parch .name small{font-size:11px}.t.parch tr.grp td{text-align:left;padding-left:10px}.t.parch td.fu .pc{background:var(--sunk);color:var(--muted)}
 .t.parch .ph{border:0;background:none;color:inherit;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:1px;width:100%;font-size:11px;font-weight:600;color:var(--muted);padding:2px 0;border-radius:10px}.t.parch .ph b{font-size:15px;color:var(--ink)}.t.parch .ph.td{background:var(--soft)}
 .t.parch .pc{border:0;cursor:pointer;width:100%;border-radius:9px;padding:6px 0;font:700 11.5px var(--f-b);font-variant-numeric:tabular-nums}
 .t.parch td.ok .pc{background:var(--good-soft);color:var(--good)}.t.parch td.ab .pc{background:var(--bad-soft);color:var(--bad)}
@@ -2127,7 +2128,7 @@ function tabPalm(){
   const cid=S.cid,cls=S.classes[cid],key=S.pKey||'t1';const es=elevesOf(cid);
   if(!es.length)return `<div class="card empty"><h3>Aucun élève dans cette classe</h3></div>`;
   const vue=S.pVue||'cl';
-  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Points par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures des parents</button></div>`;
+  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures</button></div>`;
   const chips=`<div class="chips" role="group" aria-label="Période">${pkeys().map(([k,l])=>`<button class="chipb${k[0]==='t'||k==='an'?' strong':''}" data-act="pkey" data-v="${k}" aria-pressed="${key===k}">${l}</button>`).join('')}</div>`;
   if(vue==='sig')return `<div class="card pad stack">${seg}${chips}</div>`+tabSig();
   if(vue==='det')return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Points par branche</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm grad" data-act="detfs">${ic('expand',16)} Plein écran</button></span></div>${chips}</div>`+palmDetail(cid,key,chips);
@@ -2312,13 +2313,13 @@ function vPresence(){
   const dd=D(d);const prev=iso(new Date(dd.getTime()-864e5)),next=iso(new Date(dd.getTime()+864e5));
   let n=0;
   const row=p=>{n++;const s=S.presence[pid2(d,p.id)];return `<tr class="${s?'ok':''}"><td class="num muted">${n}</td><td class="name"><span class="pnm">${p.photo?`<img class="av ph sm" src="${h(p.photo)}" alt="">`:`<span class="av sm">${h(initials({nom:p.nom}))}</span>`}<span><span style="display:block">${h(p.nom)}</span><small class="muted mob">${h(p.fonction)} · ${p.sexe==='F'?'F':'M'}</small></span></span></td><td class="dsk">${p.sexe==='F'?'F':p.sexe==='M'?'M':'–'}</td><td class="fn dsk">${h(p.fonction)}</td>
-    <td class="sigc">${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(p.nom)}"><small class="mob hrm num">${hm(s.at)}</small>`:d===td?`<button class="btn grad sm" data-act="ppresent" data-id="${h(p.id)}">Présent · signer</button>`:'<span class="pill">Absent</span>'}</td>
+    <td class="sigc">${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(p.nom)}"><small class="mob hrm num">${hm(s.at)}</small>`:d===td?`<button class="btn grad sm" data-act="ppresent" data-id="${h(p.id)}" style="padding-inline:12px;white-space:nowrap">Signer</button>`:'<span class="pill">Absent</span>'}</td>
     <td class="num hr dsk">${s?`<b>${hm(s.at)}</b>${isDir()?`<button class="x xs" data-act="punsign" data-id="${h(p.id)}" aria-label="Annuler la présence de ${h(p.nom)}">×</button>`:''}`:'—'}</td></tr>`};
   return band({back:'accueil',kicker:isSec()?(myPoste()==='discipline'?'Discipline':'Direction'):'Direction',title:'Présence du personnel',sub:`${JLONG[dd.getUTCDay()]} ${dfr(d)} · ${pres.length} présent${pres.length>1?'s':''} sur ${L.length}`})+page(`
    <div class="card pad stack"><div class="sec-h"><div class="seg" role="group" aria-label="Affichage"><button data-act="ptab" data-v="jour" aria-pressed="${S.pTab!=='arch'}">Jour</button><button data-act="ptab" data-v="arch" aria-pressed="${S.pTab==='arch'}">Archives par date</button></div></div><div class="sec-h"><div class="btns"><button class="x" data-act="pday" data-v="${prev}" aria-label="Jour précédent">${ic('left',18)}</button><b class="num">${dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}</b><button class="x" data-act="pday" data-v="${next}" ${d>=td?'disabled':''} aria-label="Jour suivant">${ic('chev',18)}</button>${d!==td?`<button class="btn sm" data-act="pday" data-v="${td}">Aujourd’hui</button>`:''}</div>
     <button class="btn sm" data-act="new-person">${ic('plus',16)} Ajouter une personne</button></div>
     <div class="meter"><i style="width:${L.length?Math.round(pres.length/L.length*100):0}%"></i></div>
-    <p class="muted small" style="margin:0">${isSec()?`Le personnel de l’école : la direction (préfet, secrétaire, directeur des études, directeur de discipline), un titulaire par salle (${classIds().length}), les professeurs et les travailleurs.`:`Le personnel de l’école : 2 administrateurs (directeur et surécole), ${classIds().length||6} enseignants et 2 travailleurs (travailleur et sentinelle).`} Quand une personne arrive, touchez « Présent · signer » : écrivez son heure d’arrivée, puis elle signe avec le doigt.</p></div>
+    <p class="muted small" style="margin:0">${isSec()?`Le personnel de l’école : la direction (préfet, secrétaire, directeur des études, directeur de discipline), un titulaire par salle (${classIds().length}), les professeurs et les travailleurs.`:`Le personnel de l’école : 2 administrateurs (directeur et surécole), ${classIds().length||6} enseignants et 2 travailleurs (travailleur et sentinelle).`} Quand une personne arrive, touchez « Signer » : écrivez son heure d’arrivée, puis elle signe avec le doigt.</p></div>
    <div class="tblwrap"><table class="t pres"><thead><tr><th>N°</th><th class="name">Nom, postnom et prénom</th><th class="dsk">Sexe</th><th class="dsk">Fonction</th><th>Signature</th><th class="dsk">Heure</th></tr></thead><tbody>
     ${groups.map(([g,l,vide])=>`<tr class="grp"><td colspan="6" class="gc">${g} · ${l.filter(p=>S.presence[pid2(d,p.id)]).length}/${l.length}${vide.length?` <span class="muted">· ${vide.length} poste${vide.length>1?'s':''} à créer</span>`:''}</td></tr>`+l.map(row).join('')+vide.map(v=>{n++;return `<tr class="vide"><td class="num muted">${n}</td><td class="name"><span class="pnm"><span class="av sm g">+</span><span><span style="display:block">${h(v.lbl)}</span><small class="muted">Poste à pourvoir</small></span></span></td><td class="dsk">–</td><td class="fn dsk">${h(v.lbl)}</td><td class="sigc" colspan="2"><button class="btn sm" data-act="${v.act}" ${v.attr}>${ic('plus',14)} Créer</button></td></tr>`}).join('')).join('')}
    </tbody></table></div>

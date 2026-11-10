@@ -15,7 +15,7 @@ var app = $('app');
   var seen = false; try { seen = sessionStorage.getItem('cv_splash') === '1'; sessionStorage.setItem('cv_splash', '1'); } catch (e) {}
   if (seen) { sp.remove(); return; }
   var t, done = function () { clearTimeout(t); sp.classList.add('out'); setTimeout(function () { sp.remove(); }, 650); };
-  t = setTimeout(done, window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 700 : 2300);
+  t = setTimeout(done, 10000);
   sp.addEventListener('click', done);
 })();
 
@@ -127,21 +127,37 @@ async function route() {
 /* ---------- Accueil ---------- */
 function card(p) {
   return '<a class="card" href="?p=' + esc(p.id) + '" data-nav><div class="sq">' + (p.promo ? '<span class="flag badge">Promo</span>' : '') + pic(p.image_url) + '</div><div class="b"><h3>' + esc(p.titre) + '</h3>' +
-    '<div class="p">' + money(p.prix_actuel, p.devise) + (p.promo ? '<s>' + money(p.prix, p.devise) + '</s>' : '') + '</div>' +
+    '<div class="p">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="pold"><s>' + money(p.prix, p.devise) + '</s></div>' : '') +
     '<div class="m">' + (p.ventes > 0 ? p.ventes + ' vendu' + (p.ventes > 1 ? 's' : '') : 'Nouveau') + (p.boutique ? ' · ' + esc(p.boutique) : '') + '</div></div></a>';
 }
 function sellCta(loyer) {
   return '<div class="cta sec"><div class="kicker">Vendeurs</div><h2>Ouvre ta boutique en ligne</h2><p class="lead" style="margin:8px 0 16px">Publie tes produits, partage ton lien sur WhatsApp et Facebook, et reçois tes paiements par Mobile Money. Loyer : ' + money(loyer, 'USD') + ' par mois.</p>' +
     '<a class="btn btn-primary" href="?v=compte" data-nav>' + (S.vendor ? 'Gérer ma boutique' : 'Créer ma boutique') + ' ' + ico('i-arrow') + '</a></div>';
 }
+var ILLU = {
+  shop: '<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="30" width="92" height="52" rx="8" fill="#16301F"/><path d="M10 30l10-18h80l10 18" stroke="#E8F55C" stroke-width="3" stroke-linejoin="round"/><path d="M10 30h100v6a10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0z" fill="#9BE36A"/><rect x="48" y="52" width="24" height="30" rx="4" fill="#07100B"/><rect x="24" y="48" width="16" height="14" rx="3" fill="#3CC48A"/><rect x="80" y="48" width="16" height="14" rx="3" fill="#3CC48A"/><circle cx="66" cy="68" r="2" fill="#E8F55C"/></svg>',
+  share: '<svg viewBox="0 0 120 90" fill="none"><rect x="36" y="6" width="48" height="80" rx="10" fill="#16301F" stroke="#3CC48A" stroke-width="3"/><rect x="44" y="18" width="32" height="24" rx="4" fill="#9BE36A"/><rect x="44" y="48" width="24" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="56" width="18" height="4" rx="2" fill="#A3B3A7"/><circle cx="16" cy="30" r="9" fill="#E8F55C"/><circle cx="104" cy="22" r="9" fill="#3CC48A"/><circle cx="104" cy="64" r="9" fill="#9BE36A"/><path d="M25 30h11M84 30l11-6M84 56l11 6" stroke="#E8F55C" stroke-width="3" stroke-linecap="round"/></svg>',
+  pay: '<svg viewBox="0 0 120 90" fill="none"><rect x="10" y="22" width="70" height="48" rx="8" fill="#16301F" stroke="#3CC48A" stroke-width="3"/><rect x="10" y="32" width="70" height="8" fill="#3CC48A"/><rect x="20" y="52" width="22" height="6" rx="3" fill="#A3B3A7"/><circle cx="90" cy="54" r="22" fill="#E8F55C"/><path d="M80 54l7 7 13-14" stroke="#071505" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#16301F" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#9BE36A"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#071505" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+function feature(k, t, d) { return '<div class="feat"><div class="fill">' + ILLU[k] + '</div><div><h3>' + t + '</h3><p>' + d + '</p></div></div>'; }
 async function pageHome(alive) {
   skeleton();
   var r = await sb.rpc('mk_home'); if (!alive()) return;
   if (r.error) throw r.error;
   var d = r.data || { products: [], loyer: 10 }, ps = d.products || [];
-  page('<div style="padding-top:8px"><div class="kicker">Boutiques en ligne</div><h1>Achète et vends en ligne, paie par <span class="gt">Mobile Money</span>.</h1>' +
-    '<p class="lead" style="margin-top:12px">Formations, fichiers, applications et produits de créateurs de la RDC.</p></div>' +
-    '<div class="sec"><h2 style="margin-bottom:16px">Derniers produits</h2>' +
+  var top = ps.filter(function (p) { return p.ventes > 0; }).sort(function (a, b) { return b.ventes - a.ventes; }).slice(0, 4);
+  page('<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
+    '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp et Facebook. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
+    '<div class="g8" style="margin-top:20px"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><button class="btn btn-ghost" type="button" data-act="toProducts"><span>Voir les produits</span></button></div></div>' +
+    '<div class="sec"><div class="kicker">Comment ça marche</div><h2 style="margin-bottom:16px">Tout ce qu\'il faut pour vendre</h2><div class="g12 stag">' +
+    feature('shop', 'Ta boutique en quelques minutes', 'Ton nom, ta photo, tes numéros Mobile Money : ta boutique est prête.') +
+    feature('share', 'Un lien par produit', 'Partage-le sur WhatsApp ou Facebook : le client arrive directement sur ton produit.') +
+    feature('pay', 'Paiement par Mobile Money', 'M-Pesa, Airtel Money ou Orange Money. Le client envoie sa capture, tu confirmes.') +
+    feature('files', 'Livraison automatique', 'PDF, fichiers ou liens : le client y accède dès que tu confirmes son paiement.') +
+    '</div></div>' +
+    (top.length ? '<div class="sec"><div class="kicker">Les plus vendus</div><h2 style="margin-bottom:16px">Produits phares</h2><div class="grid stag">' + top.map(card).join('') + '</div></div>' : '') +
+    '<div class="sec" id="produits"><div class="kicker">Nouveautés</div><h2 style="margin-bottom:16px">Derniers produits</h2>' +
     (ps.length ? '<div class="grid stag">' + ps.map(card).join('') + '</div>' : '<div class="empty">Aucun produit en ligne pour l\'instant. Sois le premier à ouvrir ta boutique.</div>') + '</div>' + sellCta(d.loyer));
 }
 
@@ -179,17 +195,16 @@ async function pageProduct(id, alive) {
   var vids = (p.videos || []).map(videoHtml).filter(Boolean);
   var canPay = (s.ops || []).length > 0 && !d.apercu;
   var mine = S.vendor && S.vendor.id === p.vendor_id;
-  var sold = p.ventes > 0 ? '<b>' + p.ventes + '</b> vente' + (p.ventes > 1 ? 's' : '') + ' de ce produit' : '<b>0</b> vente pour l\'instant · Nouveau';
+  var sold = p.ventes > 0 ? p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') : 'Nouveau · 0 vente';
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
-    '<div class="phero"><div class="pbg">' + (safeUrl(s.cover_url) ? '<img class="f" src="' + esc(safeUrl(s.cover_url)) + '" alt="" onload="this.classList.add(\'ld\')">' : '') + '</div><div class="pimg sq">' + pic(p.image_url) + '</div></div>' +
-    '<div class="pinfo"><div class="soldline"><i></i><span>' + sold + '</span></div><h1>' + esc(p.titre) + '</h1>' +
-    '<div class="price-row"><div class="price gt">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old">Prix normal : <s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div>' +
-    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier ce produit</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
+    '<div class="cover">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
     '<div class="stats sm"><div class="stat"><b class="gt" data-count="' + (p.ventes || 0) + '">0</b><span>ventes de ce produit</span></div><div class="stat"><b data-count="' + (s.ventes || 0) + '">0</b><span>ventes de la boutique</span></div><div class="stat"><b>' + (d.autres.length + 1) + '</b><span>produit' + (d.autres.length ? 's' : '') + ' en boutique</span></div></div>' +
-    '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique et voir ses autres produits</small></div>' + ico('i-arrow') + '</a>' +
-    '<article class="prod">' + (promo ? promo.replace('class="promo-box"', 'class="promo-box" style="margin-top:0"') : '') +
+    '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
+    '<article class="prod"><div class="phead"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="tag g">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
+    '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
+    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
@@ -211,7 +226,7 @@ async function pageShop(slug, alive) {
   var d = r.data, s = d.shop, ps = d.products || [];
   document.title = s.boutique + ' — cuervo.co';
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette boutique n\'est pas encore visible du public.</div><div style="height:16px"></div>' : '') +
-    '<div class="cover">' + (safeUrl(s.cover_url) ? pic(s.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
+    '<div class="shopbanner"></div>' +
     '<div style="padding:0 8px">' + avatar(s, 'lg') + '<h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
     '<div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><b class="gt" data-count="' + (s.ventes || 0) + '">0</b><span>produits vendus</span></div><div class="stat"><b>' + ps.length + '</b><span>produit' + (ps.length > 1 ? 's' : '') + ' en ligne</span></div></div>' +
     '<div class="sec"><h2 style="margin-bottom:16px">Produits</h2>' + (ps.length ? '<div class="grid stag">' + ps.map(card).join('') + '</div>' : '<div class="empty">Cette boutique n\'a pas encore de produit.</div>') + '</div>' +
@@ -231,6 +246,7 @@ function payInfo(o) {
 }
 var A = {
   closeSheet: closeSheet,
+  toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView({ behavior: 'smooth' }); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
     var p = S.ctx.product, s = S.ctx.shop; if (!p) return;
@@ -546,7 +562,7 @@ function upBox(key, url, label, cls) {
 }
 function dashShop() {
   var v = S.vendor, mm = { vide: ['a', 'À remplir'], attente: ['a', 'En attente de confirmation'], confirme: ['g', 'Confirmés'], refuse: ['r', 'Refusés'] }[v.mm_statut];
-  return '<div class="g12"><div class="box"><h3>Photos</h3><p class="note">Photo de couverture en paysage (1920 × 1080) et photo de profil carrée.</p>' + upBox('cover', v.cover_url, 'Photo de couverture', 'cover') +
+  return '<div class="g12"><div class="box"><h3>Photo de profil</h3><p class="note">Photo carrée : ton logo ou ta photo. La photo de couverture se règle maintenant dans chaque produit.</p>' +
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
     '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label></div>' +
@@ -577,7 +593,7 @@ function localDT(v) { if (!v) return ''; var d = new Date(v); if (isNaN(d)) retu
 async function edLoadFiles() { if (!E || !E.id) return; var r = await sb.from('mk_product_files').select('*').eq('product_id', E.id).order('created_at'); E.files = r.data || []; }
 async function openEditor(p) {
   armed = '';
-  E = { id: p ? p.id : null, files: [], p: p ? JSON.parse(JSON.stringify(p)) : { titre: '', description: '', points: [], prix: '', devise: 'USD', promo_prix: null, promo_fin: null, promo_places: null, image_url: '', exemples: [], videos: [], actif: true } };
+  E = { id: p ? p.id : null, files: [], p: p ? JSON.parse(JSON.stringify(p)) : { titre: '', description: '', points: [], prix: '', devise: 'USD', promo_prix: null, promo_fin: null, promo_places: null, image_url: '', cover_url: '', exemples: [], videos: [], actif: true } };
   edRender(); if (E.id) { await edLoadFiles(); if (E) edRender(); }
 }
 function edRead() {
@@ -601,6 +617,7 @@ function edRender() {
     '<div class="switch"><span>Visible dans ma boutique</span><input id="e-actif" type="checkbox"' + (p.actif ? ' checked' : '') + '></div></div>' +
     '<div class="box"><h3>Promotion limitée (facultatif)</h3><div class="two"><label>Prix promo<input id="e-pprix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.promo_prix == null ? '' : p.promo_prix) + '"></label><label>Places<input id="e-places" type="number" inputmode="numeric" min="0" step="1" placeholder="Illimité" value="' + (p.promo_places == null ? '' : p.promo_places) + '"></label></div>' +
     '<label>Fin de la promo<input id="e-fin" type="datetime-local" value="' + localDT(p.promo_fin) + '"></label></div>' +
+    '<div class="box"><h3>Photo de couverture du produit</h3><p class="note">Format paysage 1920 × 1080. Elle s\'affiche en haut de la page du produit.</p>' + upBox('pcover', p.cover_url, 'Photo de couverture', 'cover') + '</div>' +
     '<div class="box"><h3>Photo du produit (carrée)</h3><div style="width:160px">' + upBox('pimg', p.image_url, 'Photo du produit', 'sq') + '</div></div>' +
     '<div class="box"><h3>Photos d\'exemples</h3><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
     (p.exemples.length < 4 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
@@ -621,7 +638,7 @@ async function edSave() {
   if (p.titre.length < 2) throw new Error('Donne un titre à ton produit.');
   if (!(p.prix > 0)) throw new Error('Indique le prix du produit.');
   if (p.promo_prix != null && !(p.promo_prix > 0 && p.promo_prix < p.prix)) throw new Error('Le prix promo doit être inférieur au prix normal.');
-  var row = { titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif };
+  var row = { titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif };
   var r;
   if (E.id) r = await sb.from('mk_products').update(row).eq('id', E.id).select().single();
   else { row.vendor_id = S.user.id; r = await sb.from('mk_products').insert(row).select().single(); }
@@ -637,7 +654,8 @@ document.addEventListener('change', async function (e) {
       var url = k === 'cover' ? await upImage(f, 1280, 720, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
       var r = await sb.from('mk_vendors').update(patch).eq('id', S.user.id); if (r.error) throw r.error;
       S.vendor[k + '_url'] = url; renderDash(true); toast('Photo enregistrée');
-    } else if (k === 'pimg') { edRead(); toast('Envoi de la photo…'); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
+    } else if (k === 'pcover') { edRead(); toast('Envoi de la photo…'); E.p.cover_url = await upImage(f, 1280, 720, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
+    else if (k === 'pimg') { edRead(); toast('Envoi de la photo…'); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
     else if (k === 'pex') { edRead(); toast('Envoi de la photo…'); E.p.exemples.push({ url: await upImage(f, 800, 800, true), legende: '' }); edRender(); toast('Exemple ajouté : pense à enregistrer'); }
     else if (k === 'pvid') {
       if (f.size > 50 * 1024 * 1024) return toast('Vidéo trop lourde : 50 Mo maximum');

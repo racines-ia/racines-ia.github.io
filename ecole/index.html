@@ -364,6 +364,17 @@ table.t td.name,table.t th.name{text-align:left}
 .dtab .dt-t{font-family:var(--f-d);font-size:15px;color:var(--accent);min-width:46px;padding:0 6px}
 .dtab .dt-p{font-weight:700;font-size:12.5px;min-width:52px;padding-right:8px}
 .dtab .dt-p.ok{color:var(--good)}.dtab .dt-p.ko{color:var(--bad)}
+.dfs{display:flex;flex-direction:column;gap:14px}
+.dfs.on{position:fixed;inset:0;z-index:9000;background:var(--bg);padding:calc(10px + env(safe-area-inset-top,0px)) 10px calc(8px + env(safe-area-inset-bottom,0px));gap:8px}
+.dfs.on .dfs-hide{display:none}
+.dfs.on .dwrap{flex:1;min-height:0;max-height:none}
+.dfs.on .chips{flex:none}
+.dfs-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.dfs-h b{display:block;font-family:var(--f-d);font-weight:400;font-size:18px;text-transform:uppercase}
+.dfs-h small{color:var(--muted);font-weight:600}
+html.dfs-lock,html.dfs-lock body{overflow:hidden}
+html.dfs-lock #nav{display:none}
+.dfs.on .dtab .nm{min-width:96px;max-width:96px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1262,7 +1273,7 @@ function keepSelected(prev,key){
 let LOGO_DONE=false;function calmLogos(){document.querySelectorAll('#view .band-anim svg.logo-anim').forEach(sv=>{if(sv.dataset.calm)return;sv.dataset.calm=1;const stop=()=>{try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}};if(LOGO_DONE)stop();else setTimeout(()=>{LOGO_DONE=true;stop()},6500)})}
 document.addEventListener('visibilitychange',()=>{document.querySelectorAll('svg.logo-anim').forEach(sv=>{try{document.hidden||sv.dataset.calm?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}})});
 let renderQ=0;function renderSoon(){if(renderQ)return;renderQ=requestAnimationFrame(()=>{renderQ=0;render()})}
-function render(){if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
+function render(){if(S.detFS&&!(S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det')){S.detFS=false;document.documentElement.classList.remove('dfs-lock')}if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
   const key=S.view+'|'+S.ctab+'|'+S.cid;const prevSc={key:lastKey,pos:[...document.querySelectorAll('#view :is('+SCR+')')].map(el=>[el.scrollLeft,el.scrollTop])};
   const keep={};['regwrap','egridw'].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.scrollLeft});
   const ae=document.activeElement,aid=ae&&ae.id&&$('#view').contains(ae)?ae.id:null,selS=ae&&ae.selectionStart;
@@ -2103,13 +2114,14 @@ function palmTable(cid,key,paper){const {mx,MT,list}=palmData(cid,key);
 function detRow(cid,key,eid){const cls=S.classes[cid];let tot=0,mx=0,any=false;for(const c of cls.cours||[]){mx+=MX(c,key);const v=V(eid,c,key);if(v!=null){tot+=v;any=true}}return{tot:any?tot:null,mx,pct:any&&mx?tot/mx*100:null}}
 function detTot(eid){const tr=document.querySelector(`.dtab tr[data-e="${CSS.escape(eid)}"]`);if(!tr)return;const r=detRow(S.cid,S.pKey||'t1',eid);tr.querySelector('.dt-t').textContent=r.tot==null?'–':fmt(r.tot);const pc=tr.querySelector('.dt-p');pc.textContent=pctf(r.pct);pc.className='dt-p num '+(r.pct==null?'':r.pct>=50?'ok':'ko')}
 function refreshDet(){const cls=S.classes[S.cid];if(!cls)return;const key=S.pKey||'t1';document.querySelectorAll('.dtab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,key);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});document.querySelectorAll('.dtab tr[data-e]').forEach(tr=>detTot(tr.dataset.e))}
-function palmDetail(cid,key){
+function palmDetail(cid,key,chips){
   const cls=S.classes[cid],cours=cls.cours||[];const {list}=palmData(cid,key);const edit=key[0]==='p'||key.startsWith('ex');const MT=sum(cours.map(c=>MX(c,key)));
   if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3></div>`;
-  return `<p class="muted small" style="margin:0">${edit?'Les élèves sont classés du premier au dernier. Pour corriger une erreur, touchez la cote, tapez la bonne valeur : elle s’enregistre et le bulletin se met à jour.':'Totaux en lecture seule. Pour corriger une cote, choisissez une <b>période</b> ou un <b>examen</b> ci-dessus.'} Faites glisser le tableau vers la gauche pour voir toutes les branches.</p>
+  const fs=!!S.detFS;
+  return `<div class="dfs${fs?' on':''}">${fs?`<div class="dfs-h"><div><b>${h(cls.nom)}</b><small>Points par branche · ${h(keyName(key))}</small></div><button class="btn sm grad" data-act="detfs">Fermer</button></div>${chips||''}`:''}<p class="muted small dfs-hide" style="margin:0">${edit?'Les élèves sont classés du premier au dernier. Pour corriger une erreur, touchez la cote, tapez la bonne valeur : elle s’enregistre et le bulletin se met à jour.':'Totaux en lecture seule. Pour corriger une cote, choisissez une <b>période</b> ou un <b>examen</b> ci-dessus.'} Faites glisser le tableau vers la gauche pour voir toutes les branches.</p>
   <div class="tblwrap dwrap" id="dwrap"><table class="dtab"><thead><tr><th class="pl">Pl.</th><th class="nm">Élève</th>${cours.map(c=>`<th class="br"><span>${h(c.nom)}</span><small class="num">/${fmt(MX(c,key))}</small></th>`).join('')}<th class="tt">Total<small class="num">/${fmt(MT)}</small></th><th class="tt">%</th></tr></thead><tbody>
   ${list.map(r=>{const e=r.e;return `<tr data-e="${h(e.id)}"><td class="pl num">${r.p||'–'}</td><td class="nm">${h(e.nom)} ${h(e.postnom||'')} <span>${h(e.prenom||'')}</span></td>${cours.map(c=>{const v=V(e.id,c,key);return edit?`<td><input class="gi" data-e="${h(e.id)}" data-k="${key}" data-c="${h(c.id)}" data-fix="1" inputmode="decimal" autocomplete="off" aria-label="${h(c.nom)}, ${h(nomComplet(e))}, maximum ${fmt(MX(c,key))}" value="${v==null?'':fmt(v)}"></td>`:`<td class="ro num">${v==null?'·':fmt(v)}</td>`}).join('')}<td class="dt-t num">${r.tot==null?'–':fmt(r.tot)}</td><td class="dt-p num ${r.pct==null?'':r.pct>=50?'ok':'ko'}">${pctf(r.pct)}</td></tr>`}).join('')}
-  </tbody></table></div><div class="ehint"><span>${edit?'Le classement se remet en ordre quand vous changez de période ou rouvrez la page.':''}</span><span class="saved" id="saved"></span></div>`;
+  </tbody></table></div><div class="ehint"><span class="dfs-hide">${edit?'Le classement se remet en ordre quand vous changez de période ou rouvrez la page.':''}</span><span class="saved" id="saved"></span></div></div>`;
 }
 function tabPalm(){
   const cid=S.cid,cls=S.classes[cid],key=S.pKey||'t1';const es=elevesOf(cid);
@@ -2118,7 +2130,7 @@ function tabPalm(){
   const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Points par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures des parents</button></div>`;
   const chips=`<div class="chips" role="group" aria-label="Période">${pkeys().map(([k,l])=>`<button class="chipb${k[0]==='t'||k==='an'?' strong':''}" data-act="pkey" data-v="${k}" aria-pressed="${key===k}">${l}</button>`).join('')}</div>`;
   if(vue==='sig')return `<div class="card pad stack">${seg}${chips}</div>`+tabSig();
-  if(vue==='det')return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Points par branche</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div></div>${chips}</div>`+palmDetail(cid,key);
+  if(vue==='det')return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Points par branche</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm grad" data-act="detfs">${ic('expand',16)} Plein écran</button></span></div>${chips}</div>`+palmDetail(cid,key,chips);
   const {mx,MT,ranked}=palmData(cid,key);
   const moy=ranked.length?sum(ranked.map(r=>r.pct))/ranked.length:null,reu=ranked.filter(r=>r.pct>=50).length;const ns=es.filter(e=>sigOf(e.id,key)).length;
   return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Palmarès</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm" data-act="palmpdf">${ic('doc',16)} PDF</button><button class="btn sm grad" data-act="palmfs">${ic('expand',16)} Plein écran</button></span></div>
@@ -3125,7 +3137,8 @@ const A={
   fsz:b=>{const v=+b.dataset.v;if(!v){FS.z=FS.fit;applyFSZoom();$('#bfsb').scrollTo(0,0)}else zoomFS(FS.z*(v>0?1.25:.8))},
   fsclose:()=>closeBulFS(),
   pkey:b=>{S.pKey=b.dataset.v;render()},
-  pvue:b=>{S.pVue=b.dataset.v;render()},
+  pvue:b=>{S.pVue=b.dataset.v;S.detFS=false;render()},
+  detfs:()=>{S.detFS=!S.detFS;document.documentElement.classList.toggle('dfs-lock',S.detFS);render()},
   palmfs:()=>openBulFS('palm'),
   fspkey:b=>{S.pKey=b.dataset.v;renderFS(true);render()},
   sign:b=>signSheet(b.dataset.id),

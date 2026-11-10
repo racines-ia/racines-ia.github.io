@@ -375,6 +375,15 @@ table.t td.name,table.t th.name{text-align:left}
 html.dfs-lock,html.dfs-lock body{overflow:hidden}
 html.dfs-lock #nav{display:none}
 .dfs.on .dtab .nm{min-width:96px;max-width:96px}
+/* En-tête compact de la classe */
+.clc{display:flex;align-items:center;gap:14px;padding:14px 16px;border-radius:24px;background:var(--grad);color:#fff;box-shadow:var(--shadow-s)}
+.clc-ph{flex:none;width:64px;height:64px;border-radius:18px;overflow:hidden;border:2px solid rgba(255,255,255,.55);padding:0;background:rgba(255,255,255,.14);display:grid;place-items:center;cursor:pointer;color:#fff}
+.clc-ph img{width:100%;height:100%;object-fit:cover}
+.clc-in{min-width:0;display:flex;flex-direction:column;gap:2px}
+.clc h1{margin:0;font-family:var(--f-d);font-weight:400;font-size:24px;line-height:1.05;text-transform:uppercase}
+.clc-in>span{font-size:13.5px;font-weight:600;opacity:.92}
+.clc-st{font-size:12.5px;opacity:.9;margin-top:2px}
+.clc-st b{font-weight:800}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -950,7 +959,8 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .meter.late i{background:var(--bad)}.meter.ok i{background:var(--good)}
 .sn-sym{flex-wrap:wrap;overflow:visible}
 .sn-dec{display:flex;border-radius:20px}.sn-dec button{flex:1 1 auto}
-.sn-li{align-items:flex-start}.sn-li .pill{flex:none;margin-top:2px}
+.sn-li{align-items:flex-start}.sn-li .ttl{white-space:normal;overflow:visible;overflow-wrap:anywhere}
+.seg.full button{padding-inline:6px;white-space:nowrap}.sn-li .pill{flex:none;margin-top:2px}
 .sn-motif{display:block;margin-top:4px;font-size:13px;color:var(--ink);opacity:.85;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
 .sn-k b{font-size:17px!important}.sn-k b.sn-dc{font-size:13.5px!important;line-height:1.25;padding-top:3px}
 .aiprop{background:var(--sunk);border-radius:14px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;align-items:flex-start}
@@ -1387,7 +1397,7 @@ function vClasse(){
   return `<div class="pf-page cl"><div class="prof wide">
    <header class="pf-top"><button class="pf-ic" data-act="go" data-v="${isDir()?'classes':'prof'}" aria-label="${isDir()?'Retour aux classes':'Retour à mon profil'}">${ic('back',22)}</button><b>La classe</b>${t0?`<button class="pf-ic" data-act="prof" data-id="${h(t0.id)}" aria-label="Voir le profil de l’enseignant">${ic('shield',20)}</button>`:'<span class="pf-ic ghost"></span>'}</header>
    ${S.demo?`<div class="pf-demo">${demoPill()}</div>`:''}
-   <section class="ticket g">
+   ${S.clCompact?`<section class="clc"><${t0?`button data-act="prof" data-id="${h(t0.id)}" aria-label="Voir le profil de ${h(t0.nom)}"`:'div'} class="clc-ph">${photo}</${t0?'button':'div'}><div class="clc-in"><h1>${h(c.nom)}</h1><span>${t0?h(ts.map(t=>t.nom).join(', ')):'Aucun enseignant attribué'}</span><div class="clc-st num"><b>${es.length}</b> élèves · <b>${es.length-f}</b> G · <b>${f}</b> F · <b>${(c.cours||[]).length}</b> branches</div></div></section>`:`<section class="ticket g">
     <span class="t-chip">${ic('book',16)} ${h(degLabel(c))}</span>
     <div class="t-row"><div class="t-info"><small>Classe</small><h1>${h(c.nom)}</h1><span>Enseignant titulaire : ${t0?h(ts.map(t=>t.nom).join(', ')):'non attribué'}</span></div>
      ${t0?`<button class="t-photo" data-act="prof" data-id="${h(t0.id)}" aria-label="Voir le profil de ${h(t0.nom)}">${photo}</button>`:`<div class="t-photo">${photo}</div>`}</div>
@@ -1395,7 +1405,7 @@ function vClasse(){
     <div class="t-stats four num"><div><small>Élèves</small><b>${es.length}</b></div><div><small>Garçons</small><b>${es.length-f}</b></div><div><small>Filles</small><b>${f}</b></div><div><small>Branches</small><b>${(c.cours||[]).length}</b></div></div>
    </section>
    ${t0?`<button class="pf-cta" data-act="prof" data-id="${h(t0.id)}"><span><small>Enseignant titulaire</small><b>${h(t0.nom)}</b><em>${h(t0.tel||t0.matiere||'')}</em></span><i>Voir le profil ${ic('chev',18)}</i></button>`
-     :isDir()?`<button class="pf-cta" data-act="new-ens" data-cls="${h(cid)}"><span><small>Aucun enseignant attribué</small><b>Créer le profil du titulaire</b></span><i>${ic('plus',18)} Créer</i></button>`:''}
+     :isDir()?`<button class="pf-cta" data-act="new-ens" data-cls="${h(cid)}"><span><small>Aucun enseignant attribué</small><b>Créer le profil du titulaire</b></span><i>${ic('plus',18)} Créer</i></button>`:''}`}
   </div></div>`
    +`<div class="page wide flat"><div class="page-in"><nav class="ctabs pfx" aria-label="Rubriques de la classe">${tabs.map(([k,l,i],n)=>`<button class="ctab" data-act="ctab" data-v="${k}" ${S.ctab===k?'aria-current="page"':''}><small>${n+1}</small>${ic(i,18)}${l}</button>`).join('')}</nav>
    ${(({appel:tabAppel,cotes:tabCotes,bul:tabBul,palm:tabPalm,eleves:tabEleves})[S.ctab]||(S.ctab='appel',tabAppel))()}</div></div>`;

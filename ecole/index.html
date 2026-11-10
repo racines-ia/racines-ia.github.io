@@ -1345,7 +1345,7 @@ function vAccueil(){
    ['book','Cahier de cotes','Les points se saisissent cours par cours : 1re à 6e période et examens des trois trimestres.'],
    ['doc','Bulletins officiels','Modèle du Ministère pour chaque degré. Les points du cahier de cotes s’y reportent seuls : totaux, sous-totaux, pourcentages et places.'],
    ['chalk','Classes et enseignants','Six classes, de la 1re à la 6e année primaire. Chaque classe a son enseignant titulaire, attribué par la direction.']];
-  return band({home:true,title:ECO().nom,sub:`${isSec()&&isDir()?h(POSTE_LBL[myPoste()]||'')+' · ':''}Année scolaire ${ANNEE}`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`
+  return band({home:true,title:ECO().nom,sub:`${isSec()&&isDir()?'<span style="display:block">'+h(POSTE_LBL[myPoste()]||'')+'</span>':''}<span style="white-space:nowrap">Année scolaire ${ANNEE}</span>`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`
    <section class="card summary">
     <div class="sum3 num"><div><b>${ids.length}</b><span>Classes</span></div><div><b>${nbEl}</b><span>Élèves</span></div><div><b>${nbEns}</b><span>Enseignants</span></div></div>
     ${isDir()&&canView('presence')?(()=>{const L=personnel(),td=today();const n=L.filter(p=>S.presence[pid2(td,p.id)]).length;return `<button class="li actsum" data-act="go" data-v="presence"><span class="ib g">${ic('users',22)}</span><span class="grow"><span class="ttl" style="display:block">Présence du personnel</span><span class="muted small num">Aujourd’hui : ${n} présent${n>1?'s':''} sur ${L.length}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}

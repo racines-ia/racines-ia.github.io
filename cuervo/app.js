@@ -99,12 +99,57 @@ function toJpeg(file, W, H, crop) {
   });
 }
 function rnd() { return Date.now().toString(36) + Math.random().toString(36).slice(2, 10); }
-async function upload(bucket, path, blob, type) {
-  var r = await sb.storage.from(bucket).upload(path, blob, { contentType: type, cacheControl: '31536000', upsert: false });
-  if (r.error) throw r.error;
+var XHR = null;
+function progress(label, pct) {
+  var el = $('prog');
+  if (pct == null) { el.classList.remove('on'); return; }
+  el.classList.add('on');
+  el.querySelector('.pl').textContent = label;
+  el.querySelector('.pp').textContent = Math.round(pct) + ' %';
+  el.querySelector('.pf').style.transform = 'scaleX(' + Math.max(0, Math.min(1, pct / 100)) + ')';
+}
+async function upload(bucket, path, blob, type, label) {
+  var ses = (await sb.auth.getSession()).data.session, tok = ses ? ses.access_token : SB_KEY;
+  label = label || 'Envoi en cours';
+  progress(label, 0);
+  try {
+    await new Promise(function (res, rej) {
+      var x = XHR = new XMLHttpRequest();
+      x.open('POST', SB_URL + '/storage/v1/object/' + bucket + '/' + path.split('/').map(encodeURIComponent).join('/'));
+      x.setRequestHeader('Authorization', 'Bearer ' + tok);
+      x.setRequestHeader('apikey', SB_KEY);
+      x.setRequestHeader('Content-Type', type || 'application/octet-stream');
+      x.setRequestHeader('x-upsert', 'false');
+      x.setRequestHeader('cache-control', 'max-age=31536000');
+      x.upload.onprogress = function (e) { if (e.lengthComputable) progress(label, e.loaded / e.total * 99); };
+      x.onload = function () { if (x.status >= 200 && x.status < 300) res(); else { var m = ''; try { m = JSON.parse(x.responseText).message; } catch (e) {} rej(new Error(m || 'Envoi refusé (' + x.status + ')')); } };
+      x.onerror = function () { rej(new Error('Connexion internet instable. Réessaie.')); };
+      x.onabort = function () { rej(new Error('Envoi annulé.')); };
+      x.send(blob);
+    });
+    progress(label, 100);
+  } finally { XHR = null; setTimeout(function () { progress(null, null); }, 500); }
   return sb.storage.from(bucket).getPublicUrl(path).data.publicUrl;
 }
-async function upImage(file, W, H, crop) { var b = await toJpeg(file, W, H, crop); return upload('mk-media', S.user.id + '/' + rnd() + '.jpg', b, 'image/jpeg'); }
+function download(url, name) {
+  progress('Téléchargement de ' + name, 0);
+  var x = XHR = new XMLHttpRequest();
+  x.open('GET', url); x.responseType = 'blob';
+  x.onprogress = function (e) { if (e.lengthComputable) progress('Téléchargement de ' + name, e.loaded / e.total * 100); };
+  x.onload = function () {
+    XHR = null;
+    if (x.status < 200 || x.status >= 300) { progress(null, null); window.open(url, '_blank'); return; }
+    progress('Téléchargement de ' + name, 100);
+    var a = document.createElement('a'), u = URL.createObjectURL(x.response);
+    a.href = u; a.download = name; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(function () { URL.revokeObjectURL(u); }, 60000);
+    setTimeout(function () { progress(null, null); toast('Téléchargement terminé'); }, 600);
+  };
+  x.onerror = function () { XHR = null; progress(null, null); window.open(url, '_blank'); };
+  x.onabort = function () { XHR = null; progress(null, null); toast('Téléchargement annulé'); };
+  x.send();
+}
+async function upImage(file, W, H, crop) { var b = await toJpeg(file, W, H, crop); return upload('mk-media', S.user.id + '/' + rnd() + '.jpg', b, 'image/jpeg', 'Envoi de la photo'); }
 
 /* ---------- Navigation ---------- */
 function nav(q) { history.pushState({}, '', q || location.pathname); route(); }
@@ -195,14 +240,13 @@ async function pageProduct(id, alive) {
   var vids = (p.videos || []).map(videoHtml).filter(Boolean);
   var canPay = (s.ops || []).length > 0 && !d.apercu;
   var mine = S.vendor && S.vendor.id === p.vendor_id;
-  var sold = p.ventes > 0 ? p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') : 'Nouveau · 0 vente';
+  var sold = '<b>' + (p.ventes || 0) + '</b> vente' + (p.ventes > 1 ? 's' : '');
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
     '<div class="cover">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
-    '<div class="stats sm"><div class="stat"><b class="gt" data-count="' + (p.ventes || 0) + '">0</b><span>ventes de ce produit</span></div><div class="stat"><b data-count="' + (s.ventes || 0) + '">0</b><span>ventes de la boutique</span></div><div class="stat"><b>' + (d.autres.length + 1) + '</b><span>produit' + (d.autres.length ? 's' : '') + ' en boutique</span></div></div>' +
     '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
-    '<article class="prod"><div class="phead"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="tag g">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
+    '<article class="prod"><div class="phead"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
     (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
@@ -246,6 +290,8 @@ function payInfo(o) {
 }
 var A = {
   closeSheet: closeSheet,
+  dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
+  cancelXfer: function () { if (XHR) XHR.abort(); },
   toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView({ behavior: 'smooth' }); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
@@ -274,7 +320,7 @@ var A = {
     busy(el, true);
     try {
       var blob = await toJpeg(f, 1400, 1400, false), path = 'o/' + el.dataset.id + '/' + rnd() + '.jpg';
-      var u = await sb.storage.from('mk-captures').upload(path, blob, { contentType: 'image/jpeg' }); if (u.error) throw u.error;
+      await upload('mk-captures', path, blob, 'image/jpeg', 'Envoi de la capture');
       var r = await sb.rpc('mk_order_capture', { p_token: el.dataset.token, p_path: path }); if (r.error) throw r.error;
       closeSheet(); toast('Capture envoyée'); nav('?c=' + el.dataset.token);
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
@@ -358,17 +404,22 @@ var A = {
   },
   edRmFile: async function (el) { var r = await sb.from('mk_product_files').delete().eq('id', el.dataset.id); if (r.error) return toast(errMsg(r.error)); edRead(); await edLoadFiles(); edRender(); },
   edAI: async function (el) {
-    edRead(); if (!E.p.titre && !E.p.description) return toast('Écris d\'abord un titre ou quelques mots sur ton produit');
-    busy(el, true);
-    var r = await sb.functions.invoke('mk-ai', { body: { titre: E.p.titre, description: E.p.description } });
-    busy(el, false);
-    if (r.error || !r.data || r.data.error) {
+    edRead(); if (!E.p.titre && !E.p.description && !E.p.points.length) return toast('Écris d\'abord un titre ou quelques mots sur ton produit');
+    busy(el, true); E.ai = 'loading'; edRender();
+    var r = await sb.functions.invoke('mk-ai', { body: { titre: E.p.titre, description: E.p.description, points: E.p.points } });
+    if (!E) return;
+    if (r.error || !r.data || r.data.error || !r.data.propositions) {
       var m = r.data && r.data.error; try { if (!m && r.error && r.error.context) m = (await r.error.context.json()).error; } catch (e) {}
-      return toast(m || 'L\'assistant IA n\'est pas disponible pour le moment.');
+      E.ai = null; edRender(); return toast(m || 'L\'assistant IA n\'est pas disponible pour le moment.');
     }
-    E.p.description = r.data.description; if ((r.data.points || []).length) E.p.points = r.data.points;
-    edRender(); toast('Description améliorée : relis-la avant d\'enregistrer');
+    E.ai = r.data.propositions; edRender();
   },
+  edUseAI: function (el) {
+    edRead(); var pr = E.ai && E.ai[Number(el.dataset.i)]; if (!pr) return;
+    E.p.description = pr.description; if (pr.points.length) E.p.points = pr.points.slice();
+    E.ai = null; edRender(); toast('Proposition appliquée : modifie-la si besoin, puis enregistre');
+  },
+  edCloseAI: function () { edRead(); E.ai = null; edRender(); },
 
   /* Boutique et loyer */
   saveShop: async function (el) {
@@ -387,7 +438,7 @@ var A = {
     busy(el, true);
     try {
       var path = null;
-      if (f) { var b = await toJpeg(f, 1400, 1400, false); path = 's/' + S.user.id + '/' + rnd() + '.jpg'; var u = await sb.storage.from('mk-captures').upload(path, b, { contentType: 'image/jpeg' }); if (u.error) throw u.error; }
+      if (f) { var b = await toJpeg(f, 1400, 1400, false); path = 's/' + S.user.id + '/' + rnd() + '.jpg'; await upload('mk-captures', path, b, 'image/jpeg', 'Envoi de la capture'); }
       var r = await sb.rpc('mk_sub_create', { p_op: $('l-op').value, p_ref: ref, p_path: path }); if (r.error) throw r.error;
       await loadDash(); renderDash(); toast('Paiement envoyé à l\'administrateur');
     } catch (e) { busy(el, false); toast(errMsg(e)); }
@@ -443,7 +494,7 @@ async function pageOrder(token, alive) {
       var fs = o.files || [];
       body = '<div class="check">' + ico('i-check') + '</div><div class="center"><h1 style="font-size:24px">Paiement confirmé</h1><p class="lead" style="margin-top:8px">Merci ' + esc((o.nom || '').split(' ')[0]) + '. Voici ton achat.</p></div>' +
         '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>' +
-        (fs.length ? '<div class="g8 stag">' + fs.map(function (f) { var u = safeUrl(f.url); return u ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(u) + '"' + (f.kind === 'fichier' ? ' download' : '') + '>' + ico('i-file') + esc(f.nom) + '</a>' : ''; }).join('') + '</div>'
+        (fs.length ? '<div class="g8 stag">' + fs.map(function (f) { var u = safeUrl(f.url); if (!u) return ''; return f.kind === 'fichier' ? '<button class="btn btn-primary" type="button" data-act="dl" data-url="' + esc(u) + '" data-name="' + esc(f.nom) + '">' + ico('i-file') + '<span>' + esc(f.nom) + '</span></button>' : '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(u) + '">' + ico('i-file') + '<span>' + esc(f.nom) + '</span></a>'; }).join('') + '</div>'
           : '<div class="banner">Le vendeur n\'a pas encore ajouté de fichier à ce produit. Contacte-le pour recevoir ta commande.</div>') +
         '<p class="note center">Garde le lien de cette page : il te redonne accès à tes fichiers.</p>';
     } else if (o.statut === 'refuse') {
@@ -605,6 +656,15 @@ function edRead() {
   p.promo_fin = $('e-fin').value ? new Date($('e-fin').value).toISOString() : null; p.actif = $('e-actif').checked;
   document.querySelectorAll('[data-exleg]').forEach(function (i) { var e = p.exemples[Number(i.dataset.exleg)]; if (e) e.legende = i.value.trim(); });
 }
+function aiBlock() {
+  if (E.ai === 'loading') return '<div class="ai g8"><div class="sk" style="height:84px"></div><div class="sk" style="height:84px"></div><div class="sk" style="height:84px"></div></div>';
+  if (!Array.isArray(E.ai)) return '';
+  return '<div class="ai g8 stag">' + E.ai.map(function (pr, i) {
+    return '<div class="aip"><div class="rowx" style="justify-content:space-between"><b>' + esc(pr.style || ('Version ' + (i + 1))) + '</b><span class="tag g">' + (i + 1) + '/' + E.ai.length + '</span></div><p>' + esc(pr.description) + '</p>' +
+      (pr.points.length ? '<ul class="ck">' + pr.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
+      '<button class="btn btn-primary btn-sm" type="button" data-act="edUseAI" data-i="' + i + '"><span>Utiliser cette version</span></button></div>';
+  }).join('') + '<button class="btn btn-ghost btn-sm" type="button" data-act="edCloseAI">Fermer les propositions</button></div>';
+}
 function edRender() {
   var p = E.p, url = E.id ? link('?p=' + E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
   sheet('<div class="shead"><h2>' + (E.id ? 'Modifier le produit' : 'Nouveau produit') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div><div class="g12">' +
@@ -612,8 +672,9 @@ function edRender() {
     '<div class="box"><h3>Le produit</h3><label>Titre<input id="e-titre" maxlength="120" value="' + esc(p.titre) + '"></label>' +
     '<div class="two"><label>Prix<input id="e-prix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.prix == null ? '' : p.prix) + '"></label><label>Devise<select id="e-devise"><option value="USD"' + (p.devise === 'USD' ? ' selected' : '') + '>Dollars ($)</option><option value="CDF"' + (p.devise === 'CDF' ? ' selected' : '') + '>Francs (FC)</option></select></label></div>' +
     '<label>Description<textarea id="e-desc" maxlength="6000" placeholder="Écris quelques mots : l\'assistant peut les arranger pour toi.">' + esc(p.description) + '</textarea></label>' +
-    '<button class="btn btn-ghost btn-sm" type="button" data-act="edAI">' + ico('i-spark') + '<span>Arranger ma description avec l\'IA</span></button>' +
     '<label>Points forts (une ligne par point)<textarea id="e-points">' + esc((p.points || []).join('\n')) + '</textarea></label>' +
+    '<button class="btn btn-ghost btn-sm" type="button" data-act="edAI"' + (E.ai === 'loading' ? ' disabled' : '') + '>' + ico('i-spark') + '<span>' + (E.ai === 'loading' ? 'L\'IA réfléchit…' : 'Proposer 3 versions avec l\'IA') + '</span></button>' +
+    aiBlock() +
     '<div class="switch"><span>Visible dans ma boutique</span><input id="e-actif" type="checkbox"' + (p.actif ? ' checked' : '') + '></div></div>' +
     '<div class="box"><h3>Promotion limitée (facultatif)</h3><div class="two"><label>Prix promo<input id="e-pprix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.promo_prix == null ? '' : p.promo_prix) + '"></label><label>Places<input id="e-places" type="number" inputmode="numeric" min="0" step="1" placeholder="Illimité" value="' + (p.promo_places == null ? '' : p.promo_places) + '"></label></div>' +
     '<label>Fin de la promo<input id="e-fin" type="datetime-local" value="' + localDT(p.promo_fin) + '"></label></div>' +
@@ -650,25 +711,25 @@ document.addEventListener('change', async function (e) {
   var f = inp.files[0], k = inp.dataset.up;
   try {
     if (k === 'cover' || k === 'avatar') {
-      toast('Envoi de la photo…');
+      
       var url = k === 'cover' ? await upImage(f, 1280, 720, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
       var r = await sb.from('mk_vendors').update(patch).eq('id', S.user.id); if (r.error) throw r.error;
       S.vendor[k + '_url'] = url; renderDash(true); toast('Photo enregistrée');
-    } else if (k === 'pcover') { edRead(); toast('Envoi de la photo…'); E.p.cover_url = await upImage(f, 1280, 720, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
-    else if (k === 'pimg') { edRead(); toast('Envoi de la photo…'); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
-    else if (k === 'pex') { edRead(); toast('Envoi de la photo…'); E.p.exemples.push({ url: await upImage(f, 800, 800, true), legende: '' }); edRender(); toast('Exemple ajouté : pense à enregistrer'); }
+    } else if (k === 'pcover') { edRead(); E.p.cover_url = await upImage(f, 1280, 720, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
+    else if (k === 'pimg') { edRead(); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
+    else if (k === 'pex') { edRead(); E.p.exemples.push({ url: await upImage(f, 800, 800, true), legende: '' }); edRender(); toast('Exemple ajouté : pense à enregistrer'); }
     else if (k === 'pvid') {
       if (f.size > 50 * 1024 * 1024) return toast('Vidéo trop lourde : 50 Mo maximum');
-      edRead(); var t = $('e-vtitre').value.trim(); toast('Envoi de la vidéo… garde cette page ouverte');
+      edRead(); var t = $('e-vtitre').value.trim(); 
       var ext = (/\.(mp4|webm|mov)$/i.exec(f.name) || [0, 'mp4'])[1].toLowerCase();
-      var vu = await upload('mk-media', S.user.id + '/' + rnd() + '.' + ext, f, f.type || 'video/mp4');
+      var vu = await upload('mk-media', S.user.id + '/' + rnd() + '.' + ext, f, f.type || 'video/mp4', 'Envoi de la vidéo');
       if (!E) return; E.p.videos.push({ url: vu, titre: t }); edRender(); toast('Vidéo ajoutée : pense à enregistrer');
     } else if (k === 'pfile') {
       if (f.size > 50 * 1024 * 1024) return toast('Fichier trop lourd : 50 Mo maximum');
-      toast('Envoi du fichier… garde cette page ouverte');
+      
       if (!E.id) await edSave();
       var safe = f.name.normalize('NFD').replace(/[^\w.\-]+/g, '_').slice(-80) || 'fichier';
-      var fu = await upload('mk-files', S.user.id + '/' + rnd() + rnd() + '/' + safe, f, f.type || 'application/octet-stream');
+      var fu = await upload('mk-files', S.user.id + '/' + rnd() + rnd() + '/' + safe, f, f.type || 'application/octet-stream', 'Envoi de ' + f.name.slice(0, 40));
       var ins = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: f.name.slice(0, 150), url: fu, kind: 'fichier' }); if (ins.error) throw ins.error;
       edRead(); await edLoadFiles(); edRender(); toast('Fichier ajouté');
     }

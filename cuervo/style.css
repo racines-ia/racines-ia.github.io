@@ -253,3 +253,21 @@ input:focus,select:focus,textarea:focus{border-color:var(--green)}
 
 /* Bandeau de boutique (sans photo de couverture) */
 .shopbanner{height:120px;border-radius:20px;border:1px solid var(--line);background:radial-gradient(60% 120% at 20% 0%,rgba(232,245,92,.25),transparent 60%),radial-gradient(60% 120% at 90% 100%,rgba(60,196,138,.35),transparent 60%),var(--surface)}
+
+/* Ventes : simple et discret */
+.sold{display:inline-block;font-size:13px;color:var(--muted);font-weight:600}
+.sold b{color:var(--green);font:800 15px var(--f-head);margin-right:2px}
+/* Propositions de l'IA */
+.aip{border:1px solid var(--line);border-radius:var(--r-in);padding:12px;display:grid;gap:10px;background:var(--bg)}
+.aip b{font-size:14px}
+.aip p{font-size:14px;color:var(--text);line-height:1.5;white-space:pre-line}
+.aip ul.ck li{font-size:13px}
+/* Barre de progression des envois et téléchargements */
+.prog{position:fixed;left:16px;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));z-index:70;max-width:528px;margin:0 auto;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-card);padding:14px 16px;box-shadow:var(--sh-2);display:grid;gap:10px;transform:translateY(140%);visibility:hidden;transition:transform 320ms var(--out),visibility 0s 320ms}
+.prog.on{transform:none;visibility:visible;transition:transform 320ms var(--out)}
+.prog .row1{display:flex;align-items:center;gap:12px}
+.prog .pl{flex:1;min-width:0;font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog .pp{font:800 18px var(--f-head);font-variant-numeric:tabular-nums}
+.prog .pt{height:6px;border-radius:6px;background:var(--line);overflow:hidden}
+.prog .pf{height:100%;background:var(--grad);transform:scaleX(0);transform-origin:left;transition:transform 200ms linear}
+.prog button{background:none;border:0;color:var(--muted);font:600 12px var(--f-body);text-decoration:underline;cursor:pointer;justify-self:start;padding:0;min-height:24px}

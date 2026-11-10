@@ -10,6 +10,14 @@ var E = null;            // produit en cours d'édition
 var rid = 0, pollT = null, armed = '';
 var $ = function (id) { return document.getElementById(id); };
 var app = $('app');
+(function () {
+  var sp = $('splash'); if (!sp) return;
+  var seen = false; try { seen = sessionStorage.getItem('cv_splash') === '1'; sessionStorage.setItem('cv_splash', '1'); } catch (e) {}
+  if (seen) { sp.remove(); return; }
+  var t, done = function () { clearTimeout(t); sp.classList.add('out'); setTimeout(function () { sp.remove(); }, 650); };
+  t = setTimeout(done, window.matchMedia('(prefers-reduced-motion:reduce)').matches ? 700 : 2300);
+  sp.addEventListener('click', done);
+})();
 
 /* ---------- Outils ---------- */
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -170,14 +178,18 @@ async function pageProduct(id, alive) {
   var exs = (p.exemples || []).filter(function (e) { return safeUrl(e && e.url); });
   var vids = (p.videos || []).map(videoHtml).filter(Boolean);
   var canPay = (s.ops || []).length > 0 && !d.apercu;
+  var mine = S.vendor && S.vendor.id === p.vendor_id;
+  var sold = p.ventes > 0 ? '<b>' + p.ventes + '</b> vente' + (p.ventes > 1 ? 's' : '') + ' de ce produit' : '<b>0</b> vente pour l\'instant · Nouveau';
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
-    '<div class="cover">' + (safeUrl(s.cover_url) ? pic(s.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
-    '<div class="stats"><div class="stat"><b class="gt" data-count="' + (p.ventes || 0) + '">0</b><span>ventes de ce produit</span></div><div class="stat"><b data-count="' + (s.ventes || 0) + '">0</b><span>ventes de la boutique</span></div><div class="stat"><b>' + (d.autres.length + 1) + '</b><span>produit' + (d.autres.length ? 's' : '') + ' en boutique</span></div></div>' +
-    '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique et ses autres produits</small></div>' + ico('i-arrow') + '</a>' +
-    '<article class="prod"><div class="phead"><div class="sq">' + pic(p.image_url) + '</div><div><span class="tag g">' + (p.ventes > 0 ? p.ventes + ' achat' + (p.ventes > 1 ? 's' : '') : 'Nouveau') + '</span><h1>' + esc(p.titre) + '</h1>' +
-    '<div class="price-row" style="margin-top:8px"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old">' + money(p.prix, p.devise) + '</div>' : '') + '</div></div></div>' + promo +
+    '<div class="phero"><div class="pbg">' + (safeUrl(s.cover_url) ? '<img class="f" src="' + esc(safeUrl(s.cover_url)) + '" alt="" onload="this.classList.add(\'ld\')">' : '') + '</div><div class="pimg sq">' + pic(p.image_url) + '</div></div>' +
+    '<div class="pinfo"><div class="soldline"><i></i><span>' + sold + '</span></div><h1>' + esc(p.titre) + '</h1>' +
+    '<div class="price-row"><div class="price gt">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old">Prix normal : <s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div>' +
+    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier ce produit</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
+    '<div class="stats sm"><div class="stat"><b class="gt" data-count="' + (p.ventes || 0) + '">0</b><span>ventes de ce produit</span></div><div class="stat"><b data-count="' + (s.ventes || 0) + '">0</b><span>ventes de la boutique</span></div><div class="stat"><b>' + (d.autres.length + 1) + '</b><span>produit' + (d.autres.length ? 's' : '') + ' en boutique</span></div></div>' +
+    '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique et voir ses autres produits</small></div>' + ico('i-arrow') + '</a>' +
+    '<article class="prod">' + (promo ? promo.replace('class="promo-box"', 'class="promo-box" style="margin-top:0"') : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
@@ -294,8 +306,19 @@ var A = {
 
   /* Produits du vendeur */
   newProduct: function () { openEditor(null); },
+  shareProduct: function (el) {
+    var url = link('?p=' + el.dataset.id);
+    sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Partager le produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+      '<p class="lead">Ce lien ouvre directement « ' + esc(el.dataset.title) + ' ». Depuis le produit, le client peut aussi visiter ta boutique.</p>' +
+      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title) + '</div>');
+  },
+  editHere: async function (el) {
+    var r = await sb.from('mk_products').select('*').eq('id', el.dataset.id).maybeSingle();
+    if (r.error || !r.data) return toast('Produit introuvable');
+    await openEditor(r.data);
+  },
   editProduct: function (el) { openEditor(S.products.filter(function (p) { return p.id === el.dataset.id; })[0]); },
-  edSave: async function (el) { busy(el, true); try { await edSave(); toast('Produit enregistré'); edRender(); await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
+  edSave: async function (el) { busy(el, true); try { await edSave(); toast('Produit enregistré'); edRender(); if (new URLSearchParams(location.search).get('p')) { closeSheet(); route(); return; } await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
   edDelete: async function (el) {
     if (armed !== 'del') { armed = 'del'; el.textContent = 'Confirmer la suppression'; return; }
     var r = await sb.from('mk_products').delete().eq('id', E.id); if (r.error) return toast(errMsg(r.error));
@@ -484,7 +507,7 @@ function renderDash(keepScroll) {
   var body = { commandes: dashOrders, produits: dashProducts, boutique: dashShop, loyer: dashRent }[S.tab]();
   page('<div class="rowx" style="padding-top:8px">' + avatar(v) + '<div class="grow"><h1 style="font-size:24px">' + esc(v.boutique) + '</h1><p class="note">' + esc(v.prenom + ' ' + v.nom) + '</p></div></div>' +
     '<div class="banner ' + st[0] + '"><b>' + st[1] + '</b>' + esc(st[2]) + '</div>' +
-    '<div class="two" style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir ma boutique</a><button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + esc(link('?b=' + v.slug)) + '">' + ico('i-share') + 'Copier mon lien</button></div>' +
+    '<div class="two" style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir ma boutique</a><button class="btn btn-ghost btn-sm" type="button" data-act="newProduct">' + ico('i-plus') + '<span>Produit</span></button></div>' +
     (v.is_admin ? '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="?v=admin" data-nav>Espace administrateur ' + ico('i-arrow') + '</a>' : '') +
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.tab ? ' on' : '') + '" type="button" data-act="tab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
     '<div style="margin-top:16px">' + body + '</div>' +
@@ -508,10 +531,14 @@ function dashOrders() {
   }).join('') + '</div>';
 }
 function dashProducts() {
-  return '<button class="btn btn-primary" type="button" data-act="newProduct">' + ico('i-plus') + 'Nouveau produit</button><div class="g12 stag" style="margin-top:16px">' +
+  return '<button class="btn btn-primary" type="button" data-act="newProduct">' + ico('i-plus') + 'Nouveau produit</button>' +
+    (S.products.length ? '<p class="note" style="margin-top:12px">Partage le lien de chaque produit : le client arrive directement sur le produit, et peut ensuite visiter ta boutique.</p>' : '') +
+    '<div class="g12 stag" style="margin-top:16px">' +
     (S.products.length ? S.products.map(function (p) {
-      return '<button class="ord" type="button" data-act="editProduct" data-id="' + p.id + '" style="text-align:left;color:inherit;font:inherit;cursor:pointer"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div><b>' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</small>' +
-        '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div></button>';
+      return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</small>' +
+        '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div>' +
+        '<div class="two"><button class="btn btn-ghost btn-sm" type="button" data-act="editProduct" data-id="' + p.id + '"><span>Modifier</span></button>' +
+        '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
     }).join('') : '<div class="empty">Tu n\'as pas encore de produit. Ajoute le premier.</div>') + '</div>';
 }
 function upBox(key, url, label, cls) {

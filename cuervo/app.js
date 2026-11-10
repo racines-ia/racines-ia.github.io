@@ -251,7 +251,7 @@ function compressVideo(f, meta) {
 
 /* ---------- Navigation ---------- */
 function nav(q) { history.pushState({}, '', q || location.pathname); route(); }
-window.addEventListener('popstate', route);
+window.addEventListener('popstate', function () { if (closeZoom(true)) return; route(); });
 async function route() {
   var my = ++rid, alive = function () { return my === rid; };
   clearInterval(pollT); closeSheet(); armed = '';
@@ -343,15 +343,15 @@ async function pageProduct(id, alive) {
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
-    '<div class="cover">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
+    '<div class="cover' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
     '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
-    '<article class="prod"><div class="phead"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
+    '<article class="prod"><div class="phead"><div class="sq' + (safeUrl(p.image_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.image_url)) : '') + '">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
     (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
-    (exs.length ? '<div class="sub">Exemples</div><div class="exs">' + exs.map(function (e) { return '<figure class="ex"><div class="sq">' + pic(e.url) + '</div>' + (e.legende ? '<figcaption>' + esc(e.legende) + '</figcaption>' : '') + '</figure>'; }).join('') + '</div>' : '') +
+    (exs.length ? '<div class="sub">Exemples</div><div class="exs">' + exs.map(function (e) { return '<figure class="ex"><div class="sq zoom" data-zoom="' + esc(safeUrl(e.url)) + '">' + pic(e.url) + '</div>' + (e.legende ? '<figcaption>' + esc(e.legende) + '</figcaption>' : '') + '</figure>'; }).join('') + '</div>' : '') +
     (canPay ? '<button class="btn btn-primary" style="margin-top:24px" type="button" data-act="pay">Payer ' + money(p.prix_actuel, p.devise) + ' ' + ico('i-arrow') + '</button>' : '<div class="banner">Le paiement n\'est pas encore disponible pour ce produit.</div>') +
     '</article>' +
     '<div class="sec g12"><h2>Une question ?</h2>' + (contactRow(s) || '<p class="lead">Le vendeur n\'a pas encore indiqué de contact.</p>') + '</div>' +
@@ -369,8 +369,8 @@ async function pageShop(slug, alive) {
   var d = r.data, s = d.shop, ps = d.products || [];
   document.title = s.boutique + ' — cuervo.co';
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette boutique n\'est pas encore visible du public.</div><div style="height:16px"></div>' : '') +
-    '<div class="shopbanner"></div>' +
-    '<div style="padding:0 8px">' + avatar(s, 'lg') + '<h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
+    (safeUrl(s.cover_url) ? '<div class="cover zoom" data-zoom="' + esc(safeUrl(s.cover_url)) + '">' + pic(s.cover_url) + '</div>' : '<div class="shopbanner"></div>') +
+    '<div style="padding:0 8px"><span' + (safeUrl(s.avatar_url) ? ' class="zoom" data-zoom="' + esc(safeUrl(s.avatar_url)) + '"' : '') + ' style="display:inline-block">' + avatar(s, 'lg') + '</span><h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
     '<div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><b class="gt" data-count="' + (s.ventes || 0) + '">0</b><span>produits vendus</span></div><div class="stat"><b>' + ps.length + '</b><span>produit' + (ps.length > 1 ? 's' : '') + ' en ligne</span></div></div>' +
     '<div class="sec"><h2 style="margin-bottom:16px">Produits</h2>' + (ps.length ? '<div class="grid stag">' + ps.map(card).join('') + '</div>' : '<div class="empty">Cette boutique n\'a pas encore de produit.</div>') + '</div>' +
     '<div class="sec g12"><h2>Contacter le vendeur</h2>' + (contactRow(s) || '<p class="lead">Aucun contact indiqué.</p>') + '</div>' +
@@ -723,7 +723,8 @@ function upBox(key, url, label, cls) {
 }
 function dashShop() {
   var v = S.vendor, mm = { vide: ['a', 'À remplir'], attente: ['a', 'En attente de confirmation'], confirme: ['g', 'Confirmés'], refuse: ['r', 'Refusés'] }[v.mm_statut];
-  return '<div class="g12"><div class="box"><h3>Photo de profil</h3><p class="note">Photo carrée : ton logo ou ta photo. La photo de couverture se règle maintenant dans chaque produit.</p>' +
+  return '<div class="g12"><div class="box"><h3>Photos de la boutique</h3><p class="note">Couverture de la page boutique (paysage 1920 × 1080) et photo de profil carrée. Chaque produit a aussi sa propre couverture.</p>' +
+    upBox('cover', v.cover_url, 'Couverture de la boutique', 'cover') +
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
     '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label></div>' +
@@ -891,6 +892,57 @@ function renderAdmin() {
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.atab ? ' on' : '') + '" type="button" data-act="atab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div style="margin-top:16px">' + body + '</div>');
   setBar(null);
 }
+
+/* ---------- Visionneuse de photos ---------- */
+var ZV = { s: 1, x: 0, y: 0, pts: {}, d0: 0, s0: 1, last: 0, mx: 0, my: 0 };
+function zApply(anim) { var im = $('zvImg'); if (!im) return; im.style.transition = anim ? 'transform 220ms cubic-bezier(.22,1,.36,1)' : 'none'; im.style.transform = 'translate(' + ZV.x + 'px,' + ZV.y + 'px) scale(' + ZV.s + ')'; }
+function zClamp() {
+  ZV.s = Math.min(5, Math.max(1, ZV.s));
+  var im = $('zvImg'), mx = im.offsetWidth * (ZV.s - 1) / 2, my = im.offsetHeight * (ZV.s - 1) / 2;
+  ZV.x = Math.min(mx, Math.max(-mx, ZV.x)); ZV.y = Math.min(my, Math.max(-my, ZV.y));
+}
+function openZoom(url) {
+  var v = $('zv'); ZV.s = 1; ZV.x = ZV.y = 0; ZV.pts = {};
+  v.innerHTML = '<img id="zvImg" src="' + esc(url) + '" alt="" draggable="false"><button class="x zx" type="button" data-act="closeZoom" aria-label="Fermer">' + ico('i-x') + '</button><p class="zh">Pince pour zoomer · double toucher</p>';
+  v.classList.add('on'); document.body.style.overflow = 'hidden';
+  try { history.pushState({ zoom: 1 }, '', location.href); } catch (e) {}
+}
+function closeZoom(fromPop) {
+  var v = $('zv'); if (!v.classList.contains('on')) return false;
+  v.classList.remove('on'); document.body.style.overflow = ''; setTimeout(function () { if (!v.classList.contains('on')) v.innerHTML = ''; }, 260);
+  if (!fromPop) { try { if (history.state && history.state.zoom) history.back(); } catch (e) {} }
+  return true;
+}
+A.closeZoom = function () { closeZoom(false); };
+(function () {
+  var v = $('zv');
+  v.addEventListener('pointerdown', function (e) {
+    if (e.target.closest('button')) return;
+    v.setPointerCapture(e.pointerId); ZV.pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var ids = Object.keys(ZV.pts);
+    if (ids.length === 2) { var a = ZV.pts[ids[0]], b = ZV.pts[ids[1]]; ZV.d0 = Math.hypot(a.x - b.x, a.y - b.y); ZV.s0 = ZV.s; }
+    if (ids.length === 1) {
+      var now = Date.now();
+      if (now - ZV.last < 300) { ZV.s = ZV.s > 1 ? 1 : 2.5; if (ZV.s === 1) { ZV.x = ZV.y = 0; } else { var r = v.getBoundingClientRect(); ZV.x = (r.width / 2 - e.clientX) * 1.5; ZV.y = (r.height / 2 - e.clientY) * 1.5; } zClamp(); zApply(true); ZV.last = 0; }
+      else ZV.last = now;
+      ZV.mx = e.clientX; ZV.my = e.clientY;
+    }
+  });
+  v.addEventListener('pointermove', function (e) {
+    if (!ZV.pts[e.pointerId]) return;
+    ZV.pts[e.pointerId] = { x: e.clientX, y: e.clientY };
+    var ids = Object.keys(ZV.pts);
+    if (ids.length === 2 && ZV.d0) { var a = ZV.pts[ids[0]], b = ZV.pts[ids[1]]; ZV.s = ZV.s0 * Math.hypot(a.x - b.x, a.y - b.y) / ZV.d0; zClamp(); zApply(false); }
+    else if (ids.length === 1 && ZV.s > 1) { ZV.x += e.clientX - ZV.mx; ZV.y += e.clientY - ZV.my; ZV.mx = e.clientX; ZV.my = e.clientY; zClamp(); zApply(false); }
+  });
+  var up = function (e) { delete ZV.pts[e.pointerId]; if (Object.keys(ZV.pts).length < 2) ZV.d0 = 0; var ids = Object.keys(ZV.pts); if (ids.length === 1) { ZV.mx = ZV.pts[ids[0]].x; ZV.my = ZV.pts[ids[0]].y; } };
+  v.addEventListener('pointerup', up); v.addEventListener('pointercancel', up);
+  v.addEventListener('wheel', function (e) { e.preventDefault(); ZV.s *= e.deltaY < 0 ? 1.15 : 0.87; zClamp(); zApply(false); }, { passive: false });
+})();
+document.addEventListener('click', function (e) {
+  var zz = e.target.closest('[data-zoom]');
+  if (zz && zz.dataset.zoom && !e.target.closest('a,button,label,input')) { e.preventDefault(); openZoom(zz.dataset.zoom); }
+});
 
 /* ---------- Événements et démarrage ---------- */
 document.addEventListener('click', function (e) {

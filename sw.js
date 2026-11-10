@@ -14,3 +14,12 @@ self.addEventListener('fetch', e => {
     return res;
   }).catch(() => caches.match(r).then(m => m || (r.mode === 'navigate' ? caches.match(u.pathname.startsWith('/ecole/') ? '/ecole/index.html' : '/index.html') : undefined))));
 });
+
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  const url = (e.notification.data && e.notification.data.url) || '/ecole/';
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(cs => {
+    for (const c of cs) if (new URL(c.url).pathname.startsWith('/ecole')) return c.focus();
+    return self.clients.openWindow(url);
+  }));
+});

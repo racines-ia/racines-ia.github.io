@@ -334,6 +334,19 @@ table.t td.name,table.t th.name{text-align:left}
 .ftab tr.fb th{text-align:left;padding:7px 12px 3px;font-size:12px;font-weight:700;color:var(--muted);border-top:1px solid var(--line)}
 .ftab tfoot td{background:var(--sunk);font-weight:700}
 .ftab tfoot b{font-family:var(--f-d);font-weight:400;font-size:17px;color:var(--accent)}
+/* Remarques direction ↔ enseignant */
+.mthread{display:flex;flex-direction:column;gap:8px}
+.mday{text-align:center;margin:8px 0 2px}
+.mday span{display:inline-block;background:var(--sunk);color:var(--muted);font-size:12px;font-weight:700;padding:4px 12px;border-radius:99px}
+.mrow{display:flex}
+.mrow.me{justify-content:flex-end}
+.mb{max-width:86%;background:var(--surface);border:1px solid var(--line);border-radius:18px 18px 18px 6px;padding:9px 13px}
+.mrow.me .mb{background:var(--soft);border-color:transparent;border-radius:18px 18px 6px 18px}
+.mb small{display:block;font-size:11.5px;font-weight:700;color:var(--muted);margin-bottom:2px}
+.mb p{margin:0;line-height:1.42;overflow-wrap:anywhere}
+.mb em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:4px;text-align:right}
+.mb em button{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;padding:0;cursor:pointer}
+.msgs textarea.inp{height:auto;min-height:104px;padding:12px 14px;line-height:1.4;resize:vertical}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -987,7 +1000,7 @@ const POSTES_G=[['prefet','Préfet'],['secretaire','Secrétaire'],['etudes','Dir
 const POSTES_E=[['titulaire','Titulaire'],['professeur','Professeur']];
 const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire',etudes:'Directeur des études',discipline:'Directeur de discipline',titulaire:'Titulaire',professeur:'Professeur',directeur:'Directeur'};
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
-const VIEWS_P={secretaire:['accueil','eleves','perception'],etudes:['accueil','classes','classe','activite','eleves','palmsit'],discipline:['accueil','activite','eleves','presence','sante','classes','classe']};
+const VIEWS_P={secretaire:['accueil','eleves','perception'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs']};
 function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
@@ -1033,8 +1046,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem'};
-const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs'};
+const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -1249,7 +1262,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='corbeille'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='corbeille'||S.view==='msgs'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1270,9 +1283,9 @@ function screen(){
     if(!S.inscr[meId()]){const L=libres();return band({kicker:'Espace enseignant',title:L.length?'Bienvenue':'Créez votre profil'})+page((L.length?`<section class="card pad stack"><div><b>Votre profil a peut-être déjà été préparé par la direction</b><p class="muted small" style="margin:4px 0 0">Touchez votre nom pour l’utiliser.</p></div><div class="list">${L.map(p=>`<button class="li" data-act="claim" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(p.matiere||'')}</span></span><span class="badge-g">C’est moi</span></button>`).join('')}</div></section><h2 class="h2">Sinon, créez votre profil</h2>`:'')+inscription())}
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
-  if(!isDir()){const mine=mesClasses();if(!['prof','classe'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
+  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1553,6 +1566,7 @@ function vGestion(){
   const sec=isSec(),mp=myPoste(),promo=sec&&mp==='promoteur';
   return band({back:'accueil',kicker:sec?h(POSTE_LBL[mp]||'Direction'):'Direction',title:'Gestion de l’école',sub:sec?'Secondaire · salles, personnel et accès':'Classes, branches, enseignants et informations du bulletin'})+page(`
   ${sec?`<div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('shield',20)}</span><span>${promo?'<b>Vous êtes le promoteur</b> : vous voyez tout ce qui se passe à l’école. Créez le profil du <b>préfet</b> et donnez-lui son code ; c’est lui qui crée les accès de tout le personnel.':'<b>Vous êtes le préfet</b> : vous créez les accès de tout le personnel (secrétaire, directeurs, titulaires, professeurs) et vous leur donnez leur code personnel.'}</span></div>`:''}
+  <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
   ${canView('presence')?'':'<!--'}<button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence, avec l’heure d’arrivée écrite à la main.</small></span><i>${ic('chev',22)}</i></button>
   ${canView('presence')?'':'-->'}<button class="gcta" data-act="go" data-v="perception"><span><b>Perception des frais</b><small>Frais fixés par classe, paiements de chaque élève, montants restants, reçus PDF et rappels aux parents.</small></span><i>${ic('money',22)}</i></button>
   <button class="gcta" data-act="go" data-v="sante"><span><b>Cahier de sortie</b><small>Élèves malades : enregistrez l’heure, la date, le motif de sortie et les conseils aux parents (avec l’IA). La fiche part en PDF sur WhatsApp.</small></span><i>${ic('med',22)}</i></button>
@@ -1707,6 +1721,61 @@ function ficheEleve(id){
 const isoToDmy=v=>{const m=/^(\d{4})-(\d{2})-(\d{2})/.exec(v||'');return m?m[3]+'/'+m[2]+'/'+m[1]:(v||'')};
 function dmyToIso(v){v=String(v||'').trim();if(!v)return '';const m=/^(\d{1,2})\D+(\d{1,2})\D+(\d{4})$/.exec(v);if(!m)return null;const d=+m[1],mo=+m[2],y=+m[3];const t=new Date(y,mo-1,d);if(t.getFullYear()!==y||t.getMonth()!==mo-1||t.getDate()!==d||y<1950||t>new Date())return null;return y+'-'+String(mo).padStart(2,'0')+'-'+String(d).padStart(2,'0')}
 document.addEventListener('input',ev=>{const i=ev.target;if(!i.matches||!i.matches('[data-dmy]'))return;if(ev.inputType&&ev.inputType.startsWith('delete'))return;const n=i.value.replace(/\D/g,'').slice(0,8);i.value=n.length>4?n.slice(0,2)+'/'+n.slice(2,4)+'/'+n.slice(4):n.length>2?n.slice(0,2)+'/'+n.slice(2):n});
+/* ---------- Remarques et suggestions : direction ↔ enseignant ---------- */
+const myEnsIds=()=>[meId(),S.inscr[meId()]?.profil].filter(Boolean);
+const ensIdsOf=id=>[id,S.inscr[id]?.profil,...Object.entries(S.inscr).filter(([,p])=>p.profil===id).map(([k])=>k)].filter(Boolean);
+function msgsOf(ensId){const ids=isDir()?ensIdsOf(ensId):myEnsIds();return Object.entries(S.msgs||{}).filter(([,m])=>m&&ids.includes(m.ens)).map(([id,m])=>({id,...m})).sort((a,b)=>(a.at||'')<(b.at||'')?-1:1)}
+function msgUnread(ensId){const L=Object.values(S.msgs||{}).filter(m=>m&&!m.luAt);if(isDir())return L.filter(m=>m.sens==='ens'&&(!ensId||ensIdsOf(ensId).includes(m.ens))).length;const ids=myEnsIds();return L.filter(m=>m.sens==='dir'&&ids.includes(m.ens)).length}
+const msgSeenBusy=new Set();
+function msgSeen(ensId){const mine=isDir()?'ens':'dir';for(const m of msgsOf(ensId)){if(m.sens!==mine||m.luAt||msgSeenBusy.has(m.id))continue;msgSeenBusy.add(m.id);const{id,...doc}=m;put('messages',id,{...doc,luAt:new Date().toISOString()}).catch(()=>{}).then(()=>msgSeenBusy.delete(id))}}
+const jourLbl=d=>{const td=today();if(d===td)return 'Aujourd’hui';const y=new Date(td+'T00:00:00Z');y.setUTCDate(y.getUTCDate()-1);if(d===iso(y))return 'Hier';const dd=D(d);return JLONG[dd.getUTCDay()]+' '+dfr(d)};
+function vMsgs(){
+  const dir=isDir();const ens=dir?S.mEns:meId();
+  if(dir&&!ens){
+    const L=ensList().filter(p=>!isGest(p));
+    return band({back:'gestion',home:true,kicker:'Direction',title:'Remarques aux enseignants',sub:'Suggestions du jour et réponses.'})+page(`<div class="stack">
+     <div class="card pad"><p class="muted small" style="margin:0">Choisissez un enseignant pour lui écrire. Il reçoit une notification dans l’application et peut vous répondre. L’assistant IA peut corriger votre texte et proposer ses versions.</p></div>
+     <div class="card list">${L.map(p=>{const M=msgsOf(p.id),last=M[M.length-1],nu=msgUnread(p.id);return `<button class="li" data-act="mopen" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${last?h((last.sens==='dir'?'Vous : ':'Réponse : ')+last.texte.slice(0,60)):'Aucun message'}</span></span>${nu?`<span class="pill bad num">${nu}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`}).join('')||'<div class="empty"><h3>Aucun enseignant</h3></div>'}</div></div>`);
+  }
+  const p=ensList().find(x=>x.id===ens)||{nom:''};const M=msgsOf(ens);setTimeout(()=>msgSeen(ens),600);
+  let html='',lastD='';
+  for(const m of M){const d=m.date||(m.at||'').slice(0,10);if(d!==lastD){html+=`<div class="mday"><span>${h(jourLbl(d))}</span></div>`;lastD=d}
+    const mine=(m.sens==='dir')===dir;
+    html+=`<div class="mrow ${mine?'me':''}"><div class="mb"><small>${mine?'Vous':h(m.sens==='dir'?(m.nom||'La direction'):(m.nom||p.nom||'Enseignant'))} · ${hm(m.at)}</small><p>${h(m.texte).replace(/\n/g,'<br>')}</p>${mine?`<em>${m.luAt?'✓✓ Lu à '+hm(m.luAt):'✓ Envoyé'}${dir||m.sens==='ens'?` · <button type="button" data-act="mdel" data-id="${h(m.id)}">Supprimer</button>`:''}</em>`:''}</div></div>`}
+  const canN=typeof Notification!=='undefined'&&Notification.permission==='default';
+  return band({back:dir?'msgs':'prof',home:true,kicker:dir?'Remarques et suggestions':'Messages de la direction',title:dir?p.nom:'La direction',sub:dir?'Vu seulement par cet enseignant et la direction.':'Vous pouvez répondre ci-dessous.'})+page(`<div class="stack msgs">
+   ${canN?`<button class="btn sm" data-act="mnotif" style="align-self:flex-start">${ic('bell',16)} Activer les notifications sur ce téléphone</button>`:''}
+   <div class="mthread" id="mthread">${html||`<div class="card empty"><h3>Aucun message</h3><p class="muted small">${dir?'Écrivez votre première remarque ci-dessous.':'Les remarques de la direction apparaîtront ici.'}</p></div>`}</div>
+   <form id="f-msg" class="card pad stack" data-ens="${h(ens)}"><label for="m-txt" class="eyebrow">${dir?'Remarque ou suggestion du jour':'Votre réponse'}</label>
+    <textarea class="inp" id="m-txt" name="texte" rows="4" maxlength="1500" placeholder="${dir?'Écrivez votre remarque…':'Écrivez votre réponse…'}" required>${h(S.mDraft||'')}</textarea>
+    <div class="btns"><button type="button" class="btn sm" data-act="mia">${ic('spark',16)} Corriger avec l’IA</button><button class="btn grad" type="submit" style="margin-left:auto">Envoyer</button></div>
+    <div id="mia" class="stack"></div></form></div>`);
+}
+let mAiCtl=null;
+async function msgIA(){
+  const ta=$('#m-txt'),box=$('#mia');if(!ta||!box)return;const base=ta.value.trim();
+  if(!base){box.innerHTML='<p class="muted small">Écrivez d’abord votre texte, puis l’assistant le corrigera.</p>';return}
+  const sample=window.claude?.use?await claude.use('sample').catch(()=>null):null;
+  if(!sample){box.innerHTML='<p class="muted small">L’assistant IA n’est pas disponible ici.</p>';return}
+  const qui=isDir()?'la direction d’une école à écrire une remarque ou une suggestion à un enseignant':'un enseignant à répondre à une remarque de la direction de son école';
+  const prompt=`Tu aides ${qui}, en République démocratique du Congo. Corrige l’orthographe et la grammaire du texte ci-dessous, puis propose 3 versions en français : 1) le texte corrigé, fidèle mot pour mot autant que possible ; 2) une version plus courtoise et encourageante ; 3) une version plus courte et directe. Garde le vouvoiement, ne change pas le sens, n’ajoute aucun fait, aucun nom, aucun chiffre qui n’est pas dans le texte. Réponds uniquement par un tableau JSON de 3 chaînes de caractères, sans autre texte.\n\nTexte : « ${base} »`;
+  mAiCtl?.abort();mAiCtl=new AbortController();box.innerHTML='<p class="muted small">L’assistant corrige votre texte…</p>';
+  try{const out=await sample.json(prompt,{signal:mAiCtl.signal,modelTier:'quick'});const list=(Array.isArray(out)?out:[out]).map(String).filter(Boolean).slice(0,3);const T=['Corrigé','Plus courtois','Plus court'];
+    box._list=list;box.innerHTML=list.map((t,i)=>`<div class="aiprop"><b class="small">${T[i]||'Version '+(i+1)}</b><p>${h(t).replace(/\n/g,'<br>')}</p><button type="button" class="btn sm grad" data-act="miause" data-i="${i}">Utiliser ce texte</button></div>`).join('')||'<p class="muted small">Aucune proposition. Réessayez.</p>';
+  }catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}
+}
+function sysNotif(title,body){try{if(typeof Notification==='undefined'||Notification.permission!=='granted')return;const o={body,icon:'icon-192-v3.png',badge:'icon-192-v3.png',tag:'racines-msg',renotify:true,data:{url:location.pathname}};if(navigator.serviceWorker)navigator.serviceWorker.ready.then(r=>r.showNotification(title,o)).catch(()=>{try{new Notification(title,o)}catch(e){}});else new Notification(title,o)}catch(e){}}
+const MNK='clr-msg-vus';
+function msgAlert(){
+  if(!S.ready||S.sim&&!S.demo)return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(MNK)||'[]'))}catch(e){seen=new Set()}
+  const dir=isDir(),ids=dir?null:myEnsIds();
+  const N=Object.entries(S.msgs||{}).filter(([id,m])=>m&&!m.luAt&&!seen.has(id)&&(dir?m.sens==='ens':m.sens==='dir'&&ids.includes(m.ens)));
+  if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(MNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
+  if(S.view==='msgs'&&!document.hidden)return;
+  const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'}`:(N.length>1?`${N.length} nouveaux messages de la direction`:'Nouveau message de la direction');
+  if(!S.demo)sysNotif(title,(m.texte||'').slice(0,140));
+  toast(title+' · ouvrez '+(dir?'« Remarques aux enseignants »':'« Messages de la direction »'));
+}
 function formEleve(id){
   const e=id?S.eleves[id]:{classeId:S.view==='classe'?S.cid:(S.fCls||mesClasses()[0]),nationalite:'Congolaise',sexe:'M'};
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
@@ -1837,6 +1906,7 @@ function vProf(){
   const presRow=row('users','Cahier de présence',`${sigAuj?`Signé aujourd’hui à ${hm(sigAuj.at)}`:'Pas encore signé aujourd’hui'} · ce mois : ${sig} / ${jm.length} jour${jm.length>1?'s':''}`,isDir()?'data-act="go" data-v="presence"':'');
   const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
    :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : ${tri.map((v,i)=>tShort(TRS()[i])+' '+v+' %').join(' · ')}`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves'))]:[presRow];
+  if(!isGest(p)){const nu=msgUnread(p.id),L=msgsOf(p.id),last=L[L.length-1];rows.unshift(row('pen',isDir()?'Remarques et suggestions':'Messages de la direction',last?h((last.sens==='dir'?(isDir()?'Vous : ':'Direction : '):(isDir()?'Réponse : ':'Vous : '))+last.texte.slice(0,70)):(isDir()?'Écrire une remarque à cet enseignant':'Aucun message pour le moment'),`data-act="mopen" data-id="${h(p.id)}"`,nu?`<span class="pill bad num">${nu} nouveau${nu>1?'x':''}</span>`:''))}
   return band({back:backV,home:true,title:ECO().nom,sub:`${isGest(p)?'Profil gestionnaire':'Profil enseignant'} · ${ANNEE}`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`<div class="prof">
    <section class="ticket">
     <span class="t-chip">${isGest(p)?ic('shield',16)+' Gestionnaire':ic('chalk',16)+' Enseignant titulaire'}</span>
@@ -1844,6 +1914,7 @@ function vProf(){
     <div class="t-cut" aria-hidden="true"></div>
     ${isGest(p)?`<div class="t-stats num gs"><div><small>Fonction</small><b>${h(p.matiere||'Gestion')}</b></div><div><small>Matricule</small><b>${h(p.matricule||'—')}</b></div><div><small>Classes</small><b>${classIds().length}</b></div></div>`:`<div class="t-stats num"><div><small>Classe</small><b>${c?h(short(c.nom)):'—'}</b></div><div><small>Élèves</small><b>${es.length}</b></div><div><small>Garçons / Filles</small><b>${es.length-f} / ${f}</b></div></div>`}
    </section>
+   ${!isDir()&&msgUnread()?`<button class="pf-cta" data-act="mopen" data-id="${h(p.id)}"><span><small>Message de la direction</small><b>${msgUnread()} nouveau${msgUnread()>1?'x messages':' message'} à lire</b></span><i>Lire ${ic('chev',18)}</i></button>`:''}
    ${!isGest(p)&&c?profHello(p,cid,es,p.id===meId()||(S.demo&&S.demoRole==='ens')):''}
    ${!isGest(p)&&!c?`<div class="pf-card pf-empty">Aucune classe attribuée.${isDir()?` <button class="pf-btn" data-act="ens" data-id="${h(p.id)}">Attribuer une classe</button>`:''}</div>`:''}
    <section class="card summary pf-menu">${rows.join('')}</section>
@@ -2037,6 +2108,7 @@ const TR_KIND={eleves:'el',inscriptions:'pe',personnel:'pe',presence:'pr',paieme
 function trLabel(r){const d=r.data||{};const el=id=>S.eleves[id]?nomComplet(S.eleves[id]):'';const cl=id=>S.classes[id]?.nom||'';
   switch(r.col){
    case 'eleves':return['Élève',nomComplet(d),cl(d.classeId)||'Classe supprimée','users'];
+   case 'messages':return[d.sens==='dir'?'Remarque de la direction':'Réponse d’un enseignant',(d.texte||'').slice(0,60),(S.inscr[d.ens]?.nom||'')+' · '+(d.date||'').split('-').reverse().join('/'),'pen'];
    case 'inscriptions':return[d.role==='gestionnaire'?(isSec()?POSTE_LBL[d.poste]||'Direction':'Direction'):(isSec()?POSTE_LBL[d.poste]||'Professeur':'Enseignant'),d.nom||'Profil',d.matiere||'','users'];
    case 'personnel':return['Travailleur',d.nom||'',d.fonction||'','users'];
    case 'presence':return['Présence du personnel',d.nom||'','signée le '+(d.date||'').split('-').reverse().join('/')+(d.at?' à '+hm(d.at):''),'cal'];
@@ -2891,7 +2963,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -2906,6 +2978,7 @@ addEventListener('hashchange',()=>{if(location.hash==='#apercu-enseignant'&&S.re
 function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.add('armed');btn.dataset.lbl=btn.textContent;btn.textContent='Appuyez encore pour confirmer';setTimeout(()=>{if(btn.isConnected){btn.classList.remove('armed');btn.textContent=btn.dataset.lbl}},4000);return false}
 function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   if(v==='maclasse'){const c=mesClasses()[0];if(c){S.cid=c;S.view='classe';S.ctab='appel'}render();scrollTo(0,0);return}
+  if(v==='msgs'&&isDir())S.mEns='';
   if(v==='activite'){S.seenAt=seenGet();seenSet(new Date().toISOString())}
   S.view=v;render();scrollTo(0,0)}
 const A={
@@ -2916,6 +2989,11 @@ const A={
   cours:b=>{S.cours=b.dataset.id;render();if(innerWidth<1280)$('.entry')?.scrollIntoView({block:'start',behavior:'smooth'})},
   cnav:b=>{const cls=S.classes[S.cid];const all=[...(cls.cours||[]).map(c=>c.id),'vie'];const i=all.indexOf(S.cours)+ +b.dataset.v;if(all[i]){S.cours=all[i];render()}},
   viemode:b=>{S.vieMode=b.dataset.v;render()},
+  mopen:b=>{S.mEns=b.dataset.id||'';S.mDraft='';S.view='msgs';render();scrollTo(0,0);if(S.mEns||!isDir())setTimeout(()=>$('#f-msg')?.scrollIntoView({block:'end'}),80)},
+  mia:()=>msgIA(),
+  miause:b=>{const box=$('#mia'),t=box?._list?.[+b.dataset.i];if(t&&$('#m-txt')){$('#m-txt').value=t;S.mDraft=t;box.innerHTML='';toast('Texte remplacé. Relisez puis envoyez.')}},
+  mdel:async b=>{if(!arm(b))return;await del('messages',b.dataset.id);toast('Message supprimé')},
+  mnotif:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'Notifications activées sur ce téléphone.':'Notifications refusées. Vous pouvez les activer dans les réglages du téléphone.')}catch(e){}render()},
   cmode:b=>{S.cMode=b.dataset.v;render()},
   cper:b=>{S.cPer=b.dataset.v;render()},
   fnav:b=>{const es=elevesOf(S.cid);const i=es.findIndex(e=>e.id===S.sel)+ +b.dataset.v;if(es[i]){S.sel=es[i].id;render();document.querySelector('.fiche')?.scrollIntoView({block:'start',behavior:'smooth'})}},
@@ -3057,7 +3135,7 @@ document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.targe
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}});
-document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
+document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='m-txt')S.mDraft=t.value;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
   if(f.id==='f-frais'){const cid=f.dataset.id;const n=+fd.n;const tr=[];for(let i=0;i<n;i++){const m=numM(fd['mt_'+i]);if(m>0)tr.push({nom:(fd['nom_'+i]||'').trim()||`Tranche ${i+1}`,montant:m,echeance:fd['ech_'+i]||''})}
@@ -3081,6 +3159,7 @@ document.addEventListener('submit',async ev=>{
   if(f.id==='f-reg'){const debut=lundi(fd.debut);const ex=regsOf(S.cid).find(r=>r.debut===debut);const id=ex?ex.id:uid();if(!ex)await put('registres',id,{classeId:S.cid,debut});S.aReg=id;S.aVue='reg';closeSheet();toast(ex?'Ce registre existe déjà, il est ouvert.':'Registre ouvert')}
   if(f.id==='f-rap'){const eid=f.dataset.id,k=f.dataset.k;const doc={eleveId:eid,classeId:S.eleves[eid]?.classeId,key:k,conduite:fd.conduite||'',conduiteTxt:(fd.conduiteTxt||'').trim(),consignes:(fd.consignes||'').trim(),at:new Date().toISOString(),by:meId()};await put('rapports',rid(eid,k),doc);if(k[0]==='p'&&doc.conduite){const vid=nid(eid,'vie');const v=JSON.parse(JSON.stringify(S.notes[vid]||{eleveId:eid,classeId:doc.classeId,coursId:'vie'}));v.cond={...(v.cond||{}),[k]:doc.conduite};S.notes={...S.notes,[vid]:v};await put('notes',vid,v)}const pv=$('#rprev');if(pv){pv.innerHTML=rapportPaper(eid,k);applyFit()}toast('Rapport enregistré')}
   if(f.id==='f-cal'){const doc={};for(const k of Object.keys(CAL_DEF)){const a=fd[k+'_a'],b=fd[k+'_b'];if(a&&b)doc[k]=[a,b]}await put('config','calendrier',doc);closeSheet();toast('Calendrier enregistré')}
+  if(f.id==='f-msg'){const texte=(fd.texte||'').trim();if(!texte)return;const dir=isDir();const ens=f.dataset.ens;if(!ens)return;const nom=dir?(S.inscr[meId()]?.nom||(typeof chefPerson==='function'&&chefPerson()?.nom)||'La direction'):(S.inscr[meId()]?.nom||'');const now=new Date().toISOString();S.mDraft='';f.texte.value='';$('#mia').innerHTML='';await put('messages',uid(),{ens,sens:dir?'dir':'ens',texte,date:today(),at:now,by:meId(),nom});toast(dir?'Remarque envoyée à l’enseignant':'Réponse envoyée à la direction');render();setTimeout(()=>$('#f-msg')?.scrollIntoView({block:'end'}),80)}
   if(f.id==='f-pres'){const hr=(fd.heure||'').trim();if(!/^\d{1,2}:\d{2}/.test(hr)){$('#sigmsg').textContent='Écrivez l’heure d’arrivée.';f.heure?.focus();return}const img=sigData();if(!img){$('#sigmsg').textContent='La personne doit signer dans le cadre.';return}const id=f.dataset.id,d=today();const at=new Date(d+'T'+hr.slice(0,5).padStart(5,'0')+':00').toISOString();const p=personnel().find(x=>x.id===id);
     await put('presence',pid2(d,id),{date:d,personId:id,nom:p?.nom||'',fonction:p?.fonction||'',img,at,signeAt:new Date().toISOString(),by:meId()});closeSheet();toast('Présence enregistrée · arrivée à '+hm(at))}
   if(f.id==='f-agent'){const id=f.dataset.id||uid();const old=S.agents[id]||{};const doc={nom:(fd.nom||'').trim(),sexe:fd.sexe||'M',fonction:(fd.fonction||'').trim()||'Agent'};if(agPhoto)doc.photo=agPhoto;else if(old.photo)doc.photo=old.photo;
@@ -3103,6 +3182,7 @@ let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(applyFit,80
 /* ---------- données ---------- */
 function onData(key){
   if(!S.ready)return;
+  if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
   if(key==='notes'&&S.view==='classe'&&(S.ctab==='cotes'||S.ctab==='bul')){S.ctab==='cotes'?refreshCotes():refreshBul();return}
   renderSoon();

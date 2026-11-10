@@ -1,0 +1,5 @@
+-- Remarques direction <-> enseignant (collection « messages » dans ecole_docs)
+-- Appliqué le 10/11/2026 (migration ecole_messages_direction_enseignant).
+-- L'enseignant ne lit et n'écrit que les messages dont data.ens est son identifiant
+-- (auth.uid() ou son profile_id). La direction lit et écrit tout.
+-- Voir ecole_my_ids(s), ecole_can_read, ecole_can_write.

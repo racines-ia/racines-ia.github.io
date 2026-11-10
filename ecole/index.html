@@ -384,6 +384,36 @@ html.dfs-lock #nav{display:none}
 .clc-in>span{font-size:13.5px;font-weight:600;opacity:.92}
 .clc-st{font-size:12.5px;opacity:.9;margin-top:2px}
 .clc-st b{font-weight:800}
+/* Perception : résumé du jour, tranches, paiements du jour */
+.pc-day{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.pc-day small{display:block;font-size:12.5px;color:var(--muted);font-weight:600}
+.pc-day b{font-size:24px;font-weight:700;line-height:1.2;color:var(--ink)}
+.pc-day3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pc-day3>div{background:var(--sunk);border-radius:14px;padding:9px 10px;min-width:0}
+.pc-day3 b{display:block;font-size:15.5px;font-weight:700;line-height:1.25;overflow-wrap:anywhere}
+.pc-day3 span{display:block;font-size:11.5px;color:var(--muted);font-weight:600;line-height:1.25}
+.pc-li{align-items:flex-start}
+.pc-top{display:flex;align-items:flex-start;justify-content:space-between;gap:8px}
+.pc-top .ttl{white-space:normal;overflow:visible;overflow-wrap:anywhere;font-size:14.5px;line-height:1.2}
+.pc-top .pill{flex:none;font-size:11px;padding:3px 9px}
+.pc-pay{color:var(--ink);font-weight:700}
+.pc-tr{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0 3px}
+.pc-tr i{font-style:normal;min-width:22px;height:22px;padding:0 5px;border-radius:7px;display:grid;place-items:center;font-size:11px;font-weight:700;background:var(--sunk);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)}
+.pc-tr i.ok{background:var(--good-soft);color:var(--good);box-shadow:none}
+.pc-tr i.part{background:var(--warn-soft);color:var(--warn);box-shadow:none}
+.pc-tr i.late{background:var(--bad-soft);color:var(--bad);box-shadow:none}
+.cj-nav{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cj-nav b{font-size:15px;text-align:center}
+table.cjt th,table.cjt td{padding:8px 6px;text-align:center;font-size:13px;border-bottom:1px solid var(--line)}
+table.cjt thead th{font-size:11.5px;color:var(--muted);font-weight:700;background:var(--sunk)}
+table.cjt td.name{text-align:left;white-space:normal}
+table.cjt .cj-n{border:0;background:none;padding:0;font:inherit;font-weight:600;color:inherit;text-align:left;cursor:pointer;display:block;overflow-wrap:anywhere;line-height:1.2}
+table.cjt td.name small{display:block;font-size:11px;margin-top:2px}
+table.cjt td.cl{font-size:12.5px;white-space:nowrap}
+table.cjt td.mt,table.cjt th.mt{text-align:right;white-space:nowrap}
+table.cjt tr.tot td{background:var(--sunk);font-weight:700;border-bottom:0}
+table.cjt .cj-del{display:block;margin:3px 0 0 auto;border:0;background:none;padding:2px 0;font:inherit;font-size:11.5px;font-weight:700;color:var(--bad);text-decoration:underline;cursor:pointer}
+table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;border-radius:8px;padding:3px 8px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1039,7 +1069,7 @@ const POSTES_G=[['prefet','Préfet'],['secretaire','Secrétaire'],['etudes','Dir
 const POSTES_E=[['titulaire','Titulaire'],['professeur','Professeur']];
 const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire',etudes:'Directeur des études',discipline:'Directeur de discipline',titulaire:'Titulaire',professeur:'Professeur',directeur:'Directeur'};
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
-const VIEWS_P={secretaire:['accueil','eleves','perception'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs']};
+const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs']};
 function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
@@ -1301,7 +1331,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='corbeille'||S.view==='msgs'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1324,7 +1354,7 @@ function screen(){
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1350,7 +1380,7 @@ function vAccueil(){
     <div class="sum3 num"><div><b>${ids.length}</b><span>Classes</span></div><div><b>${nbEl}</b><span>Élèves</span></div><div><b>${nbEns}</b><span>Enseignants</span></div></div>
     ${isDir()&&canView('presence')?(()=>{const L=personnel(),td=today();const n=L.filter(p=>S.presence[pid2(td,p.id)]).length;return `<button class="li actsum" data-act="go" data-v="presence"><span class="ib g">${ic('users',22)}</span><span class="grow"><span class="ttl" style="display:block">Présence du personnel</span><span class="muted small num">Aujourd’hui : ${n} présent${n>1?'s':''} sur ${L.length}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()&&canView('sante')?(()=>{const td=today();const L=santeList();const n=L.filter(x=>x.date===td).length,w=L.filter(x=>!x.envoyeAt).length;return `<button class="li actsum" data-act="go" data-v="sante"><span class="ib g">${ic('med',22)}</span><span class="grow"><span class="ttl" style="display:block">Cahier de sortie · santé</span><span class="muted small num">Aujourd’hui : ${n} élève${n>1?'s':''} malade${n>1?'s':''}${w?` · ${w} PDF à envoyer`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
-    ${isDir()&&canView('perception')?(()=>{const ids=classIds();const st=ids.map(c=>statClasse(c));const du=sum(st.map(x=>x.du)),pa=sum(st.map(x=>x.paye));const td=today();const j=sum(Object.values(S.paiem).filter(p=>p.date===td).map(p=>numM(p.montant)));return `<button class="li actsum" data-act="go" data-v="perception"><span class="ib g">${ic('money',22)}</span><span class="grow"><span class="ttl" style="display:block">Perception des frais</span><span class="muted small num">${du?`${Math.round(pa/du*100)} % perçu · reste ${fmtM(du-pa)}`:'Frais pas encore fixés'}${j?` · aujourd’hui ${fmtM(j)}`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
+    ${isDir()&&canView('perception')?(()=>{const ids=classIds();const st=ids.map(c=>statClasse(c));const du=sum(st.map(x=>x.du)),pa=sum(st.map(x=>x.paye));const td=today();const j=sum(Object.values(S.paiem).filter(p=>p.date===td).map(p=>numM(p.montant)));return `<button class="li actsum" data-act="go" data-v="perception"><span class="ib g">${ic('money',22)}</span><span class="grow"><span class="ttl" style="display:block">Perception des frais</span><span class="muted small num">${du?`Aujourd’hui : ${fmtM(j)}`:'Frais pas encore fixés'}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()&&canView('activite')?(()=>{const td=today(),ci=classIds();const a=ci.filter(c=>appelClos(c,td)).length,cc=ci.filter(c=>cotesClos(c,td)).length,nb=unseen();return `<button class="li actsum" data-act="go" data-v="activite"><span class="ib g">${ic('bell',22)}</span><span class="grow"><span class="ttl" style="display:block">Activité du jour</span><span class="muted small num">Appel clôturé : ${a}/${ci.length} classes · Cotes : ${cc}/${ci.length}</span></span>${nb?`<span class="pill acc num">${nb} nouveau${nb>1?'x':''}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${canPalmSit()&&canView('palmsit')?(()=>{const ids=classIds();const k=S.psKey||'t1';let cl=0,re=0;for(const c of ids){const r=palmData(c,k).ranked;cl+=r.length;re+=r.filter(x=>x.pct>=50).length}return `<button class="li actsum" data-act="psit"><span class="ib g">${ic('chart',22)}</span><span class="grow"><span class="ttl" style="display:block">Situation des palmarès</span><span class="muted small num">${h(keyName(k))} : ${cl} élèves classés · ${cl?Math.round(re/cl*100):0} % de réussite</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${canView('classes')?'':'<!--'}<button class="gcta" data-act="go" data-v="classes"><span><b>Voir les classes</b><small>Choisissez une classe pour ouvrir son registre d’appel, son cahier de cotes et ses bulletins.</small></span><i>${ic('chev',22)}</i></button>${canView('classes')?'':'-->'}
@@ -2673,17 +2703,16 @@ function vPerception(){
  const f=S.fCls&&ids.includes(S.fCls)?S.fCls:'';const q=(S.pq||'').trim().toLowerCase();
  const fil=S.pFil||'tous';
  const rows=(f?[all.find(x=>x.cid===f)]:all).flatMap(c=>c.L.map(x=>({...x,cls:S.classes[c.cid]}))).filter(x=>(!q||nomComplet(x.e).toLowerCase().includes(q))&&(fil==='tous'||(fil==='late'&&x.st==='late')||(fil==='none'&&x.st==='none')||(fil==='ok'&&x.st==='ok')||(fil==='part'&&x.st==='part')));
- const li=x=>{const [pc,pl]=STP[x.st];return `<button class="li pc-li" data-act="pc-el" data-id="${h(x.e.id)}">${avEl(x.e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(x.e))}</span><span class="muted small num">${f?'':h((x.cls?.nom||'').replace(' année primaire',' année'))+' · '}${x.brut?`payé ${fmtM(x.paye)} sur ${fmtM(x.du)}`:'frais de la classe non fixés'}</span>${x.brut?pctBar(x.pct,x.st):''}</span><span class="pc-r"><span class="pill ${pc}">${pl}</span>${x.brut&&x.reste>0?`<b class="num">${fmtM(x.reste)}</b><small>reste</small>`:''}</span></button>`};
+ const trChips=x=>`<span class="pc-tr" aria-label="Tranches">${x.etapes.map((t,i)=>{const ok=t.paye>=t.du-0.001,part=!ok&&t.paye>0.001,late=!ok&&t.echeance&&t.echeance<=td;return `<i class="${ok?'ok':part?'part':late?'late':''}" title="${h(t.nom)}">${ok?'✓':i+1}</i>`}).join('')}</span>`;
+ const li=x=>{const [pc,pl]=STP[x.st];const nb=x.etapes.filter(t=>t.paye>=t.du-0.001).length;return `<button class="li pc-li" data-act="pc-el" data-id="${h(x.e.id)}">${avEl(x.e)}<span class="grow"><span class="pc-top"><span class="ttl">${h(nomComplet(x.e))}</span><span class="pill ${pc}">${pl}</span></span><span class="muted small num" style="display:block">${f?'':h((x.cls?.nom||'').replace(' année primaire',' année'))+' · '}${x.brut?`payé <b class="pc-pay">${fmtM(x.paye)}</b> sur ${fmtM(x.du)}`:'frais de la classe non fixés'}</span>${x.brut?trChips(x)+`<span class="muted small num" style="display:block">${nb} tranche${nb>1?'s':''} finie${nb>1?'s':''} sur ${x.etapes.length}</span>`:''}</span></button>`};
  return band({back:'gestion',kicker:'Direction',title:'Perception',sub:`Frais scolaires · ${ANNEE}`})+page(`
   <section class="card pad stack pc-sum">
-   <div class="pc-big"><div><small>Perçu</small><b class="num">${fmtM(pa)}</b></div><div><small>Reste à percevoir</small><b class="num">${fmtM(re)}</b></div></div>
-   ${pctBar(du?pa/du*100:0)}
-   <div class="sum3 num pc-k"><div><b>${du?Math.round(pa/du*100):0} %</b><span>du total attendu</span></div><div><b>${fmtM(auj.reduce((a,p)=>a+numM(p.montant),0))}</b><span>aujourd’hui · ${auj.length}</span></div><div><b>${nl}</b><span>élève${nl>1?'s':''} en retard</span></div></div>
-   <div class="muted small">Attendu cette année : <b class="num">${fmtM(du)}</b> · ce mois : <b class="num">${fmtM(mois.reduce((a,p)=>a+numM(p.montant),0))}</b></div>
-   <div class="btns"><button class="btn grad sm" data-act="pc-pay" data-id="">${ic('plus',16)} Enregistrer un paiement</button><button class="btn sm" data-act="pc-journal">${ic('cal',16)} Journal de caisse</button><button class="btn sm" data-act="pc-param">Monnaie : ${h(DEV())}</button></div>
+   <div class="pc-day"><div><small>Perception du jour · ${h(dfr(td))}</small><b class="num">${fmtM(auj.reduce((a,p)=>a+numM(p.montant),0))}</b></div><span class="ib g">${ic('money',22)}</span></div>
+   <div class="pc-day3 num"><div><b>${new Set(auj.map(p=>p.eleveId)).size}</b><span>élève${new Set(auj.map(p=>p.eleveId)).size>1?'s ont':' a'} payé</span></div><div><b>${auj.length}</b><span>paiement${auj.length>1?'s':''}</span></div><div><b>${fmtM(mois.reduce((a,p)=>a+numM(p.montant),0))}</b><span>ce mois</span></div></div>
+   <div class="btns"><button class="btn grad sm" data-act="pc-pay" data-id="">${ic('plus',16)} Enregistrer un paiement</button><button class="btn sm" data-act="pc-journal">${ic('cal',16)} Paiements du jour</button><button class="btn sm" data-act="pc-param">Monnaie : ${h(DEV())}</button></div>
   </section>
   <section class="sec"><div class="sec-h"><h2 class="h2">Frais fixés par classe</h2></div>
-   <div class="card list">${all.map(c=>{const t=totalClasse(c.cid);return `<button class="li" data-act="pc-frais" data-id="${h(c.cid)}"><span class="ib">${ic('book',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(S.classes[c.cid].nom)}</span><span class="muted small num">${t?`${fmtM(t)} par élève · ${tranchesOf(c.cid).length} tranche${tranchesOf(c.cid).length>1?'s':''} · ${c.es.length} élèves`:'Touchez pour fixer les frais'}</span>${t?pctBar(c.du?c.paye/c.du*100:0):''}</span><span class="pc-r">${t?`<b class="num">${c.du?Math.round(c.paye/c.du*100):0} %</b><small>${fmtM(c.reste)} reste</small>`:'<span class="pill warn">À fixer</span>'}</span></button>`}).join('')||'<div class="pad muted small">Créez d’abord des classes.</div>'}</div></section>
+   <div class="card list">${all.map(c=>{const t=totalClasse(c.cid);return `<button class="li" data-act="pc-frais" data-id="${h(c.cid)}"><span class="ib">${ic('book',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(S.classes[c.cid].nom)}</span><span class="muted small num">${t?`${fmtM(t)} par élève · ${tranchesOf(c.cid).length} tranche${tranchesOf(c.cid).length>1?'s':''} · ${c.es.length} élèves`:'Touchez pour fixer les frais'}</span>${t?pctBar(c.du?c.paye/c.du*100:0):''}</span><span class="pc-r">${t?`<b class="num">${c.du?Math.round(c.paye/c.du*100):0} %</b><small>perçu</small>`:'<span class="pill warn">À fixer</span>'}</span></button>`}).join('')||'<div class="pad muted small">Créez d’abord des classes.</div>'}</div></section>
   <section class="sec"><div class="sec-h"><h2 class="h2">Élèves</h2><span class="muted small num">${rows.length}</span></div>
    <div class="chips" role="group" aria-label="Classe"><button class="chipb" data-act="pc-cls" data-v="" aria-pressed="${!f}">Toutes</button>${ids.map(c=>`<button class="chipb" data-act="pc-cls" data-v="${h(c)}" aria-pressed="${f===c}">${h(S.classes[c].nom.replace(' année primaire',''))}</button>`).join('')}</div>
    <div class="chips" role="group" aria-label="Situation">${[['tous','Tous'],['late','En retard'],['none','Rien payé'],['part','En cours'],['ok','Soldés']].map(([k,l])=>`<button class="chipb sm" data-act="pc-fil" data-v="${k}" aria-pressed="${fil===k}">${l}</button>`).join('')}</div>
@@ -2691,6 +2720,40 @@ function vPerception(){
    ${fil==='late'&&rows.length?`<button class="btn sm" data-act="pc-relances">${ic('bell',16)} Copier la liste des retards pour WhatsApp</button>`:''}
    <div class="card list">${rows.map(li).join('')||'<div class="pad muted small">Aucun élève.</div>'}</div></section>`);
 }
+/* ---------- Paiements du jour : rapport journalier de la perception ---------- */
+function caisseData(d){const L=Object.entries(S.paiem).filter(([,p])=>p.date===d).map(([id,p])=>{const e=S.eleves[p.eleveId]||{nom:p.nom||'Élève'};return{id,...p,e,cls:S.classes[e.classeId]?.nom||p.classeNom||''}}).sort((a,b)=>(a.at||'').localeCompare(b.at||''));
+ return{L,tot:sum(L.map(p=>numM(p.montant))),nel:new Set(L.map(p=>p.eleveId)).size}}
+const jourLong=d=>{const dd=D(d);return JLONG[dd.getUTCDay()]+' '+dfr(d)+' '+dd.getUTCFullYear()};
+function caisseTexte(d){const{L,tot,nel}=caisseData(d);return `*${ECO().nom} · Perception du ${jourLong(d)}*\n${nel} élève(s) ont payé · ${L.length} paiement(s)\n*Total : ${fmtM(tot)}*\n\n`+L.map((p,i)=>`${i+1}. ${nomComplet(p.e)} · ${p.cls.replace(' année primaire','e année').replace(/^(\d)ee/,'$1e').replace('1ree','1re')} · ${fmtM(p.montant)}`).join('\n')}
+function vCaisse(){
+ if(!isDir()){S.view='prof';return screen()}
+ const d=S.jDate||today();const{L,tot,nel}=caisseData(d);const dd=D(d);const prev=iso(new Date(dd.getTime()-864e5)),next=iso(new Date(dd.getTime()+864e5));
+ return band({back:'perception',kicker:'Perception',title:'Paiements du jour',sub:'Rapport journalier pour la direction'})+page(`<div class="stack cj">
+  <div class="card pad stack"><div class="cj-nav"><button class="x" data-act="pc-jday" data-v="${prev}" aria-label="Jour précédent">${ic('left',18)}</button><b style="text-transform:capitalize">${h(jourLong(d))}</b><button class="x" data-act="pc-jday" data-v="${next}" ${d>=today()?'disabled':''} aria-label="Jour suivant">${ic('chev',18)}</button></div>
+   <div class="pc-day3 num"><div><b>${fmtM(tot)}</b><span>montant perçu</span></div><div><b>${nel}</b><span>élève${nel>1?'s ont':' a'} payé</span></div><div><b>${L.length}</b><span>paiement${L.length>1?'s':''}</span></div></div>
+   ${L.length?`<div class="btns"><button class="btn grad sm" data-act="pc-jpdf">${ic('doc',16)} Envoyer le rapport (PDF)</button><button class="btn sm" data-act="pc-jcopy">Copier pour WhatsApp</button></div>`:''}</div>
+  ${L.length?`<div class="tblwrap"><table class="t cjt"><thead><tr><th>N°</th><th class="name">Nom, postnom et prénom</th><th>Classe</th><th class="mt">Montant payé</th></tr></thead><tbody>
+   ${L.map((p,i)=>`<tr><td class="num muted">${i+1}</td><td class="name"><button class="cj-n" data-act="pc-el" data-id="${h(p.eleveId)}">${h(nomComplet(p.e))}</button>${p.at?`<small class="muted num">${hm(p.at)}${p.recu?' · reçu '+h(p.recu):''}</small>`:''}</td><td class="cl">${h(p.cls.replace(' année primaire',''))}</td><td class="mt num"><b>${fmtM(p.montant)}</b><button class="cj-del" data-act="pc-del" data-armtxt="Confirmer ?" data-id="${h(p.id)}" aria-label="Supprimer ce paiement de ${h(nomComplet(p.e))}">Supprimer</button></td></tr>`).join('')}
+   <tr class="tot"><td></td><td class="name">Total du jour</td><td></td><td class="mt num"><b>${fmtM(tot)}</b></td></tr></tbody></table></div>
+   <p class="muted small" style="margin:0">En cas d’erreur, touchez « Supprimer » puis « Confirmer ? » : le paiement est retiré et reste 60 jours dans la corbeille.</p>`
+   :`<div class="card empty"><h3>Aucun paiement ce jour-là</h3><p class="muted small">Les paiements enregistrés à cette date apparaîtront ici.</p><button class="btn grad" data-act="pc-pay" data-id="">${ic('plus',16)} Enregistrer un paiement</button></div>`}
+ </div>`);
+}
+function caissePaper(d){const{L,tot,nel}=caisseData(d);const ec=S.config.ecole||{};const by=santeBy();
+ return `<div class="ob rp sn-paper">
+  <div class="ob-top"><img src="${eLogo()}" alt=""><div class="ob-tt"><div>${h(ECO().nom)}</div><div>Rapport journalier de perception · Frais scolaires</div><div>Année scolaire ${ANNEE.replace('–',' - ')}</div></div><img src="${eLogo()}" alt=""></div>
+  <div class="rp-id"><div><b style="text-transform:capitalize">${h(jourLong(d))}</b><span>${nel} élève${nel>1?'s ont':' a'} payé · ${L.length} paiement${L.length>1?'s':''}</span><span>Montant perçu : ${fmtM(tot)}</span></div></div>
+  <div class="rp-sec"><h4>Paiements du jour</h4><table class="rp-t sm"><thead><tr><th>N°</th><th>Nom, postnom et prénom</th><th>Classe</th><th>Montant payé</th></tr></thead><tbody>${L.map((p,i)=>`<tr><td>${i+1}</td><td style="text-align:left">${h(nomComplet(p.e))}</td><td>${h(p.cls)}</td><td>${fmtM(p.montant)}</td></tr>`).join('')}<tr class="tot"><td></td><td style="text-align:left">Total du jour</td><td></td><td>${fmtM(tot)}</td></tr></tbody></table></div>
+  <div class="rp-sign" style="grid-template-columns:1fr 1fr"><div>Le percepteur${by.sig?`<br><img class="rp-sig" src="${h(by.sig)}" alt="">`:''}<br><small>${h(by.nom||'………………………')}</small></div><div>Le chef d’établissement<br><small>${h(ec.chef||'………………………')}</small></div></div></div>`}
+async function caissePDF(d){const{L,tot,nel}=caisseData(d);if(!L.length){toast('Aucun paiement ce jour-là.');return}
+ const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+ toast('Préparation du rapport…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+ const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=caissePaper(d);document.body.appendChild(host);const node=host.firstElementChild;node.style.width='794px';
+ try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+  const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4'});const mg=8,iw=210-2*mg,ph=297-2*mg;const pxPage=Math.floor(cv.width*ph/iw);
+  for(let y=0,n=0;y<cv.height;y+=pxPage,n++){const hh=Math.min(pxPage,cv.height-y);const c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);if(n)pdf.addPage();pdf.addImage(c2.toDataURL('image/jpeg',.92),'JPEG',mg,mg,iw,hh*iw/cv.width)}
+  try{await dl.save({filename:`Perception du ${dfr(d).replace(/\//g,'-')}.pdf`,data:pdf.output('blob'),text:`*${ECO().nom} · Perception du ${jourLong(d)}*\n${nel} élève(s) ont payé · total ${fmtM(tot)}`});toast('Rapport prêt. Choisissez WhatsApp puis le destinataire.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+ }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
 function fraisSheet(cid){const c=S.classes[cid];if(!c)return;const f=fraisOf(cid)||{};const tr=(f.tranches&&f.tranches.length?f.tranches:[{nom:'1re tranche',montant:'',echeance:''},{nom:'2e tranche',montant:'',echeance:''},{nom:'3e tranche',montant:'',echeance:''}]);
  openSheet('Frais · '+c.nom,`<form id="f-frais" class="stack" data-id="${h(cid)}">
   <p class="muted small" style="margin:0">Fixez le montant de chaque tranche et sa date limite. Le total est le frais scolaire annuel d’un élève de cette classe (en ${h(DEV())}).</p>
@@ -2721,7 +2784,7 @@ function eleveFinSheet(eid){const s=situation(eid);if(!s.e)return;const L=paieme
   <div class="card list">${s.etapes.map(t=>{const ok=t.paye>=t.du-0.001;const late=!ok&&t.echeance&&t.echeance<=today();return `<div class="li"><span class="pf-chk" style="background:${ok?'var(--accent)':'transparent'};color:${ok?'#fff':'inherit'};box-shadow:inset 0 0 0 2px ${late?'var(--bad)':'var(--line)'}">${ok?'✓':''}</span><span class="grow"><span class="ttl" style="display:block">${h(t.nom)}</span><span class="muted small num">${t.echeance?'avant le '+h(dfr(t.echeance)):'sans date limite'}</span></span><span class="pc-r"><b class="num">${fmtM(t.paye)} / ${fmtM(t.du)}</b>${late?'<small style="color:var(--bad)">en retard</small>':''}</span></div>`}).join('')}</div>`:`<div class="card pad small muted">Les frais de cette classe ne sont pas encore fixés. <button class="btn sm" data-act="pc-frais" data-id="${h(s.cid)}">Fixer les frais</button></div>`}
   <div class="btns"><button class="btn grad" data-act="pc-pay" data-id="${h(eid)}">${ic('plus',16)} Enregistrer un paiement</button>${s.reste>0&&s.brut?`<button class="btn sm" data-act="pc-wa" data-id="${h(eid)}">Rappel au parent (WhatsApp)</button>`:''}<button class="btn sm" data-act="pc-remise" data-id="${h(eid)}">${r?'Modifier la réduction':'Réduction / bourse'}</button></div>
   <h3 class="h2" style="font-size:18px">Historique des paiements · ${L.length}</h3>
-  <div class="card list">${L.map(p=>`<div class="li"><span class="ib">${ic('check',18)}</span><span class="grow"><span class="ttl num" style="display:block">${fmtM(p.montant)}</span><span class="muted small">${h(dfr(p.date))} · ${h((MODES.find(m=>m[0]===p.mode)||['','Espèces'])[1])}${p.recu?' · reçu n° '+h(p.recu):''}</span></span><button class="btn sm" data-act="pc-recu" data-id="${h(p.id)}">Reçu</button><button class="x" data-act="pc-edit" data-id="${h(p.id)}" aria-label="Modifier ce paiement">${ic('pen2',16)}</button></div>`).join('')||'<div class="pad muted small">Aucun paiement pour l’instant.</div>'}</div>
+  <div class="card list">${L.map(p=>`<div class="li"><span class="ib">${ic('check',18)}</span><span class="grow"><span class="ttl num" style="display:block">${fmtM(p.montant)}</span><span class="muted small">${h(dfr(p.date))} · ${h((MODES.find(m=>m[0]===p.mode)||['','Espèces'])[1])}${p.recu?' · reçu n° '+h(p.recu):''}</span></span><button class="btn sm" data-act="pc-recu" data-id="${h(p.id)}">Reçu</button><button class="x" data-act="pc-edit" data-id="${h(p.id)}" aria-label="Modifier ce paiement">${ic('pen2',16)}</button><button class="btn sm danger" data-act="pc-del" data-armtxt="Confirmer ?" data-id="${h(p.id)}">Supprimer</button></div>`).join('')||'<div class="pad muted small">Aucun paiement pour l’instant.</div>'}</div>
  </div>`);
 }
 function remiseSheet(eid){const e=S.eleves[eid];const r=remiseOf(eid)||{type:'montant',valeur:'',motif:''};
@@ -3028,7 +3091,7 @@ addEventListener('hashchange',()=>{if(location.hash==='#apercu-enseignant'&&S.re
 
 
 /* ---------- actions ---------- */
-function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.add('armed');btn.dataset.lbl=btn.textContent;btn.textContent='Appuyez encore pour confirmer';setTimeout(()=>{if(btn.isConnected){btn.classList.remove('armed');btn.textContent=btn.dataset.lbl}},4000);return false}
+function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.add('armed');btn.dataset.lbl=btn.textContent;btn.textContent=btn.dataset.armtxt||'Appuyez encore pour confirmer';setTimeout(()=>{if(btn.isConnected){btn.classList.remove('armed');btn.textContent=btn.dataset.lbl}},4000);return false}
 function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   if(v==='maclasse'){const c=mesClasses()[0];if(c){S.cid=c;S.view='classe';S.ctab='appel'}render();scrollTo(0,0);return}
   if(v==='msgs'&&isDir())S.mEns='';
@@ -3092,7 +3155,7 @@ const A={
   'pc-el':b=>eleveFinSheet(b.dataset.id),
   'pc-pay':b=>paySheet(b.dataset.id||''),
   'pc-edit':b=>{const p=S.paiem[b.dataset.id];if(p)paySheet(p.eleveId,b.dataset.id)},
-  'pc-del':async b=>{if(!arm(b))return;const p=S.paiem[b.dataset.id];await del('paiements',b.dataset.id);toast('Paiement supprimé');if(p)eleveFinSheet(p.eleveId);else closeSheet()},
+  'pc-del':async b=>{if(!arm(b))return;const p=S.paiem[b.dataset.id];const page=!!b.closest('.cj');await del('paiements',b.dataset.id);toast('Paiement supprimé. Il reste 60 jours dans la corbeille.');if(page){render();return}if(p)eleveFinSheet(p.eleveId);else closeSheet()},
   'pc-frais':b=>fraisSheet(b.dataset.id),
   'pc-tradd':b=>{const f=b.closest('form');const n=+f.querySelector('[name=n]').value;const box=f.querySelector('#fr-rows');const d=document.createElement('div');d.className='card pad stack';d.style.gap='8px';d.innerHTML=`<div class="grid2"><div class="field"><label>Nom</label><input class="inp" name="nom_${n}" value="${n+1}e tranche"></div><div class="field"><label>Montant (${h(DEV())})</label><input class="inp num" name="mt_${n}" inputmode="decimal" placeholder="0"></div></div><div class="field"><label>Date limite</label><input class="inp" type="date" name="ech_${n}"></div>`;box.appendChild(d);f.querySelector('[name=n]').value=n+1},
   'pc-cls':b=>{S.fCls=b.dataset.v;render()},
@@ -3104,9 +3167,10 @@ const A={
   'pc-rdel':async b=>{if(!arm(b))return;await del('frais','r_'+b.dataset.id);toast('Réduction retirée');eleveFinSheet(b.dataset.id)},
   'pc-param':()=>paramSheet(),
   'pc-dev':b=>{const f=b.closest('form');f.querySelectorAll('[data-act=pc-dev]').forEach(x=>x.setAttribute('aria-pressed',x===b));f.querySelector('[name=devise]').value=b.dataset.v},
-  'pc-journal':()=>journalSheet(today()),
-  'pc-jday':b=>journalSheet(b.dataset.v),
-  'pc-jcopy':()=>{const d=S.jDate||today();const L=Object.values(S.paiem).filter(p=>p.date===d);copyTxt(`*${ECO().nom} · Caisse du ${dfr(d)}*\n${L.length} paiement(s) · total ${fmtM(sum(L.map(p=>numM(p.montant))))}\n\n`+L.map(p=>{const e=S.eleves[p.eleveId]||{nom:p.nom||''};return `• ${nomComplet(e)} (${(S.classes[e.classeId]?.nom||'').replace(' année primaire','')}) : ${fmtM(p.montant)}`}).join('\n'),'Résumé copié.')},
+  'pc-journal':()=>{S.jDate=today();S.view='caisse';render();scrollTo(0,0)},
+  'pc-jday':b=>{S.jDate=b.dataset.v;render()},
+  'pc-jpdf':()=>caissePDF(S.jDate||today()),
+  'pc-jcopy':()=>{const d=S.jDate||today();const L=Object.values(S.paiem).filter(p=>p.date===d);copyTxt(caisseTexte(d),'Rapport copié. Collez-le dans WhatsApp.')},
   'pc-recu':b=>recuSheet(b.dataset.id),
   'pc-recupdf':b=>recuPDF(b.dataset.id),
   'pc-wa':b=>{const s=situation(b.dataset.id);const t=rappelTexte(b.dataset.id);const n=waNum(s.e.telephone);if(n){const a=document.createElement('a');a.href=`https://wa.me/${n}?text=${encodeURIComponent(t)}`;a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove()}else copyTxt(t,'Message copié (pas de téléphone des parents dans la fiche).')},

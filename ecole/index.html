@@ -348,6 +348,22 @@ table.t td.name,table.t th.name{text-align:left}
 .mb em{display:block;font-style:normal;font-size:11.5px;color:var(--muted);margin-top:4px;text-align:right}
 .mb em button{border:0;background:none;color:inherit;font:inherit;text-decoration:underline;padding:0;cursor:pointer}
 .msgs textarea.inp{height:auto;min-height:104px;padding:12px 14px;line-height:1.4;resize:vertical}
+/* Palmarès : points par branche */
+.dwrap{max-height:74vh;overflow:auto}
+.dtab{border-collapse:separate;border-spacing:0;font-variant-numeric:tabular-nums}
+.dtab th,.dtab td{padding:4px 3px;text-align:center;border-bottom:1px solid var(--line);white-space:nowrap}
+.dtab thead th{position:sticky;top:0;z-index:3;background:var(--sunk);color:var(--muted);font-size:11px;font-weight:700;vertical-align:bottom;line-height:1.15}
+.dtab thead th small{display:block;font-size:10.5px;margin-top:3px}
+.dtab th.br span{display:block;writing-mode:vertical-rl;transform:rotate(180deg);max-height:128px;white-space:normal;text-align:left;margin:0 auto;overflow:hidden}
+.dtab .pl{position:sticky;left:0;z-index:2;width:30px;min-width:30px;background:var(--surface);color:var(--muted);font-weight:700;font-size:12.5px}
+.dtab .nm{position:sticky;left:30px;z-index:2;background:var(--surface);text-align:left;min-width:112px;max-width:112px;white-space:normal;overflow-wrap:anywhere;font-weight:600;font-size:12.5px;line-height:1.15;padding:5px 6px;border-right:1px solid var(--line)}
+.dtab .nm span{font-weight:500;color:var(--muted)}
+.dtab thead .pl,.dtab thead .nm{z-index:4;background:var(--sunk)}
+.dtab td .gi{width:40px;height:36px;font-size:14px;border-radius:9px}
+.dtab td.ro{min-width:38px;font-weight:600}
+.dtab .dt-t{font-family:var(--f-d);font-size:15px;color:var(--accent);min-width:46px;padding:0 6px}
+.dtab .dt-p{font-weight:700;font-size:12.5px;min-width:52px;padding-right:8px}
+.dtab .dt-p.ok{color:var(--good)}.dtab .dt-p.ko{color:var(--bad)}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1500,10 +1516,11 @@ function gradeInput(inp){
   if(raw!==''&&(isNaN(v)||v<0||v>max)){inp.classList.add('bad');const s=$('#saved');if(s)s.textContent=`Maximum ${fmt(max)} pour cette case`;return}
   inp.classList.remove('bad');
   const id=nid(eid,c.id);const doc=JSON.parse(JSON.stringify(S.notes[id]||{eleveId:eid,classeId:el.classeId,coursId:c.id}));
+  if(inp.dataset.fix){const old=doc[t]?.[k];if(old!=null&&old!==v&&doc.log?.[key]&&doc.log[key]<today()&&!(doc.corr&&doc.corr[key]))doc.corr={...(doc.corr||{}),[key]:{de:old,le:today(),par:meId()}}}
   doc[t]=doc[t]||{};if(v==null)delete doc[t][k];else doc[t][k]=v;
   if(!isDir()||!doc.log?.[key])doc.log={...(doc.log||{}),[key]:today()};doc.by=meId();
   S.notes={...S.notes,[id]:doc};
-  const tt=document.getElementById('tt_'+eid);if(tt)tt.textContent=fmt(V(eid,c,t));ficheTot();
+  const tt=document.getElementById('tt_'+eid);if(tt)tt.textContent=fmt(V(eid,c,t));ficheTot();if(inp.dataset.fix)detTot(eid);
   saveNote(id);refreshBul();
   const cb=$('#cbarC');if(cb){const t2=document.createElement('div');t2.innerHTML=barCotes(S.cid);cb.replaceWith(t2.firstElementChild)}
 }
@@ -2083,13 +2100,25 @@ function palmTable(cid,key,paper){const {mx,MT,list}=palmData(cid,key);
   return `${paper?`<div class="pfs-h"><b>${h(ECO().nom)}</b><span>Palmarès · ${h(S.classes[cid].nom)} · ${h(keyName(key))} · Année scolaire ${ANNEE}</span></div>`:''}<table class="t palm"><thead><tr><th>Place</th><th class="name">Élève</th>${GRPf().map(([k,l])=>`<th>${l}<small>/${fmt(mx[k])}</small></th>`).join('')}<th>Total<small>/${fmt(MT)}</small></th><th>%</th><th>Parents</th></tr></thead><tbody>
    ${list.map(r=>{const s=sigOf(r.e.id,key);return `<tr class="${r.p&&r.p<=3?'top':''}"><td class="rkc num">${r.p?`<span>${r.p}<sup>${r.p===1?'er':'e'}</sup></span>`:'–'}</td><td class="name">${paper?`<span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span>`:`<button class="pnm" data-act="eleve" data-id="${h(r.e.id)}">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></button>`}</td>${GRPf().map(([k])=>cell(r.g[k],mx[k]||1)).join('')}<td class="num tt"><b>${r.tot==null?'–':fmt(r.tot)}</b></td><td class="num"><span class="pill ${r.pct==null?'':r.pct>=50?'good':'warn'}">${pctf(r.pct)}</span></td><td>${s?`<span class="pill good">✓ Signé</span>`:`<span class="pill">Non signé</span>`}</td></tr>`}).join('')}
   </tbody></table>`}
+function detRow(cid,key,eid){const cls=S.classes[cid];let tot=0,mx=0,any=false;for(const c of cls.cours||[]){mx+=MX(c,key);const v=V(eid,c,key);if(v!=null){tot+=v;any=true}}return{tot:any?tot:null,mx,pct:any&&mx?tot/mx*100:null}}
+function detTot(eid){const tr=document.querySelector(`.dtab tr[data-e="${CSS.escape(eid)}"]`);if(!tr)return;const r=detRow(S.cid,S.pKey||'t1',eid);tr.querySelector('.dt-t').textContent=r.tot==null?'–':fmt(r.tot);const pc=tr.querySelector('.dt-p');pc.textContent=pctf(r.pct);pc.className='dt-p num '+(r.pct==null?'':r.pct>=50?'ok':'ko')}
+function refreshDet(){const cls=S.classes[S.cid];if(!cls)return;const key=S.pKey||'t1';document.querySelectorAll('.dtab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,key);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});document.querySelectorAll('.dtab tr[data-e]').forEach(tr=>detTot(tr.dataset.e))}
+function palmDetail(cid,key){
+  const cls=S.classes[cid],cours=cls.cours||[];const {list}=palmData(cid,key);const edit=key[0]==='p'||key.startsWith('ex');const MT=sum(cours.map(c=>MX(c,key)));
+  if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3></div>`;
+  return `<p class="muted small" style="margin:0">${edit?'Les élèves sont classés du premier au dernier. Pour corriger une erreur, touchez la cote, tapez la bonne valeur : elle s’enregistre et le bulletin se met à jour.':'Totaux en lecture seule. Pour corriger une cote, choisissez une <b>période</b> ou un <b>examen</b> ci-dessus.'} Faites glisser le tableau vers la gauche pour voir toutes les branches.</p>
+  <div class="tblwrap dwrap" id="dwrap"><table class="dtab"><thead><tr><th class="pl">Pl.</th><th class="nm">Élève</th>${cours.map(c=>`<th class="br"><span>${h(c.nom)}</span><small class="num">/${fmt(MX(c,key))}</small></th>`).join('')}<th class="tt">Total<small class="num">/${fmt(MT)}</small></th><th class="tt">%</th></tr></thead><tbody>
+  ${list.map(r=>{const e=r.e;return `<tr data-e="${h(e.id)}"><td class="pl num">${r.p||'–'}</td><td class="nm">${h(e.nom)} ${h(e.postnom||'')} <span>${h(e.prenom||'')}</span></td>${cours.map(c=>{const v=V(e.id,c,key);return edit?`<td><input class="gi" data-e="${h(e.id)}" data-k="${key}" data-c="${h(c.id)}" data-fix="1" inputmode="decimal" autocomplete="off" aria-label="${h(c.nom)}, ${h(nomComplet(e))}, maximum ${fmt(MX(c,key))}" value="${v==null?'':fmt(v)}"></td>`:`<td class="ro num">${v==null?'·':fmt(v)}</td>`}).join('')}<td class="dt-t num">${r.tot==null?'–':fmt(r.tot)}</td><td class="dt-p num ${r.pct==null?'':r.pct>=50?'ok':'ko'}">${pctf(r.pct)}</td></tr>`}).join('')}
+  </tbody></table></div><div class="ehint"><span>${edit?'Le classement se remet en ordre quand vous changez de période ou rouvrez la page.':''}</span><span class="saved" id="saved"></span></div>`;
+}
 function tabPalm(){
   const cid=S.cid,cls=S.classes[cid],key=S.pKey||'t1';const es=elevesOf(cid);
   if(!es.length)return `<div class="card empty"><h3>Aucun élève dans cette classe</h3></div>`;
   const vue=S.pVue||'cl';
-  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures des parents</button></div>`;
+  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Points par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures des parents</button></div>`;
   const chips=`<div class="chips" role="group" aria-label="Période">${pkeys().map(([k,l])=>`<button class="chipb${k[0]==='t'||k==='an'?' strong':''}" data-act="pkey" data-v="${k}" aria-pressed="${key===k}">${l}</button>`).join('')}</div>`;
   if(vue==='sig')return `<div class="card pad stack">${seg}${chips}</div>`+tabSig();
+  if(vue==='det')return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Points par branche</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div></div>${chips}</div>`+palmDetail(cid,key);
   const {mx,MT,ranked}=palmData(cid,key);
   const moy=ranked.length?sum(ranked.map(r=>r.pct))/ranked.length:null,reu=ranked.filter(r=>r.pct>=50).length;const ns=es.filter(e=>sigOf(e.id,key)).length;
   return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Palmarès</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm" data-act="palmpdf">${ic('doc',16)} PDF</button><button class="btn sm grad" data-act="palmfs">${ic('expand',16)} Plein écran</button></span></div>
@@ -3134,7 +3163,7 @@ document.addEventListener('click',ev=>{const b=ev.target.closest('[data-act]');i
 document.addEventListener('focusin',ev=>{const t=ev.target;if(t.classList?.contains('gi')&&t.dataset.e&&t.dataset.e!==S.sel){S.sel=t.dataset.e;refreshBul()}const b=t.closest&&t.closest('.bars .b');if(b&&$('#tip'))$('#tip').textContent=b.dataset.tip});
 document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.target.closest('.bars .b');if(b&&$('#tip'))$('#tip').textContent=b.dataset.tip});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
-  if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
+  if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi,.dtab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('.dtab')?1:ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}});
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='m-txt')S.mDraft=t.value;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
@@ -3185,6 +3214,7 @@ function onData(key){
   if(!S.ready)return;
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
+  if(key==='notes'&&S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det'&&document.querySelector('.dtab')){refreshDet();return}
   if(key==='notes'&&S.view==='classe'&&(S.ctab==='cotes'||S.ctab==='bul')){S.ctab==='cotes'?refreshCotes():refreshBul();return}
   renderSoon();
 }

@@ -95,7 +95,11 @@ function reveal() {
   });
 }
 function page(html) {
-  var go = function () { app.innerHTML = '<div class="page">' + html + '</div>'; window.scrollTo(0, 0); tick(); countUp(); reveal(); };
+  /* même écran (choix, onglet, enregistrement) : on garde la position, sans animation d'entrée */
+  var same = page.last === location.href && !!app.querySelector('.page'), y = window.scrollY;
+  page.last = location.href;
+  var go = function () { app.innerHTML = '<div class="page' + (same ? ' still' : '') + '">' + html + '</div>'; window.scrollTo({ top: same ? y : 0, behavior: 'instant' }); tick(); countUp(same); if (!same) reveal(); };
+  if (same) return go();
   if (!RM && document.startViewTransition && !page.busy && app.querySelector('.page:not(.g16)')) { page.busy = true; var t = document.startViewTransition(go); t.finished.then(function () { page.busy = false; }, function () { page.busy = false; }); }
   else go();
 }
@@ -113,10 +117,10 @@ function tick() {
   });
 }
 setInterval(tick, 1000);
-function countUp() {
+function countUp(now) {
   document.querySelectorAll('[data-count]').forEach(function (el) {
     var to = Number(el.dataset.count) || 0, t0 = null; el.removeAttribute('data-count');
-    if (to < 2 || window.matchMedia('(prefers-reduced-motion:reduce)').matches) { el.textContent = to; return; }
+    if (now || to < 2 || window.matchMedia('(prefers-reduced-motion:reduce)').matches) { el.textContent = to; return; }
     function f(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 300); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }
     requestAnimationFrame(f);
   });
@@ -978,7 +982,7 @@ function renderDash(keepScroll) {
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.tab ? ' on' : '') + '" type="button" data-act="tab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
     '<div style="margin-top:16px">' + body + '</div>' +
     '<button class="btn btn-ghost btn-sm" style="margin-top:40px" type="button" data-act="logout">Me déconnecter</button>');
-  setBar(null); if (keepScroll) window.scrollTo(0, y);
+  setBar(null); if (keepScroll) window.scrollTo({ top: y, behavior: 'instant' });
 }
 function dashOrders() {
   var done = S.orders.filter(function (o) { return o.statut === 'paye'; }), usd = 0, cdf = 0;

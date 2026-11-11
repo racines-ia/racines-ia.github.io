@@ -11,6 +11,10 @@ var E = null;            // produit en cours d'édition
 var rid = 0, pollT = null, armed = '';
 var $ = function (id) { return document.getElementById(id); };
 var app = $('app');
+function theme(t) { if (t) { try { localStorage.setItem('cv_theme', t); } catch (e) {} } else { try { t = localStorage.getItem('cv_theme'); } catch (e) {} } if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  document.documentElement.dataset.theme = t; var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#F3F6FD' : '#070B18';
+  var b = $('hTheme'); if (b) { b.innerHTML = ico(t === 'light' ? 'i-moon' : 'i-sun'); b.setAttribute('aria-label', t === 'light' ? 'Mode sombre' : 'Mode jour'); } }
+theme();
 (function () {
   var sp = $('splash'); if (!sp) return;
   var seen = false, now = Date.now();
@@ -90,9 +94,15 @@ function countUp() {
     requestAnimationFrame(f);
   });
 }
+function tabnav() {
+  var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : (q.get('p') || q.get('b') || q.get('c')) ? '' : 'home';
+  var it = function (k, href, icn, label) { return '<a class="' + (cur === k ? 'on' : '') + '" href="' + href + '" data-nav>' + ico(icn) + label + '</a>'; };
+  $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a href="./#produits" data-act="navProducts">' + ico('i-search') + 'Produits</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
+}
 function header() {
+  tabnav();
   var hb = $('hAccount'); hb.classList.toggle('logo', !!S.vendor); hb.setAttribute('aria-label', S.vendor ? 'Ma boutique' : 'Vendre'); hb.innerHTML = S.vendor ? avatar(S.vendor) : ico('i-store') + 'Vendre';
-  var has = tokens().length > 0; $('hOrders').classList.toggle('hide', !has); $('hOrders').innerHTML = ico('i-bag');
+  $('hOrders').classList.add('hide'); $('hOrders').innerHTML = ico('i-bag');
 }
 
 /* ---------- Photos et fichiers ---------- */
@@ -260,6 +270,7 @@ async function route() {
   clearInterval(pollT); closeSheet(); armed = '';
   var q = new URLSearchParams(location.search), v = q.get('v');
   try { if (v !== 'compte' && localStorage.getItem('cv_draft')) { history.replaceState({}, '', '?v=compte'); v = 'compte'; q = new URLSearchParams('?v=compte'); } } catch (e) {}
+  tabnav();
   try {
     if (q.get('p')) return await pageProduct(q.get('p'), alive);
     if (q.get('b')) return await pageShop(q.get('b'), alive);
@@ -273,8 +284,9 @@ async function route() {
 
 /* ---------- Accueil ---------- */
 function card(p) {
-  return '<a class="card" href="?p=' + esc(p.id) + '" data-nav><div class="sq">' + (p.promo ? '<span class="flag badge">Promo</span>' : '') + pic(p.image_url) + '</div><div class="b"><h3>' + esc(p.titre) + '</h3>' +
-    '<div class="p">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="pold"><s>' + money(p.prix, p.devise) + '</s></div>' : '') +
+  return '<a class="card" href="?p=' + esc(p.id) + '" data-nav><div class="sq">' + (p.promo ? '<span class="flag badge">−' + Math.round((1 - p.prix_actuel / p.prix) * 100) + ' %</span>' : '') + pic(p.image_url) + '<span class="pchip">' + money(p.prix_actuel, p.devise) + '</span></div><div class="b">' +
+    (p.promo && p.promo_places != null ? '<div class="stock">Plus que ' + p.promo_places + ' place' + (p.promo_places > 1 ? 's' : '') + '</div>' : p.promo ? '<div class="stock"><s style="color:var(--muted)">' + money(p.prix, p.devise) + '</s></div>' : '') +
+    '<h3>' + esc(p.titre) + '</h3>' +
     '<div class="m">' + (p.ventes > 0 ? p.ventes + ' vendu' + (p.ventes > 1 ? 's' : '') : 'Nouveau') + (p.boutique ? ' · ' + esc(p.boutique) : '') + '</div></div></a>';
 }
 function sellCta(loyer) {
@@ -282,10 +294,10 @@ function sellCta(loyer) {
     '<a class="btn btn-primary" href="?v=compte" data-nav>' + (S.vendor ? 'Gérer ma boutique' : 'Créer ma boutique') + ' ' + ico('i-arrow') + '</a></div>';
 }
 var ILLU = {
-  shop: '<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="30" width="92" height="52" rx="8" fill="#16301F"/><path d="M10 30l10-18h80l10 18" stroke="#E8F55C" stroke-width="3" stroke-linejoin="round"/><path d="M10 30h100v6a10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0z" fill="#9BE36A"/><rect x="48" y="52" width="24" height="30" rx="4" fill="#07100B"/><rect x="24" y="48" width="16" height="14" rx="3" fill="#3CC48A"/><rect x="80" y="48" width="16" height="14" rx="3" fill="#3CC48A"/><circle cx="66" cy="68" r="2" fill="#E8F55C"/></svg>',
-  share: '<svg viewBox="0 0 120 90" fill="none"><rect x="36" y="6" width="48" height="80" rx="10" fill="#16301F" stroke="#3CC48A" stroke-width="3"/><rect x="44" y="18" width="32" height="24" rx="4" fill="#9BE36A"/><rect x="44" y="48" width="24" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="56" width="18" height="4" rx="2" fill="#A3B3A7"/><circle cx="16" cy="30" r="9" fill="#E8F55C"/><circle cx="104" cy="22" r="9" fill="#3CC48A"/><circle cx="104" cy="64" r="9" fill="#9BE36A"/><path d="M25 30h11M84 30l11-6M84 56l11 6" stroke="#E8F55C" stroke-width="3" stroke-linecap="round"/></svg>',
-  pay: '<svg viewBox="0 0 120 90" fill="none"><rect x="10" y="22" width="70" height="48" rx="8" fill="#16301F" stroke="#3CC48A" stroke-width="3"/><rect x="10" y="32" width="70" height="8" fill="#3CC48A"/><rect x="20" y="52" width="22" height="6" rx="3" fill="#A3B3A7"/><circle cx="90" cy="54" r="22" fill="#E8F55C"/><path d="M80 54l7 7 13-14" stroke="#071505" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#16301F" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#9BE36A"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#071505" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  shop: '<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="30" width="92" height="52" rx="8" fill="#1B2647"/><path d="M10 30l10-18h80l10 18" stroke="#8FB4FF" stroke-width="3" stroke-linejoin="round"/><path d="M10 30h100v6a10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0z" fill="#5B9BFF"/><rect x="48" y="52" width="24" height="30" rx="4" fill="#07100B"/><rect x="24" y="48" width="16" height="14" rx="3" fill="#2F5BFF"/><rect x="80" y="48" width="16" height="14" rx="3" fill="#2F5BFF"/><circle cx="66" cy="68" r="2" fill="#8FB4FF"/></svg>',
+  share: '<svg viewBox="0 0 120 90" fill="none"><rect x="36" y="6" width="48" height="80" rx="10" fill="#1B2647" stroke="#2F5BFF" stroke-width="3"/><rect x="44" y="18" width="32" height="24" rx="4" fill="#5B9BFF"/><rect x="44" y="48" width="24" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="56" width="18" height="4" rx="2" fill="#A3B3A7"/><circle cx="16" cy="30" r="9" fill="#8FB4FF"/><circle cx="104" cy="22" r="9" fill="#2F5BFF"/><circle cx="104" cy="64" r="9" fill="#5B9BFF"/><path d="M25 30h11M84 30l11-6M84 56l11 6" stroke="#8FB4FF" stroke-width="3" stroke-linecap="round"/></svg>',
+  pay: '<svg viewBox="0 0 120 90" fill="none"><rect x="10" y="22" width="70" height="48" rx="8" fill="#1B2647" stroke="#2F5BFF" stroke-width="3"/><rect x="10" y="32" width="70" height="8" fill="#2F5BFF"/><rect x="20" y="52" width="22" height="6" rx="3" fill="#A3B3A7"/><circle cx="90" cy="54" r="22" fill="#8FB4FF"/><path d="M80 54l7 7 13-14" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#1B2647" stroke="#2F5BFF" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#2F5BFF" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#5B9BFF"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 function feature(k, t, d) { return '<div class="feat"><div class="fill">' + ILLU[k] + '</div><div><h3>' + t + '</h3><p>' + d + '</p></div></div>'; }
 function homeCats() {
@@ -306,7 +318,8 @@ async function pageHome(alive) {
   var d = r.data || { products: [], loyer: 10 }, ps = d.products || [];
   S.ctx.home = { ps: ps, q: '', cat: '' };
   var top = ps.filter(function (p) { return p.ventes > 0; }).sort(function (a, b) { return b.ventes - a.ventes; }).slice(0, 4);
-  page('<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
+  var pr = ps.filter(function (p) { return p.promo; }).sort(function (a, b) { return (1 - b.prix_actuel / b.prix) - (1 - a.prix_actuel / a.prix); })[0];
+  page((pr ? '<a class="promo-hero" href="?p=' + esc(pr.id) + '" data-nav><div><h2>−' + Math.round((1 - pr.prix_actuel / pr.prix) * 100) + ' % sur ' + esc(pr.titre.length > 34 ? pr.titre.slice(0, 32) + '…' : pr.titre) + '</h2><p>Offre limitée · ' + money(pr.prix_actuel, pr.devise) + ' au lieu de ' + money(pr.prix, pr.devise) + '</p><span class="go">' + ico('i-bag', 'width:16px;height:16px') + 'J\'en profite</span></div><div class="pi">' + (safeUrl(pr.image_url) ? '<img src="' + esc(safeUrl(pr.image_url)) + '" alt="">' : '') + '</div></a><div style="height:28px"></div>' : '') + '<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
     '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp et Facebook. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
     '<div class="g8" style="margin-top:20px"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><button class="btn btn-ghost" type="button" data-act="toProducts"><span>Voir les produits</span></button></div></div>' +
     '<div class="sec"><div class="kicker">Comment ça marche</div><h2 style="margin-bottom:16px">Tout ce qu\'il faut pour vendre</h2><div class="g12 stag">' +
@@ -408,6 +421,8 @@ var A = {
   closeSheet: function () { closeSheet(); dropDraft(); },
   dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
   cancelXfer: function () { if (XHR) XHR.abort(); },
+  theme: function () { theme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'); },
+  navProducts: async function () { if (new URLSearchParams(location.search).toString()) { history.pushState({}, '', location.pathname); await route(); } var el = $('produits'); if (el) el.scrollIntoView(); var i = $('h-q'); if (i) i.focus(); },
   cat: function (el) { var h = S.ctx.home; if (!h) return; h.cat = el.dataset.id; $('homeCats').innerHTML = homeCats(); $('homeGrid').innerHTML = homeGrid(); },
   toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView(); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },

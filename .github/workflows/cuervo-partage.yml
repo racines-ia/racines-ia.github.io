@@ -15,5 +15,5 @@ jobs:
       - run: |
           git config user.name "cuervo-bot"
           git config user.email "cuervo-bot@users.noreply.github.com"
-          git add -A cuervo/p
+          git add -A cuervo/p cuervo/l
           git diff --cached --quiet || (git commit -m "cuervo.co : pages de partage des produits" && git push)

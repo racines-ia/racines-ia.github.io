@@ -57,6 +57,7 @@ function avatar(shop, cls) {
   return '<div class="av ' + (cls || '') + '">' + (u ? '<img class="f" src="' + esc(u) + '" alt="" onload="this.classList.add(\'ld\')">' : esc((shop.boutique || '?').charAt(0).toUpperCase())) + '</div>';
 }
 function link(q) { return location.origin + location.pathname + (q || ''); }
+function llink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'l/' + id + '/'; }
 function plink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'p/' + id + '/'; }
 function norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function busy(btn, on, label) { if (!btn) return; btn.disabled = on; btn.classList.toggle('busy', on); if (label) btn.lastChild.textContent = label; }
@@ -126,7 +127,7 @@ function countUp(now) {
   });
 }
 function tabnav() {
-  var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : v === 'ia' ? 'ia' : v === 'aide' ? 'aide' : (q.get('p') || q.get('b') || q.get('c')) ? '' : 'home';
+  var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : v === 'ia' ? 'ia' : v === 'aide' ? 'aide' : (q.get('p') || q.get('l') || q.get('b') || q.get('c')) ? '' : 'home';
   var it = function (k, href, icn, label) { return '<a class="' + (cur === k ? 'on' : '') + '" href="' + href + '" data-nav>' + ico(icn) + label + '</a>'; };
   $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a class="' + (cur === 'ia' ? 'on' : '') + '" href="?v=ia" data-nav><span class="ia-ico">' + ico('i-cuervo') + '</span>Cuervo IA</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
 }
@@ -301,8 +302,10 @@ async function route() {
   clearInterval(pollT); closeSheet(); armed = '';
   var q = new URLSearchParams(location.search), v = q.get('v');
   try { if (v !== 'compte' && localStorage.getItem('cv_draft')) { history.replaceState({}, '', '?v=compte'); v = 'compte'; q = new URLSearchParams('?v=compte'); } } catch (e) {}
+  document.body.classList.toggle('landing', !!q.get('l')); if (!q.get('l')) document.body.removeAttribute('data-lt');
   tabnav();
   try {
+    if (q.get('l')) return await pageLanding(q.get('l'), alive);
     if (q.get('p')) return await pageProduct(q.get('p'), alive);
     if (q.get('b')) return await pageShop(q.get('b'), alive);
     if (q.get('c')) return await pageOrder(q.get('c'), alive);
@@ -545,6 +548,56 @@ async function pageProduct(id, alive) {
   setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
 }
 
+/* ---------- Landing page automatique ---------- */
+var LSTY = [['orange', 'Orange'], ['clair', 'Clair'], ['cuenca', 'Rouge']];
+function landingBox(id, titre, img) {
+  var u = llink(id);
+  return '<div class="lbox"><b>Ta landing page</b><p>Une page de vente créée automatiquement avec tes photos, ton prix, tes vidéos et tes avis. Idéale pour tes pubs et tes statuts.</p>' +
+    '<div class="linkbox">' + esc(u) + '</div>' +
+    '<a class="btn btn-primary btn-sm" href="?l=' + esc(id) + '" data-nav>Voir ma landing page</a>' + shareRow(u, titre, img) + '</div>';
+}
+function landingReady(id, titre, img) {
+  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Ta landing page est prête</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+    '<p class="lead">cuervo.co l\'a créée toute seule avec ta fiche produit. Choisis son style, puis partage son lien.</p>' +
+    '<div class="lstyles">' + LSTY.map(function (x, i) { return '<button type="button" class="lsty lsty-' + x[0] + (i === 0 ? ' on' : '') + '" data-act="lStyle" data-id="' + esc(id) + '" data-v="' + x[0] + '"><i></i>' + x[1] + '</button>'; }).join('') + '</div>' +
+    landingBox(id, titre, safeUrl(img)) + '</div>');
+}
+async function pageLanding(id, alive) {
+  skeleton();
+  var r = await sb.rpc('mk_product', { p_id: id }); if (!alive()) return;
+  if (r.error || !r.data) return notFound('Ce produit n\'est plus disponible.');
+  var d = r.data, p = d.product, s = d.shop; S.ctx = { product: p, shop: s };
+  var st = LSTY.some(function (x) { return x[0] === p.landing_style; }) ? p.landing_style : 'orange';
+  document.body.setAttribute('data-lt', st);
+  document.title = p.titre + ' — ' + s.boutique;
+  var canPay = (s.ops || []).length > 0 && !d.apercu, end = p.promo_fin ? new Date(p.promo_fin).getTime() : null;
+  var remise = p.promo ? Math.round((1 - p.prix_actuel / p.prix) * 100) : 0;
+  var exs = (p.exemples || []).filter(function (e) { return safeUrl(e && e.url); });
+  var vids = (p.videos || []).map(videoHtml).filter(Boolean);
+  var avis = (p.temoignages || []).filter(function (t) { return t && String(t.texte || '').trim(); });
+  var payBtn = canPay ? '<button class="btn btn-primary lp-pay" type="button" data-act="pay">Payer ' + money(p.prix_actuel, p.devise) + '</button><p class="lp-ops">' + (s.ops || []).map(function (k) { return OPS[k]; }).join(' · ') + '</p>' : '';
+  var sec = function (k, h) { return '<section class="lp-sec"><div class="lp-k">' + k + '</div>' + h + '</section>'; };
+  var FAQ = [['Comment je paie ?', 'Tu paies par Mobile Money (' + ((s.ops || []).map(function (k) { return OPS[k]; }).join(', ') || 'M-Pesa, Airtel Money, Orange Money') + '), puis tu envoies la capture de ton paiement.'],
+    ['Quand je reçois mon produit ?', 'Dès que le vendeur confirme ton paiement, ton achat s\'ouvre dans « Mes achats ».'],
+    ['J\'ai une question avant d\'acheter', waNum(s.whatsapp) ? 'Écris directement au vendeur sur WhatsApp avec le bouton ci-dessous.' : 'Visite la boutique du vendeur pour le contacter.']];
+  page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette page n\'est pas encore visible du public.</div><div style="height:12px"></div>' : '') +
+    '<div class="lp">' +
+    '<div class="lp-cover">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '') + '<a class="lp-shop" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<span>' + esc(s.boutique) + '</span></a></div>' +
+    '<div class="lp-head">' + (safeUrl(p.image_url) ? '<div class="lp-sq zoom" data-zoom="' + esc(safeUrl(p.image_url)) + '">' + pic(p.image_url) + '</div>' : '') +
+    (p.promo ? '<span class="lp-badge">Promo −' + remise + ' %' + (p.promo_places != null ? ' · plus que ' + p.promo_places + ' place' + (p.promo_places > 1 ? 's' : '') : '') + '</span>' : '') +
+    '<h1>' + esc(p.titre) + '</h1>' + (p.description ? '<p class="lp-desc">' + esc(p.description) + '</p>' : '') +
+    '<div class="lp-price"><b>' + money(p.prix_actuel, p.devise) + '</b>' + (p.promo ? '<s>' + money(p.prix, p.devise) + '</s>' : '') + (p.ventes ? '<span>' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</span>' : '') + '</div>' +
+    (p.promo && end ? '<div class="cd" data-end="' + end + '"></div>' : '') + payBtn + '</div>' +
+    ((p.points || []).length ? sec('Pourquoi ce produit', '<div class="lp-pts">' + p.points.map(function (t) { return '<div>' + ico('i-check') + '<b>' + esc(t) + '</b></div>'; }).join('') + '</div>') : '') +
+    (vids.length ? sec('En vidéo', '<div class="g16">' + vids.join('') + '</div>') : '') +
+    (exs.length ? sec('Exemples', '<p class="lp-hint">Fais glisser du doigt</p><div class="lp-rail">' + exs.map(function (e) { return '<div class="zoom" data-zoom="' + esc(safeUrl(e.url)) + '">' + pic(e.url) + '</div>'; }).join('') + '</div>') : '') +
+    (avis.length ? sec('Avis des clients', '<div class="g8">' + avis.map(function (t) { return '<div class="lp-avis"><i>★★★★★</i><p>« ' + esc(t.texte) + ' »</p><small>' + esc(t.nom || 'Client') + '</small></div>'; }).join('') + '</div>') : '') +
+    sec('Le vendeur', '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique</small></div>' + ico('i-arrow') + '</a>' + socialRow(s)) +
+    sec('Questions', '<div class="g8">' + FAQ.map(function (f) { return '<details class="lp-faq"><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>'; }).join('') + '</div>') +
+    '<p class="lp-foot">Page créée automatiquement par <a href="./" data-nav>cuervo.co</a></p></div>');
+  setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
+}
+
 /* ---------- Boutique ---------- */
 async function pageShop(slug, alive) {
   skeleton();
@@ -685,6 +738,11 @@ var A = {
 
   /* Produits du vendeur */
   newProduct: function () { openEditor(null); },
+  lStyle: async function (el) {
+    var v = el.dataset.v, r = await sb.from('mk_products').update({ landing_style: v }).eq('id', el.dataset.id);
+    if (r.error) return toast(errMsg(r.error));
+    document.querySelectorAll('.lsty').forEach(function (b) { b.classList.toggle('on', b === el); }); toast('Style enregistré');
+  },
   natShare: async function (el) {
     var d = el.dataset, data = { title: d.text, text: d.text + ' ' + d.url };
     try {
@@ -699,7 +757,7 @@ var A = {
     var url = plink(el.dataset.id);
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Partager le produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
       '<p class="lead">Ce lien ouvre directement « ' + esc(el.dataset.title) + ' ». Depuis le produit, le client peut aussi visiter ta boutique.</p>' +
-      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title, el.dataset.img) + '</div>');
+      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title, el.dataset.img) + landingBox(el.dataset.id, el.dataset.title, el.dataset.img) + '</div>');
   },
   editHere: async function (el) {
     var r = await sb.from('mk_products').select('*').eq('id', el.dataset.id).maybeSingle();
@@ -707,7 +765,7 @@ var A = {
     await openEditor(r.data);
   },
   editProduct: function (el) { openEditor(S.products.filter(function (p) { return p.id === el.dataset.id; })[0]); },
-  edSave: async function (el) { busy(el, true); try { await edSave(); dropDraft(); toast('Produit enregistré'); edRender(); if (new URLSearchParams(location.search).get('p')) { closeSheet(); route(); return; } await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
+  edSave: async function (el) { busy(el, true); var neuf = !E.id; try { await edSave(); dropDraft(); toast('Produit enregistré'); if (neuf && E.id) { var nid = E.id, np = E.p; await loadDash(); if (S.tab === 'produits') renderDash(true); landingReady(nid, np.titre, np.image_url); busy(el, false); return; } edRender(); if (new URLSearchParams(location.search).get('p')) { closeSheet(); route(); return; } await loadDash(); if (S.tab === 'produits') renderDash(true); } catch (e) { toast(errMsg(e)); } busy(el, false); },
   edDelete: async function (el) {
     if (armed !== 'del') { armed = 'del'; el.textContent = 'Confirmer la suppression'; return; }
     var r = await sb.from('mk_products').delete().eq('id', E.id); if (r.error) return toast(errMsg(r.error));
@@ -1068,7 +1126,7 @@ function edRead() {
   p.titre = $('e-titre').value.trim(); p.description = $('e-desc').value.trim();
   p.points = $('e-points').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
   p.prix = num('e-prix'); p.devise = $('e-devise').value; p.promo_prix = num('e-pprix'); p.promo_places = num('e-places');
-  p.categorie = $('e-cat').value; if (!Array.isArray(p.temoignages)) p.temoignages = [];
+  p.categorie = $('e-cat').value; if ($('e-lstyle')) p.landing_style = $('e-lstyle').value; if (!Array.isArray(p.temoignages)) p.temoignages = [];
   p.promo_fin = $('e-fin').value ? new Date($('e-fin').value).toISOString() : null; p.actif = $('e-actif').checked;
   document.querySelectorAll('[data-exleg]').forEach(function (i) { var e = p.exemples[Number(i.dataset.exleg)]; if (e) e.legende = i.value.trim(); });
 }
@@ -1084,9 +1142,10 @@ function aiBlock() {
 function edRender() {
   var p = E.p, url = E.id ? plink(E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
   sheet('<div class="shead"><h2>' + (E.id ? 'Modifier le produit' : 'Nouveau produit') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div><div class="g12">' +
-    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre, safeUrl(p.image_url)) + '</div>' : '') +
+    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre, safeUrl(p.image_url)) + landingBox(E.id, p.titre, safeUrl(p.image_url)) + '</div>' : '') +
     '<div class="box"><h3>Le produit</h3><label>Titre<input id="e-titre" maxlength="120" value="' + esc(p.titre) + '"></label>' +
     '<div class="two"><label>Prix<input id="e-prix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.prix == null ? '' : p.prix) + '"></label><label>Devise<select id="e-devise"><option value="USD"' + (p.devise === 'USD' ? ' selected' : '') + '>Dollars ($)</option><option value="CDF"' + (p.devise === 'CDF' ? ' selected' : '') + '>Francs (FC)</option></select></label></div>' +
+    '<label>Style de la landing page<select id="e-lstyle">' + LSTY.map(function (x) { return '<option value="' + x[0] + '"' + ((p.landing_style || 'orange') === x[0] ? ' selected' : '') + '>' + x[1] + '</option>'; }).join('') + '</select></label>' +
     '<label>Catégorie<select id="e-cat"><option value="">Choisir…</option>' + CATS.map(function (c) { return '<option' + (p.categorie === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></label>' +
     '<label>Description<textarea id="e-desc" maxlength="6000" placeholder="Écris quelques mots : l\'assistant peut les arranger pour toi.">' + esc(p.description) + '</textarea></label>' +
     '<label>Points forts (une ligne par point)<textarea id="e-points">' + esc((p.points || []).join('\n')) + '</textarea></label>' +
@@ -1118,7 +1177,7 @@ async function edSave() {
   if (p.titre.length < 2) throw new Error('Donne un titre à ton produit.');
   if (!(p.prix > 0)) throw new Error('Indique le prix du produit.');
   if (p.promo_prix != null && !(p.promo_prix > 0 && p.promo_prix < p.prix)) throw new Error('Le prix promo doit être inférieur au prix normal.');
-  var row = { titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif, categorie: p.categorie || '', temoignages: p.temoignages || [] };
+  var row = { landing_style: p.landing_style || 'orange', titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif, categorie: p.categorie || '', temoignages: p.temoignages || [] };
   var r;
   if (E.id) r = await sb.from('mk_products').update(row).eq('id', E.id).select().single();
   else { row.vendor_id = S.user.id; r = await sb.from('mk_products').insert(row).select().single(); }

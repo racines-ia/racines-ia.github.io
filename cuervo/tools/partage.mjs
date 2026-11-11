@@ -12,21 +12,23 @@ else {
   if (!r.ok) throw new Error('Supabase ' + r.status);
   products = (await r.json()).products || [];
 }
-rmSync('cuervo/p', { recursive: true, force: true });
+rmSync('cuervo/p', { recursive: true, force: true }); rmSync('cuervo/l', { recursive: true, force: true });
 for (const p of products) {
   if (!/^[0-9a-f-]{36}$/i.test(p.id)) continue;
   const img = /^https:\/\//.test(p.cover_url || '') ? p.cover_url : /^https:\/\//.test(p.image_url || '') ? p.image_url : '';
   const desc = money(p.prix_actuel, p.devise) + (p.promo ? ' au lieu de ' + money(p.prix, p.devise) : '') + ' · Boutique ' + (p.boutique || '') + ' sur cuervo.co';
-  const to = SITE + '?p=' + p.id;
-  mkdirSync('cuervo/p/' + p.id, { recursive: true });
-  writeFileSync('cuervo/p/' + p.id + '/index.html', `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  for (const [dir, q, tt] of [['p', '?p=', p.titre], ['l', '?l=', p.titre]]) {
+  const to = SITE + q + p.id;
+  mkdirSync('cuervo/' + dir + '/' + p.id, { recursive: true });
+  writeFileSync('cuervo/' + dir + '/' + p.id + '/index.html', `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(p.titre)} — cuervo.co</title>
 <meta name="description" content="${esc(desc)}">
 <meta property="og:type" content="website"><meta property="og:site_name" content="cuervo.co">
 <meta property="og:title" content="${esc(p.titre)}"><meta property="og:description" content="${esc(desc)}">
-<meta property="og:url" content="${SITE}p/${p.id}/">${img ? `<meta property="og:image" content="${esc(img)}"><meta name="twitter:card" content="summary_large_image">` : ''}
+<meta property="og:url" content="${SITE}${dir}/${p.id}/">${img ? `<meta property="og:image" content="${esc(img)}"><meta name="twitter:card" content="summary_large_image">` : ''}
 <meta http-equiv="refresh" content="0;url=${esc(to)}"><script>location.replace(${JSON.stringify(to)})</script></head>
 <body style="background:#07100B;color:#F1F5EE;font-family:sans-serif;padding:24px"><a style="color:#9BE36A" href="${esc(to)}">Ouvrir ${esc(p.titre)}</a></body></html>
 `);
+  }
 }
-console.log(products.length + ' page(s) de partage');
+console.log(products.length + ' produit(s) : pages de partage et landing pages');

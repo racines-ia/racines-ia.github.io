@@ -479,11 +479,23 @@ function videoHtml(v) {
   if (/\.(mp4|webm|mov|3gp|mkv)(\?|$)/i.test(u)) return '<div><div class="' + vc + '"><video controls playsinline preload="metadata" onloadedmetadata="vidFit(this)" src="' + esc(u) + '"></video></div>' + t + '</div>';
   return '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(u) + '">' + ico('i-play') + esc(v.titre || 'Voir la vidéo') + '</a>';
 }
-function shareRow(url, text) {
+var RS = [['facebook', 'Facebook', '#1877F2', 'f'], ['tiktok', 'TikTok', '#111', '♪'], ['instagram', 'Instagram', '#E1306C', '◎'], ['youtube', 'YouTube', '#FF0000', '▶']];
+function socialRow(s) {
+  var r = s.reseaux || {}, h = '', wa = waNum(s.whatsapp);
+  RS.forEach(function (x) { var u = safeUrl(r[x[0]]); if (u) h += '<a class="soc" target="_blank" rel="noopener" href="' + esc(u) + '"><i style="background:' + x[2] + '">' + x[3] + '</i>' + x[1] + '</a>'; });
+  if (wa) h += '<a class="soc" target="_blank" rel="noopener" href="https://wa.me/' + wa + '"><i style="background:#25D366">✆</i>WhatsApp</a>';
+  return h ? '<div class="socs">' + h + '</div>' : '';
+}
+function shareRow(url, text, img) {
   var u = encodeURIComponent(url);
   return '<div class="g8"><div class="two"><a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/?text=' + encodeURIComponent(text + ' ' + url) + '">WhatsApp</a>' +
     '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=' + u + '">Facebook</a></div>' +
-    '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + esc(url) + '">' + ico('i-share') + 'Copier le lien</button></div>';
+    (navigator.share ? '<button class="btn btn-ghost btn-sm" type="button" data-act="natShare" data-url="' + esc(url) + '" data-text="' + esc(text) + '" data-img="' + esc(img || '') + '">' + ico('i-share') + 'Statut, Instagram, TikTok…</button>' : '') +
+    '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + esc(url) + '">Copier le lien</button></div>';
+}
+function boostBox() {
+  return '<div class="boost"><b>Booster sur Facebook</b><p>1. Touche « Facebook » ci-dessus et publie le lien sur ta page Facebook.<br>2. Touche « Booster » : Facebook ouvre ton espace publicité. Choisis la publication, ton budget, la durée et la ville (ex. Kinshasa), puis paie directement à Facebook.</p>' +
+    '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://business.facebook.com/latest/ad_center">Booster</a></div>';
 }
 function contactRow(s) {
   var wa = waNum(s.whatsapp), h = '';
@@ -509,10 +521,11 @@ async function pageProduct(id, alive) {
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
     '<a class="shoprow top" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
+    socialRow(s) +
     '<div class="cover' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
     '<article class="prod"><div class="phead"><div class="sq' + (safeUrl(p.image_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.image_url)) : '') + '">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
-    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
+    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
@@ -521,7 +534,7 @@ async function pageProduct(id, alive) {
     (canPay ? '<button class="btn btn-primary" style="margin-top:24px" type="button" data-act="pay">Payer ' + money(p.prix_actuel, p.devise) + ' ' + ico('i-arrow') + '</button>' : '<div class="banner">Le paiement n\'est pas encore disponible pour ce produit.</div>') +
     '</article>' +
     '<div class="sec g12"><h2>Une question ?</h2>' + (contactRow(s) || '<p class="lead">Le vendeur n\'a pas encore indiqué de contact.</p>') + '</div>' +
-    '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(plink(p.id), p.titre) + '</div>' +
+    '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(plink(p.id), p.titre, safeUrl(p.image_url)) + '</div>' +
     (mine ? '' : '<div class="sec"><button class="btn btn-ghost btn-sm rep-btn" type="button" data-act="report" data-id="' + esc(p.id) + '">' + ico('i-flag') + '<span>Signaler ce produit</span></button></div>') +
     (d.autres.length ? '<div class="sec"><h2 style="margin-bottom:16px">Dans la même boutique</h2><div class="grid stag">' + d.autres.map(card).join('') + '</div></div>' : '') +
     (S.vendor && S.vendor.is_admin ? '<div class="sec"><button class="btn btn-danger btn-sm" type="button" data-act="blockProduct" data-id="' + esc(p.id) + '" data-on="' + (d.bloque ? '0' : '1') + '">' + (d.bloque ? 'Débloquer ce produit' : 'Bloquer ce produit (admin)') + '</button></div>' : ''));
@@ -538,6 +551,7 @@ async function pageShop(slug, alive) {
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette boutique n\'est pas encore visible du public.</div><div style="height:16px"></div>' : '') +
     (safeUrl(s.cover_url) ? '<div class="cover zoom" data-zoom="' + esc(safeUrl(s.cover_url)) + '">' + pic(s.cover_url) + '</div>' : '<div class="shopbanner"></div>') +
     '<div style="padding:0 8px"><span' + (safeUrl(s.avatar_url) ? ' class="zoom" data-zoom="' + esc(safeUrl(s.avatar_url)) + '"' : '') + ' style="display:inline-block">' + avatar(s, 'lg') + '</span><h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
+    socialRow(s) +
     '<div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><b class="gt" data-count="' + (s.ventes || 0) + '">0</b><span>produits vendus</span></div><div class="stat"><b>' + ps.length + '</b><span>produit' + (ps.length > 1 ? 's' : '') + ' en ligne</span></div></div>' +
     '<div class="sec"><h2 style="margin-bottom:16px">Produits</h2>' + (ps.length ? '<div class="grid stag">' + ps.map(card).join('') + '</div>' : '<div class="empty">Cette boutique n\'a pas encore de produit.</div>') + '</div>' +
     '<div class="sec g12"><h2>Contacter le vendeur</h2>' + (contactRow(s) || '<p class="lead">Aucun contact indiqué.</p>') + '</div>' +
@@ -667,11 +681,21 @@ var A = {
 
   /* Produits du vendeur */
   newProduct: function () { openEditor(null); },
+  natShare: async function (el) {
+    var d = el.dataset, data = { title: d.text, text: d.text + ' ' + d.url };
+    try {
+      if (d.img && navigator.canShare) {
+        var b = await (await fetch(d.img)).blob(), fl = new File([b], 'produit.' + ((b.type.split('/')[1] || 'jpg').replace('jpeg', 'jpg')), { type: b.type || 'image/jpeg' });
+        if (navigator.canShare({ files: [fl] })) data.files = [fl];
+      }
+    } catch (e) { }
+    try { await navigator.share(data); } catch (e) { if (data.files) { try { delete data.files; await navigator.share(data); } catch (e2) { } } }
+  },
   shareProduct: function (el) {
     var url = plink(el.dataset.id);
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Partager le produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
       '<p class="lead">Ce lien ouvre directement « ' + esc(el.dataset.title) + ' ». Depuis le produit, le client peut aussi visiter ta boutique.</p>' +
-      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title) + '</div>');
+      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title, el.dataset.img) + boostBox() + '</div>');
   },
   editHere: async function (el) {
     var r = await sb.from('mk_products').select('*').eq('id', el.dataset.id).maybeSingle();
@@ -727,8 +751,11 @@ var A = {
   saveShop: async function (el) {
     var g = function (k) { return $(k).value.trim(); };
     if (g('s-boutique').length < 2 || !g('s-prenom') || !g('s-nom')) return toast('Le nom de la boutique, ton prénom et ton nom sont obligatoires');
+    var rs = {}, bad = '';
+    RS.forEach(function (x) { var u = g('s-rs-' + x[0]); if (!u) return; if (!/^https?:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, ''); u = u.replace(/^http:/i, 'https:'); if (!safeUrl(u)) bad = x[1]; else rs[x[0]] = u; });
+    if (bad) return toast('Le lien ' + bad + ' n\'est pas valide');
     busy(el, true);
-    var r = await sb.from('mk_vendors').update({ boutique: g('s-boutique'), bio: g('s-bio'), tel: g('s-tel'), whatsapp: g('s-wa'), prenom: g('s-prenom'), nom: g('s-nom'), postnom: g('s-postnom'),
+    var r = await sb.from('mk_vendors').update({ reseaux: rs, boutique: g('s-boutique'), bio: g('s-bio'), tel: g('s-tel'), whatsapp: g('s-wa'), prenom: g('s-prenom'), nom: g('s-nom'), postnom: g('s-postnom'),
       mm_nom: g('s-mmnom'), mpesa: g('s-mpesa'), airtel: g('s-airtel'), orange: g('s-orange') }).eq('id', S.user.id);
     busy(el, false);
     if (r.error) return toast(errMsg(r.error));
@@ -982,7 +1009,7 @@ function dashProducts() {
       return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</small>' +
         '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div>' +
         '<div class="two"><button class="btn btn-ghost btn-sm" type="button" data-act="editProduct" data-id="' + p.id + '"><span>Modifier</span></button>' +
-        '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
+        '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
     }).join('') : '<div class="empty">Tu n\'as pas encore de produit. Ajoute le premier.</div>') + '</div>';
 }
 function upBox(key, url, label, cls) {
@@ -995,6 +1022,8 @@ function dashShop() {
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
     '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label></div>' +
+    '<div class="box"><h3>Mes réseaux sociaux</h3><p class="note">Colle le lien de tes pages. Ils s\'affichent sur ta boutique et tes produits. Ton WhatsApp ci-dessus s\'affiche aussi.</p>' +
+    RS.map(function (x) { return '<label>' + x[1] + '<input id="s-rs-' + x[0] + '" type="url" inputmode="url" placeholder="https://' + (x[0] === 'tiktok' ? 'www.tiktok.com/@ton_compte' : 'www.' + x[0] + '.com/ta_page') + '" value="' + esc((v.reseaux || {})[x[0]] || '') + '"></label>'; }).join('') + '</div>' +
     '<div class="box"><h3>Mon identité</h3><label>Prénom<input id="s-prenom" value="' + esc(v.prenom) + '"></label><div class="two"><label>Nom<input id="s-nom" value="' + esc(v.nom) + '"></label><label>Postnom<input id="s-postnom" value="' + esc(v.postnom) + '"></label></div></div>' +
     '<div class="box"><div class="rowx" style="justify-content:space-between"><h3>Mes Mobile Money</h3><span class="tag ' + mm[0] + '">' + mm[1] + '</span></div><p class="note">Tes clients paient sur ces numéros. L\'administrateur les confirme avant la mise en ligne, et après chaque modification.</p>' +
     '<label>Nom du compte<input id="s-mmnom" value="' + esc(v.mm_nom) + '"></label><label>Numéro M-Pesa<input id="s-mpesa" type="tel" value="' + esc(v.mpesa) + '"></label><label>Numéro Airtel Money<input id="s-airtel" type="tel" value="' + esc(v.airtel) + '"></label><label>Numéro Orange Money<input id="s-orange" type="tel" value="' + esc(v.orange) + '"></label></div>' +
@@ -1051,7 +1080,7 @@ function aiBlock() {
 function edRender() {
   var p = E.p, url = E.id ? plink(E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
   sheet('<div class="shead"><h2>' + (E.id ? 'Modifier le produit' : 'Nouveau produit') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div><div class="g12">' +
-    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre) + '</div>' : '') +
+    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre, safeUrl(p.image_url)) + boostBox() + '</div>' : '') +
     '<div class="box"><h3>Le produit</h3><label>Titre<input id="e-titre" maxlength="120" value="' + esc(p.titre) + '"></label>' +
     '<div class="two"><label>Prix<input id="e-prix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.prix == null ? '' : p.prix) + '"></label><label>Devise<select id="e-devise"><option value="USD"' + (p.devise === 'USD' ? ' selected' : '') + '>Dollars ($)</option><option value="CDF"' + (p.devise === 'CDF' ? ' selected' : '') + '>Francs (FC)</option></select></label></div>' +
     '<label>Catégorie<select id="e-cat"><option value="">Choisir…</option>' + CATS.map(function (c) { return '<option' + (p.categorie === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></label>' +

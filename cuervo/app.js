@@ -446,11 +446,16 @@ function pageAide() {
 
 /* ---------- Produit ---------- */
 function ytId(u) { var m = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/|embed\/))([\w-]{11})/.exec(u); return m ? m[1] : ''; }
+function vidFit(v) {
+  var w = v.videoWidth, h = v.videoHeight, b = v.parentNode; if (!w || !h || !b) return;
+  b.style.aspectRatio = w + ' / ' + h; b.classList.toggle('v916', h > w);
+}
+window.vidFit = vidFit;
 function videoHtml(v) {
   var u = safeUrl(v && v.url); if (!u) return '';
   var y = ytId(u), t = v.titre ? '<p class="vt">' + esc(v.titre) + '</p>' : '', vc = v.format === '9:16' ? 'vid v916' : 'vid';
   if (y) return '<div><div class="' + vc + '"><iframe src="https://www.youtube-nocookie.com/embed/' + y + '" allowfullscreen loading="lazy" title="Vidéo"></iframe></div>' + t + '</div>';
-  if (/\.(mp4|webm|mov|3gp|mkv)(\?|$)/i.test(u)) return '<div><div class="' + vc + '"><video controls playsinline preload="metadata" src="' + esc(u) + '"></video></div>' + t + '</div>';
+  if (/\.(mp4|webm|mov|3gp|mkv)(\?|$)/i.test(u)) return '<div><div class="' + vc + '"><video controls playsinline preload="metadata" onloadedmetadata="vidFit(this)" src="' + esc(u) + '"></video></div>' + t + '</div>';
   return '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="' + esc(u) + '">' + ico('i-play') + esc(v.titre || 'Voir la vidéo') + '</a>';
 }
 function shareRow(url, text) {
@@ -482,8 +487,8 @@ async function pageProduct(id, alive) {
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
+    '<a class="shoprow top" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
     '<div class="cover' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
-    '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
     '<article class="prod"><div class="phead"><div class="sq' + (safeUrl(p.image_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.image_url)) : '') + '">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
     (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +

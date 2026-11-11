@@ -399,3 +399,7 @@ body.has-bar .tabnav{display:none}
 .vx .brandm{position:absolute;left:0;right:0;bottom:16px;font:800 14px var(--f-head);opacity:.85;text-align:center}
 .vx .brandm span{color:#FF7A1A}
 .vx-ctl{display:flex;gap:8px;justify-content:center;margin-top:12px}
+
+.shoprow.top{margin:0 0 14px}
+.vid video{object-fit:contain;background:#000}
+.vid.v916{width:min(300px,100%)}

@@ -1,0 +1,19 @@
+name: cuervo-partage
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency: cuervo-partage
+jobs:
+  pages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: node cuervo/tools/partage.mjs
+      - run: |
+          git config user.name "cuervo-bot"
+          git config user.email "cuervo-bot@users.noreply.github.com"
+          git add -A cuervo/p
+          git diff --cached --quiet || (git commit -m "cuervo.co : pages de partage des produits" && git push)

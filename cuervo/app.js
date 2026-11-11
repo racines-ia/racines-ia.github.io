@@ -5,6 +5,7 @@ var SB_URL = 'https://eebqtggnmuzfrwgunpsa.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlYnF0Z2dubXV6ZnJ3Z3VucHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzI0NTQsImV4cCI6MjEwNzM0ODQ1NH0.tuCugIF_T1uVXXsWs96JwKJ1m_r-Pru477n7cP1sb1Y';
 var sb = window.supabase.createClient(SB_URL, SB_KEY);
 var OPS = { mpesa: 'M-Pesa', airtel: 'Airtel Money', orange: 'Orange Money' };
+var CATS = ['Formations', 'Fichiers et modèles', 'Applications et logiciels', 'Design et graphisme', 'Mode et beauté', 'Téléphones et électronique', 'Services', 'Autres'];
 var S = { user: null, vendor: null, settings: null, tab: 'commandes', atab: 'confirmer', ctx: {}, orders: [], products: [], subs: [] };
 var E = null;            // produit en cours d'édition
 var rid = 0, pollT = null, armed = '';
@@ -45,6 +46,8 @@ function avatar(shop, cls) {
   return '<div class="av ' + (cls || '') + '">' + (u ? '<img class="f" src="' + esc(u) + '" alt="" onload="this.classList.add(\'ld\')">' : esc((shop.boutique || '?').charAt(0).toUpperCase())) + '</div>';
 }
 function link(q) { return location.origin + location.pathname + (q || ''); }
+function plink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'p/' + id + '/'; }
+function norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function busy(btn, on, label) { if (!btn) return; btn.disabled = on; btn.classList.toggle('busy', on); if (label) btn.lastChild.textContent = label; }
 function errMsg(e) {
   var m = (e && (e.message || e.error_description)) || '';
@@ -285,11 +288,23 @@ var ILLU = {
   files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#16301F" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#3CC48A" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#9BE36A"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#071505" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 function feature(k, t, d) { return '<div class="feat"><div class="fill">' + ILLU[k] + '</div><div><h3>' + t + '</h3><p>' + d + '</p></div></div>'; }
+function homeCats() {
+  var h = S.ctx.home, used = CATS.filter(function (c) { return h.ps.some(function (p) { return p.categorie === c; }); });
+  if (!used.length) return '';
+  return '<div class="pills" style="margin-top:12px">' + [''].concat(used).map(function (c) { return '<button class="pill' + (h.cat === c ? ' on' : '') + '" type="button" data-act="cat" data-id="' + esc(c) + '">' + (c || 'Tout') + '</button>'; }).join('') + '</div>';
+}
+function homeGrid() {
+  var h = S.ctx.home, q = norm(h.q).trim();
+  var list = h.ps.filter(function (p) { return (!h.cat || p.categorie === h.cat) && (!q || norm(p.titre + ' ' + (p.boutique || '') + ' ' + (p.categorie || '')).indexOf(q) >= 0); });
+  return list.length ? '<div class="grid" style="margin-top:16px">' + list.map(card).join('') + '</div>' : '<div class="empty" style="margin-top:16px">Aucun produit ne correspond à ta recherche.</div>';
+}
+document.addEventListener('input', function (e) { if (e.target.id === 'h-q' && S.ctx.home) { S.ctx.home.q = e.target.value; $('homeGrid').innerHTML = homeGrid(); } });
 async function pageHome(alive) {
   skeleton();
   var r = await sb.rpc('mk_home'); if (!alive()) return;
   if (r.error) throw r.error;
   var d = r.data || { products: [], loyer: 10 }, ps = d.products || [];
+  S.ctx.home = { ps: ps, q: '', cat: '' };
   var top = ps.filter(function (p) { return p.ventes > 0; }).sort(function (a, b) { return b.ventes - a.ventes; }).slice(0, 4);
   page('<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
     '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp et Facebook. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
@@ -301,8 +316,9 @@ async function pageHome(alive) {
     feature('files', 'Livraison automatique', 'Tu colles ton lien de téléchargement : le client y accède dès que tu confirmes son paiement.') +
     '</div></div>' +
     (top.length ? '<div class="sec"><div class="kicker">Les plus vendus</div><h2 style="margin-bottom:16px">Produits phares</h2><div class="grid stag">' + top.map(card).join('') + '</div></div>' : '') +
-    '<div class="sec" id="produits"><div class="kicker">Nouveautés</div><h2 style="margin-bottom:16px">Derniers produits</h2>' +
-    (ps.length ? '<div class="grid stag">' + ps.map(card).join('') + '</div>' : '<div class="empty">Aucun produit en ligne pour l\'instant. Sois le premier à ouvrir ta boutique.</div>') + '</div>' + sellCta(d.loyer));
+    '<div class="sec" id="produits"><div class="kicker">Catalogue</div><h2 style="margin-bottom:12px">Tous les produits</h2>' +
+    (ps.length ? '<label class="search">' + ico('i-search') + '<input id="h-q" type="search" placeholder="Chercher un produit ou une boutique" autocomplete="off"></label><div id="homeCats">' + homeCats() + '</div><div id="homeGrid">' + homeGrid() + '</div>'
+      : '<div class="empty">Aucun produit en ligne pour l\'instant. Sois le premier à ouvrir ta boutique.</div>') + '</div>' + sellCta(d.loyer));
 }
 
 /* ---------- Produit ---------- */
@@ -352,10 +368,11 @@ async function pageProduct(id, alive) {
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
     (exs.length ? '<div class="sub">Exemples</div><div class="exs">' + exs.map(function (e) { return '<figure class="ex"><div class="sq zoom" data-zoom="' + esc(safeUrl(e.url)) + '">' + pic(e.url) + '</div>' + (e.legende ? '<figcaption>' + esc(e.legende) + '</figcaption>' : '') + '</figure>'; }).join('') + '</div>' : '') +
+    ((p.temoignages || []).length ? '<div class="sub">Ce qu\'en disent les clients</div><div class="g8">' + p.temoignages.map(function (t) { return '<div class="avis"><span class="q gt">“</span><p>' + esc(t.texte) + '</p>' + (t.nom ? '<b>' + esc(t.nom) + '</b>' : '') + '</div>'; }).join('') + '</div>' : '') +
     (canPay ? '<button class="btn btn-primary" style="margin-top:24px" type="button" data-act="pay">Payer ' + money(p.prix_actuel, p.devise) + ' ' + ico('i-arrow') + '</button>' : '<div class="banner">Le paiement n\'est pas encore disponible pour ce produit.</div>') +
     '</article>' +
     '<div class="sec g12"><h2>Une question ?</h2>' + (contactRow(s) || '<p class="lead">Le vendeur n\'a pas encore indiqué de contact.</p>') + '</div>' +
-    '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(link('?p=' + p.id), p.titre) + '</div>' +
+    '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(plink(p.id), p.titre) + '</div>' +
     (d.autres.length ? '<div class="sec"><h2 style="margin-bottom:16px">Dans la même boutique</h2><div class="grid stag">' + d.autres.map(card).join('') + '</div></div>' : '') +
     (S.vendor && S.vendor.is_admin ? '<div class="sec"><button class="btn btn-danger btn-sm" type="button" data-act="blockProduct" data-id="' + esc(p.id) + '" data-on="' + (d.bloque ? '0' : '1') + '">' + (d.bloque ? 'Débloquer ce produit' : 'Bloquer ce produit (admin)') + '</button></div>' : ''));
   setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
@@ -391,6 +408,7 @@ var A = {
   closeSheet: function () { closeSheet(); dropDraft(); },
   dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
   cancelXfer: function () { if (XHR) XHR.abort(); },
+  cat: function (el) { var h = S.ctx.home; if (!h) return; h.cat = el.dataset.id; $('homeCats').innerHTML = homeCats(); $('homeGrid').innerHTML = homeGrid(); },
   toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView(); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
@@ -452,6 +470,31 @@ var A = {
       await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); route();
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
   },
+  forgot: function () {
+    var wa = waNum((S.settings || {}).whatsapp);
+    sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Mot de passe oublié</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+      '<p class="lead">L\'administrateur de cuervo.co peut te donner un nouveau mot de passe. Écris-lui avec le numéro de ton compte.</p>' +
+      (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, j\'ai oublié le mot de passe de ma boutique cuervo.co. Mon numéro de compte : ' + ($('a-tel') ? $('a-tel').value : '')) + '">' + ico('i-chat') + '<span>Écrire à l\'administrateur</span></a>' : '<div class="banner">Contacte l\'administrateur de cuervo.co.</div>') + '</div>');
+  },
+  changePw: async function (el) {
+    var pw = $('s-pw').value;
+    if (pw.length < 6) return toast('Le mot de passe doit avoir au moins 6 caractères');
+    busy(el, true); var r = await sb.auth.updateUser({ password: pw }); busy(el, false);
+    if (r.error) return toast(errMsg(r.error));
+    $('s-pw').value = ''; toast('Mot de passe changé');
+  },
+  admReset: async function (el) {
+    if (armed !== 'pw' + el.dataset.id) { armed = 'pw' + el.dataset.id; el.textContent = 'Confirmer : nouveau mot de passe'; return; }
+    var abc = 'abcdefghjkmnpqrstuvwxyz23456789', a = new Uint32Array(8), pw = ''; crypto.getRandomValues(a);
+    for (var i = 0; i < 8; i++) pw += abc.charAt(a[i] % abc.length);
+    busy(el, true); var r = await sb.rpc('mk_admin_reset_password', { p_id: el.dataset.id, p_pw: pw }); busy(el, false); armed = '';
+    if (r.error) return toast(errMsg(r.error));
+    var wa = waNum(el.dataset.tel);
+    sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Nouveau mot de passe</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+      '<p class="lead">Mot de passe de « ' + esc(el.dataset.name) + ' ». Note-le : il ne sera plus affiché.</p><div class="paynum"><div class="n">' + pw + '</div></div>' +
+      '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + pw + '">Copier</button>' +
+      (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, voici ton nouveau mot de passe cuervo.co : ' + pw + '\nConnecte-toi avec ton numéro, puis change-le dans Ma boutique → Boutique.') + '"><span>Envoyer au vendeur sur WhatsApp</span></a>' : '') + '</div>');
+  },
   logout: async function () { await sb.auth.signOut(); S.user = null; S.vendor = null; header(); nav('./'); },
   tab: function (el) { S.tab = el.dataset.id; armed = ''; renderDash(); },
   atab: function (el) { S.atab = el.dataset.id; renderAdmin(); },
@@ -468,7 +511,7 @@ var A = {
   /* Produits du vendeur */
   newProduct: function () { openEditor(null); },
   shareProduct: function (el) {
-    var url = link('?p=' + el.dataset.id);
+    var url = plink(el.dataset.id);
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Partager le produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
       '<p class="lead">Ce lien ouvre directement « ' + esc(el.dataset.title) + ' ». Depuis le produit, le client peut aussi visiter ta boutique.</p>' +
       '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title) + '</div>');
@@ -485,6 +528,8 @@ var A = {
     var r = await sb.from('mk_products').delete().eq('id', E.id); if (r.error) return toast(errMsg(r.error));
     closeSheet(); toast('Produit supprimé'); await loadDash(); renderDash();
   },
+  edAddTem: function () { var t = $('e-ttexte').value.trim(), n = $('e-tnom').value.trim(); if (t.length < 3) return toast('Écris le témoignage du client'); edRead(); E.p.temoignages.push({ nom: n, texte: t }); edRender(); toast('Témoignage ajouté : pense à enregistrer'); },
+  edRmTem: function (el) { edRead(); E.p.temoignages.splice(Number(el.dataset.i), 1); edRender(); },
   edRmEx: function (el) { edRead(); E.p.exemples.splice(Number(el.dataset.i), 1); edRender(); },
   edVidFmt: function (el) { edRead(); var v = E.p.videos[Number(el.dataset.i)]; if (v) { v.format = v.format === '9:16' ? '16:9' : '9:16'; edRender(); } },
   edRmVid: function (el) { edRead(); E.p.videos.splice(Number(el.dataset.i), 1); edRender(); },
@@ -603,7 +648,8 @@ async function pageOrder(token, alive) {
       body = '<div><h1 style="font-size:24px">Termine ton paiement</h1><p class="lead" style="margin-top:8px">Paie, puis envoie ta capture.</p></div>' + payInfo(o);
     } else {
       body = '<div class="wait"></div><div class="center"><h1 style="font-size:24px">Capture bien reçue</h1><p class="lead" style="margin-top:8px">Le vendeur vérifie ton paiement. Cette page se met à jour toute seule : tes fichiers apparaîtront ici.</p></div>' +
-        '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>';
+        '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>' +
+        (waNum(s.whatsapp || s.tel) ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + waNum(s.whatsapp || s.tel) + '?text=' + encodeURIComponent('Bonjour, je viens de payer « ' + o.titre + ' » (' + money(o.montant, o.devise) + ' par ' + (OPS[o.op] || 'Mobile Money') + ') sur cuervo.co et j\'ai envoyé ma capture. Mon nom : ' + (o.nom || '') + '. Merci de confirmer mon paiement.') + '">' + ico('i-chat') + '<span>Prévenir le vendeur sur WhatsApp</span></a><p class="note center">Le vendeur confirme plus vite quand tu le préviens.</p>' : '');
     }
     page('<div class="prod g16" style="margin-top:8px">' + body + '</div>' +
       '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique</small></div>' + ico('i-arrow') + '</a>' +
@@ -647,7 +693,7 @@ function renderAuth() {
     (need || !reg ? '<label>Numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 0812 345 678"></label><label>Mot de passe<input id="a-pw" type="password" autocomplete="' + (reg ? 'new-password' : 'current-password') + '" placeholder="6 caractères minimum"></label>' : '<input id="a-tel" type="hidden" value="">') +
     '<div class="msg-err hide" id="a-err"></div>' +
     '<button class="btn btn-primary" type="button" data-act="' + (reg ? 'register' : 'login') + '"><span>' + (reg ? 'Créer ma boutique' : 'Me connecter') + '</span></button>' +
-    (reg ? '<p class="note center">Ton numéro sert d\'identifiant. Note bien ton mot de passe.</p>' : '') + '</div>');
+    (reg ? '<p class="note center">Ton numéro sert d\'identifiant. Note bien ton mot de passe.</p>' : '<button class="linkbtn" type="button" data-act="forgot">Mot de passe oublié ?</button>') + '</div>');
   setBar(null);
 }
 function shopStatus(v) {
@@ -660,11 +706,13 @@ function shopStatus(v) {
   var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
   if (!v.is_admin && !ok) todo.push('paie ton loyer de ' + loyer + ' (onglet Loyer)');
   if (todo.length) return ['', 'Boutique pas encore en ligne', 'Il reste à faire : ' + todo.join(' ; ') + '.'];
+  var left = v.is_admin ? 99 : Math.ceil((new Date(v.abo_fin + 'T23:59:59') - new Date()) / 864e5);
+  if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Paie ' + loyer + ' dans l\'onglet Loyer pour qu\'elle reste visible.'];
   return ['ok', 'Boutique en ligne', v.is_admin ? 'Compte administrateur : pas de loyer.' : 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) + '.'];
 }
 async function pageAccount(alive) {
   skeleton(); await loadMe(); if (!alive()) return; header();
-  if (!S.user || !S.vendor) { if (!S.settings) { var h = await sb.rpc('mk_home'); S.settings = { loyer: (h.data || {}).loyer || 10 }; if (!alive()) return; } if (S.user && !S.vendor) S.ctx.auth = 'register'; return renderAuth(); }
+  if (!S.user || !S.vendor) { if (!S.settings) { var h = await sb.rpc('mk_home'); S.settings = { loyer: (h.data || {}).loyer || 10, whatsapp: (h.data || {}).whatsapp || '' }; if (!alive()) return; } if (S.user && !S.vendor) S.ctx.auth = 'register'; return renderAuth(); }
   await loadDash(); if (!alive()) return;
   var dr = takeDraft();
   if (dr) {
@@ -697,10 +745,11 @@ function dashOrders() {
   var h = '<div class="stats" style="margin:0 0 16px"><div class="stat"><b class="gt">' + done.length + '</b><span>ventes réussies</span></div><div class="stat"><b>' + money(usd, 'USD') + '</b><span>' + (cdf ? '+ ' + money(cdf, 'CDF') : 'encaissés') + '</span></div><div class="stat"><b>' + S.orders.filter(function (o) { return o.statut === 'attente'; }).length + '</b><span>à vérifier</span></div></div>';
   if (!S.orders.length) return h + '<div class="empty">Aucune commande pour l\'instant. Partage le lien de tes produits pour recevoir tes premiers clients.</div>';
   var st = { attente: ['a', 'À vérifier'], paye: ['g', 'Vente réussie'], refuse: ['r', 'Refusée'] };
-  return h + '<div class="g12 stag">' + S.orders.map(function (o) {
+  var rank = function (o) { return o.statut === 'attente' ? (o.capture_path ? 0 : 1) : 2; };
+  return h + '<div class="g12 stag">' + S.orders.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (o) {
     var s = st[o.statut] || st.attente, acts = '';
     if (o.capture_path) acts += '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>';
-    else if (o.statut === 'attente') acts += '<p class="note">Le client n\'a pas encore envoyé sa capture.</p>';
+    else if (o.statut === 'attente') acts += '<p class="note">Le client n\'a pas encore envoyé sa capture. Sans capture, la commande s\'efface toute seule après 48 heures.</p>';
     if (o.statut !== 'paye') acts += '<button class="btn btn-primary btn-sm" type="button" data-act="orderOk" data-id="' + o.id + '"><span>Argent reçu</span></button>';
     if (o.statut === 'attente') acts += '<button class="btn btn-ghost btn-sm" type="button" data-act="orderNo" data-id="' + o.id + '">Refuser</button>';
     if (o.statut === 'paye') acts += '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + waNum(o.tel) + '?text=' + encodeURIComponent('Bonjour ' + o.nom.split(' ')[0] + ', ton paiement est confirmé. Voici l\'accès à « ' + o.titre + ' » : ' + link('?c=' + o.token)) + '">Envoyer l\'accès sur WhatsApp</a>';
@@ -731,7 +780,8 @@ function dashShop() {
     '<div class="box"><h3>Mon identité</h3><label>Prénom<input id="s-prenom" value="' + esc(v.prenom) + '"></label><div class="two"><label>Nom<input id="s-nom" value="' + esc(v.nom) + '"></label><label>Postnom<input id="s-postnom" value="' + esc(v.postnom) + '"></label></div></div>' +
     '<div class="box"><div class="rowx" style="justify-content:space-between"><h3>Mes Mobile Money</h3><span class="tag ' + mm[0] + '">' + mm[1] + '</span></div><p class="note">Tes clients paient sur ces numéros. L\'administrateur les confirme avant la mise en ligne, et après chaque modification.</p>' +
     '<label>Nom du compte<input id="s-mmnom" value="' + esc(v.mm_nom) + '"></label><label>Numéro M-Pesa<input id="s-mpesa" type="tel" value="' + esc(v.mpesa) + '"></label><label>Numéro Airtel Money<input id="s-airtel" type="tel" value="' + esc(v.airtel) + '"></label><label>Numéro Orange Money<input id="s-orange" type="tel" value="' + esc(v.orange) + '"></label></div>' +
-    '<button class="btn btn-primary" type="button" data-act="saveShop"><span>Enregistrer</span></button></div>';
+    '<button class="btn btn-primary" type="button" data-act="saveShop"><span>Enregistrer</span></button>' +
+    '<div class="box"><h3>Mon mot de passe</h3><label>Nouveau mot de passe<input id="s-pw" type="password" autocomplete="new-password" placeholder="6 caractères minimum"></label><button class="btn btn-ghost btn-sm" type="button" data-act="changePw"><span>Changer mon mot de passe</span></button></div></div>';
 }
 function dashRent() {
   var v = S.vendor, g = S.settings || {}, pend = S.subs.filter(function (s) { return s.statut === 'attente'; })[0];
@@ -755,7 +805,7 @@ function localDT(v) { if (!v) return ''; var d = new Date(v); if (isNaN(d)) retu
 async function edLoadFiles() { if (!E || !E.id) return; var r = await sb.from('mk_product_files').select('*').eq('product_id', E.id).order('created_at'); E.files = r.data || []; }
 async function openEditor(p) {
   armed = '';
-  E = { id: p ? p.id : null, files: [], p: p ? JSON.parse(JSON.stringify(p)) : { titre: '', description: '', points: [], prix: '', devise: 'USD', promo_prix: null, promo_fin: null, promo_places: null, image_url: '', cover_url: '', exemples: [], videos: [], actif: true } };
+  E = { id: p ? p.id : null, files: [], p: p ? JSON.parse(JSON.stringify(p)) : { titre: '', description: '', points: [], prix: '', devise: 'USD', promo_prix: null, promo_fin: null, promo_places: null, image_url: '', cover_url: '', exemples: [], videos: [], actif: true, categorie: '', temoignages: [] } };
   edRender(); if (E.id) { await edLoadFiles(); if (E) edRender(); }
 }
 function edRead() {
@@ -764,6 +814,7 @@ function edRead() {
   p.titre = $('e-titre').value.trim(); p.description = $('e-desc').value.trim();
   p.points = $('e-points').value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean).slice(0, 12);
   p.prix = num('e-prix'); p.devise = $('e-devise').value; p.promo_prix = num('e-pprix'); p.promo_places = num('e-places');
+  p.categorie = $('e-cat').value; if (!Array.isArray(p.temoignages)) p.temoignages = [];
   p.promo_fin = $('e-fin').value ? new Date($('e-fin').value).toISOString() : null; p.actif = $('e-actif').checked;
   document.querySelectorAll('[data-exleg]').forEach(function (i) { var e = p.exemples[Number(i.dataset.exleg)]; if (e) e.legende = i.value.trim(); });
 }
@@ -777,11 +828,12 @@ function aiBlock() {
   }).join('') + '<button class="btn btn-ghost btn-sm" type="button" data-act="edCloseAI">Fermer les propositions</button></div>';
 }
 function edRender() {
-  var p = E.p, url = E.id ? link('?p=' + E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
+  var p = E.p, url = E.id ? plink(E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
   sheet('<div class="shead"><h2>' + (E.id ? 'Modifier le produit' : 'Nouveau produit') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div><div class="g12">' +
     (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre) + '</div>' : '') +
     '<div class="box"><h3>Le produit</h3><label>Titre<input id="e-titre" maxlength="120" value="' + esc(p.titre) + '"></label>' +
     '<div class="two"><label>Prix<input id="e-prix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.prix == null ? '' : p.prix) + '"></label><label>Devise<select id="e-devise"><option value="USD"' + (p.devise === 'USD' ? ' selected' : '') + '>Dollars ($)</option><option value="CDF"' + (p.devise === 'CDF' ? ' selected' : '') + '>Francs (FC)</option></select></label></div>' +
+    '<label>Catégorie<select id="e-cat"><option value="">Choisir…</option>' + CATS.map(function (c) { return '<option' + (p.categorie === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></label>' +
     '<label>Description<textarea id="e-desc" maxlength="6000" placeholder="Écris quelques mots : l\'assistant peut les arranger pour toi.">' + esc(p.description) + '</textarea></label>' +
     '<label>Points forts (une ligne par point)<textarea id="e-points">' + esc((p.points || []).join('\n')) + '</textarea></label>' +
     '<button class="btn btn-ghost btn-sm" type="button" data-act="edAI"' + (E.ai === 'loading' ? ' disabled' : '') + '>' + ico('i-spark') + '<span>' + (E.ai === 'loading' ? 'L\'IA réfléchit…' : 'Proposer 3 versions avec l\'IA') + '</span></button>' +
@@ -797,6 +849,9 @@ function edRender() {
     p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="fmt" type="button" data-act="edVidFmt" data-i="' + i + '" title="Changer le format">' + (v.format === '9:16' ? '9:16' : '16:9') + '</button><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
     (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +
       '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><label>Format de la vidéo<select id="e-vfmt"><option value="16:9">Horizontale (16:9)</option><option value="9:16">Verticale (9:16)</option></select></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
+    '<div class="box"><h3>Témoignages de clients</h3><p class="note">Recopie les vrais retours de tes clients, avec leur accord. 6 maximum.</p>' +
+    (p.temoignages || []).map(function (t, i) { return '<div class="item"><span class="grow"><b>' + esc(t.nom || 'Client') + '</b> — ' + esc(t.texte) + '</span><button class="xs" type="button" data-act="edRmTem" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
+    ((p.temoignages || []).length < 6 ? '<label>Nom du client<input id="e-tnom" maxlength="60" placeholder="Ex. Grâce M."></label><label>Son témoignage<textarea id="e-ttexte" maxlength="400"></textarea></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddTem">Ajouter ce témoignage</button>' : '') + '</div>' +
     '<div class="box"><h3>Liens de téléchargement</h3><p class="note">Mets ton fichier sur Google Drive (ou un autre service), partage-le en « Tous les utilisateurs disposant du lien », puis colle le lien ici. Le client y accède dès que tu confirmes son paiement.</p>' +
     E.files.map(function (f) { return '<div class="item">' + ico('i-file') + '<span class="grow">' + esc(f.nom) + '</span><button class="xs" type="button" data-act="edRmFile" data-id="' + f.id + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
     '<label>Lien de téléchargement<input id="e-furl" type="url" inputmode="url" placeholder="https://drive.google.com/…"></label><label>Nom affiché au client<input id="e-fnom" placeholder="Ex. Cours complet (PDF)"></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddLink"><span>Ajouter ce lien</span></button></div>' +
@@ -809,7 +864,7 @@ async function edSave() {
   if (p.titre.length < 2) throw new Error('Donne un titre à ton produit.');
   if (!(p.prix > 0)) throw new Error('Indique le prix du produit.');
   if (p.promo_prix != null && !(p.promo_prix > 0 && p.promo_prix < p.prix)) throw new Error('Le prix promo doit être inférieur au prix normal.');
-  var row = { titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif };
+  var row = { titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif, categorie: p.categorie || '', temoignages: p.temoignages || [] };
   var r;
   if (E.id) r = await sb.from('mk_products').update(row).eq('id', E.id).select().single();
   else { row.vendor_id = S.user.id; r = await sb.from('mk_products').insert(row).select().single(); }
@@ -880,7 +935,8 @@ function renderAdmin() {
   else if (S.atab === 'vendeurs') body = '<div class="g12 stag">' + a.vendors.map(function (v) {
     var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
     return '<div class="ord"><div class="top"><div>' + who(v) + '<small>' + (v.is_admin ? 'Administrateur' : ok ? 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) : 'Loyer non payé') + ' · Mobile Money : ' + v.mm_statut + '</small></div>' + (v.suspendu ? '<span class="tag r">Suspendu</span>' : '') + '</div>' +
-      '<div class="two"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir</a>' + (v.is_admin ? '<span></span>' : '<button class="btn ' + (v.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (v.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + v.id + '">' + (v.suspendu ? 'Réactiver' : 'Suspendre') + '</button>') + '</div></div>';
+      '<div class="two"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir</a>' + (v.is_admin ? '<span></span>' : '<button class="btn ' + (v.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (v.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + v.id + '">' + (v.suspendu ? 'Réactiver' : 'Suspendre') + '</button>') + '</div>' +
+      (v.is_admin ? '' : '<button class="btn btn-ghost btn-sm" type="button" data-act="admReset" data-id="' + v.id + '" data-tel="' + esc(v.tel) + '" data-name="' + esc(v.boutique) + '">Donner un nouveau mot de passe</button>') + '</div>';
   }).join('') + '</div>';
   else { var g = S.settings || {}; body = '<div class="box"><h3>Loyer et paiement des vendeurs</h3><label>Loyer mensuel ($)<input id="g-loyer" type="number" inputmode="decimal" min="0" step="any" value="' + esc(g.loyer) + '"></label><p class="note">Les vendeurs paient leur loyer sur ces numéros.</p>' +
     '<label>Nom du compte<input id="g-nom" value="' + esc(g.mm_nom) + '"></label><label>Numéro M-Pesa<input id="g-mpesa" type="tel" value="' + esc(g.mpesa) + '"></label><label>Numéro Airtel Money<input id="g-airtel" type="tel" value="' + esc(g.airtel) + '"></label><label>Numéro Orange Money<input id="g-orange" type="tel" value="' + esc(g.orange) + '"></label>' +

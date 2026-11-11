@@ -289,3 +289,11 @@ a,button,label,.pill,.card,.btn{touch-action:manipulation}
 .btn,.pill,.card,.hbtn,.shoprow{transition-duration:90ms!important}
 .hbtn.logo{padding:0;border:0;background:none;min-height:0}
 .hbtn.logo .av{width:44px;height:44px;border:2px solid var(--line)}
+
+.search{display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r-pill);padding:0 16px;color:var(--muted)}
+.search input{border:0;background:none;min-height:48px;padding:0;flex:1}
+.avis{background:var(--bg);border:1px solid var(--line);border-radius:var(--r-in);padding:14px}
+.avis p{font-size:14px;line-height:1.5;white-space:pre-line}.avis b{display:block;margin-top:8px;font-size:13px;color:var(--muted)}
+.avis .q{font:800 28px/0.6 var(--f-head);display:block;margin-bottom:6px}
+.linkbtn{background:none;border:0;color:var(--green);font:600 14px var(--f-body);text-decoration:underline;cursor:pointer;min-height:44px;justify-self:center}
+.item .grow{white-space:normal;overflow-wrap:anywhere}

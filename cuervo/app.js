@@ -83,12 +83,12 @@ function countUp() {
   document.querySelectorAll('[data-count]').forEach(function (el) {
     var to = Number(el.dataset.count) || 0, t0 = null; el.removeAttribute('data-count');
     if (to < 2 || window.matchMedia('(prefers-reduced-motion:reduce)').matches) { el.textContent = to; return; }
-    function f(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 700); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }
+    function f(t) { if (!t0) t0 = t; var k = Math.min(1, (t - t0) / 300); el.textContent = Math.round(to * (1 - Math.pow(1 - k, 3))); if (k < 1) requestAnimationFrame(f); }
     requestAnimationFrame(f);
   });
 }
 function header() {
-  $('hAccount').innerHTML = ico('i-store') + (S.vendor ? 'Ma boutique' : 'Vendre');
+  var hb = $('hAccount'); hb.classList.toggle('logo', !!S.vendor); hb.setAttribute('aria-label', S.vendor ? 'Ma boutique' : 'Vendre'); hb.innerHTML = S.vendor ? avatar(S.vendor) : ico('i-store') + 'Vendre';
   var has = tokens().length > 0; $('hOrders').classList.toggle('hide', !has); $('hOrders').innerHTML = ico('i-bag');
 }
 
@@ -298,7 +298,7 @@ async function pageHome(alive) {
     feature('shop', 'Ta boutique en quelques minutes', 'Ton nom, ta photo, tes numéros Mobile Money : ta boutique est prête.') +
     feature('share', 'Un lien par produit', 'Partage-le sur WhatsApp ou Facebook : le client arrive directement sur ton produit.') +
     feature('pay', 'Paiement par Mobile Money', 'M-Pesa, Airtel Money ou Orange Money. Le client envoie sa capture, tu confirmes.') +
-    feature('files', 'Livraison automatique', 'PDF, fichiers ou liens : le client y accède dès que tu confirmes son paiement.') +
+    feature('files', 'Livraison automatique', 'Tu colles ton lien de téléchargement : le client y accède dès que tu confirmes son paiement.') +
     '</div></div>' +
     (top.length ? '<div class="sec"><div class="kicker">Les plus vendus</div><h2 style="margin-bottom:16px">Produits phares</h2><div class="grid stag">' + top.map(card).join('') + '</div></div>' : '') +
     '<div class="sec" id="produits"><div class="kicker">Nouveautés</div><h2 style="margin-bottom:16px">Derniers produits</h2>' +
@@ -391,7 +391,7 @@ var A = {
   closeSheet: function () { closeSheet(); dropDraft(); },
   dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
   cancelXfer: function () { if (XHR) XHR.abort(); },
-  toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView({ behavior: 'smooth' }); },
+  toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView(); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
     var p = S.ctx.product, s = S.ctx.shop; if (!p) return;
@@ -498,7 +498,7 @@ var A = {
     var u = safeUrl($('e-furl').value), n = $('e-fnom').value.trim();
     if (!u) return toast('Colle un lien complet qui commence par https://');
     busy(el, true);
-    try { if (!E.id) await edSave(); var r = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: n || 'Lien de téléchargement', url: u, kind: 'lien' }); if (r.error) throw r.error; await edLoadFiles(); edRender(); toast('Lien ajouté'); }
+    try { if (!E.id) await edSave(); var r = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: n || 'Lien de téléchargement', url: u, kind: 'lien' }); if (r.error) throw r.error; edRead(); await edLoadFiles(); edRender(); toast('Lien ajouté'); }
     catch (e) { toast(errMsg(e)); }
     busy(el, false);
   },
@@ -797,11 +797,9 @@ function edRender() {
     p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="fmt" type="button" data-act="edVidFmt" data-i="' + i + '" title="Changer le format">' + (v.format === '9:16' ? '9:16' : '16:9') + '</button><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
     (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +
       '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><label>Format de la vidéo<select id="e-vfmt"><option value="16:9">Horizontale (16:9)</option><option value="9:16">Verticale (9:16)</option></select></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
-    '<div class="box"><h3>Fichiers remis au client</h3><p class="note">PDF, archives, ou liens de téléchargement. Le client y accède dès que tu confirmes son paiement.</p>' +
+    '<div class="box"><h3>Liens de téléchargement</h3><p class="note">Mets ton fichier sur Google Drive (ou un autre service), partage-le en « Tous les utilisateurs disposant du lien », puis colle le lien ici. Le client y accède dès que tu confirmes son paiement.</p>' +
     E.files.map(function (f) { return '<div class="item">' + ico('i-file') + '<span class="grow">' + esc(f.nom) + '</span><button class="xs" type="button" data-act="edRmFile" data-id="' + f.id + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
-    '<label class="btn btn-ghost btn-sm filebtn"><span>Envoyer un fichier (50 Mo max)</span><input type="file" data-up="pfile" accept=".pdf,.zip,.rar,.7z,.apk,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv,.epub,.psd,.ai,.svg,.png,.jpg,.jpeg,.mp3,.mp4,.mov,.webm,.m4a,.wav,application/pdf,application/zip,application/octet-stream"></label>' +
-    '<p class="note">Si la page se recharge pendant le choix du fichier, c\'est que le téléphone manque de mémoire : mets le fichier sur Google Drive (partage « Tous les utilisateurs disposant du lien ») et colle le lien ci-dessous.</p>' +
-    '<label>Ou un lien de téléchargement<input id="e-furl" type="url" inputmode="url" placeholder="https://…"></label><label>Nom affiché au client<input id="e-fnom" placeholder="Ex. Cours complet (PDF)"></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddLink"><span>Ajouter ce lien</span></button></div>' +
+    '<label>Lien de téléchargement<input id="e-furl" type="url" inputmode="url" placeholder="https://drive.google.com/…"></label><label>Nom affiché au client<input id="e-fnom" placeholder="Ex. Cours complet (PDF)"></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddLink"><span>Ajouter ce lien</span></button></div>' +
     '<button class="btn btn-primary" type="button" data-act="edSave"><span>Enregistrer le produit</span></button>' +
     (E.id ? '<button class="btn btn-danger btn-sm" type="button" data-act="edDelete">Supprimer ce produit</button>' : '') + '</div>');
   if (was) $('sheetRoot').querySelector('.sheet').scrollTop = keep;

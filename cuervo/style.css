@@ -403,3 +403,52 @@ body.has-bar .tabnav{display:none}
 .shoprow.top{margin:0 0 14px}
 .vid video{object-fit:contain;background:#000}
 .vid.v916{width:min(300px,100%)}
+
+/* ===== Mouvement v2 : fluide, ressort, cascade ===== */
+:root{--out:cubic-bezier(.16,1,.3,1);--spring:cubic-bezier(.34,1.56,.64,1);--soft:cubic-bezier(.32,.72,0,1)}
+.page{animation:page2 420ms var(--out) both}
+@keyframes page2{from{opacity:0;transform:translate3d(0,22px,0) scale(.985)}to{opacity:1;transform:none}}
+.stag>*{animation:rise2 520ms var(--out) both}
+.stag>*:nth-child(1){animation-delay:40ms}.stag>*:nth-child(2){animation-delay:95ms}.stag>*:nth-child(3){animation-delay:150ms}.stag>*:nth-child(4){animation-delay:205ms}.stag>*:nth-child(5){animation-delay:260ms}.stag>*:nth-child(6){animation-delay:315ms}.stag>*:nth-child(n+7){animation-delay:370ms}
+@keyframes rise2{from{opacity:0;transform:translate3d(0,26px,0) scale(.96)}to{opacity:1;transform:none}}
+.page>*:nth-child(1){animation:rise2 480ms var(--out) 30ms both}.page>*:nth-child(2){animation:rise2 480ms var(--out) 80ms both}.page>*:nth-child(3){animation:rise2 480ms var(--out) 130ms both}.page>*:nth-child(4){animation:rise2 480ms var(--out) 180ms both}
+/* apparition au défilement */
+.rv{opacity:0;transform:translate3d(0,34px,0) scale(.97);transition:opacity 560ms var(--out),transform 680ms var(--out);animation:none!important}
+.rv.in{opacity:1;transform:none}
+.grid>.card.rv:nth-child(even){transition-delay:70ms}
+/* toucher : enfoncement immédiat, rebond au relâchement */
+.btn,.card,.pill,.hbtn,.shoprow,.rep-opt,.promo-hero,.tabnav a,.tabnav button,.x{transition:transform 460ms var(--spring),opacity 200ms,background-color 200ms,border-color 200ms;will-change:transform;-webkit-tap-highlight-color:transparent}
+.btn:active,.pill:active,.hbtn:active,.x:active,.tabnav a:active,.tabnav button:active{transform:scale(.94);transition:transform 90ms var(--out)}
+.card:active,.shoprow:active,.promo-hero:active,.rep-opt:active{transform:scale(.965);transition:transform 90ms var(--out)}
+.card .sq img.f{transition:opacity 260ms var(--out),transform 900ms var(--out)}
+.card:active .sq img.f{transform:scale(1.06)}
+img.f{transform:scale(1.035);transition:opacity 380ms var(--out),transform 900ms var(--out)}
+img.f.ld{transform:none}
+/* feuille du bas : glisse en ressort, se tire vers le bas pour fermer */
+.sheet{transition:transform 480ms var(--soft),visibility 0s 480ms}
+.open>.sheet{transition:transform 520ms var(--soft)}
+.sheet::before{content:"";display:block;width:44px;height:5px;border-radius:9px;background:var(--line);margin:-8px auto 14px}
+.sheet-bg{transition:opacity 380ms var(--out);backdrop-filter:blur(3px)}
+.open>.sheet #sheetBody>*{animation:rise2 460ms var(--out) 90ms both}
+.toast{transition:opacity 260ms var(--out),transform 520ms var(--spring)}
+.toast.on{transform:translate(-50%,0)}
+/* transitions entre écrans (navigateurs compatibles) */
+::view-transition-old(root){animation:vtout 220ms var(--out) both}
+::view-transition-new(root){animation:vtin 420ms var(--out) both}
+@keyframes vtout{to{opacity:0;transform:scale(.98)}}
+@keyframes vtin{from{opacity:0;transform:translateY(18px)}}
+html{scroll-behavior:smooth}
+
+/* ===== Signalement ===== */
+.rep-btn{color:var(--muted);margin:0 auto;display:flex;width:auto}
+.rep-btn .i{width:18px;height:18px}
+.rep-list{display:grid;gap:8px}
+.rep-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:12px 14px;border-radius:16px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:inherit;cursor:pointer}
+.rep-opt b{display:block;font-size:15px}.rep-opt small{display:block;color:var(--muted);font-size:13px;line-height:1.35}
+.rep-dot{flex:none;width:22px;height:22px;border-radius:50%;border:2px solid var(--line);position:relative;transition:border-color 200ms}
+.rep-dot::after{content:"";position:absolute;inset:4px;border-radius:50%;background:var(--err);transform:scale(0);transition:transform 380ms var(--spring)}
+.rep-opt.on{border-color:var(--err);background:rgba(255,107,90,.08)}
+.rep-opt.on .rep-dot{border-color:var(--err)}.rep-opt.on .rep-dot::after{transform:scale(1)}
+.btn:disabled{opacity:.45}
+.ord.done{opacity:.6}
+@media (prefers-reduced-motion:reduce){.rv{opacity:1;transform:none}img.f{transform:none}::view-transition-old(root),::view-transition-new(root){animation:none}}

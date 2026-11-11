@@ -5,8 +5,9 @@ var SB_URL = 'https://eebqtggnmuzfrwgunpsa.supabase.co';
 var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVlYnF0Z2dubXV6ZnJ3Z3VucHNhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE3NzI0NTQsImV4cCI6MjEwNzM0ODQ1NH0.tuCugIF_T1uVXXsWs96JwKJ1m_r-Pru477n7cP1sb1Y';
 var sb = window.supabase.createClient(SB_URL, SB_KEY);
 var OPS = { mpesa: 'M-Pesa', airtel: 'Airtel Money', orange: 'Orange Money' };
+var REPORTS = [['Arnaque', 'Le vendeur a pris mon argent sans rien donner'], ['Je n\'ai pas reçu mon produit', 'J\'ai payé mais le lien ou le fichier n\'est jamais arrivé'], ['Le produit ne marche pas', 'Lien cassé, fichier vide ou application qui ne s\'ouvre pas'], ['Différent de la description', 'Ce que j\'ai reçu ne correspond pas à l\'annonce'], ['Produit copié ou volé', 'Le vendeur revend le travail de quelqu\'un d\'autre'], ['Contenu interdit ou choquant', 'Contenu illégal, violent ou pour adultes'], ['Le vendeur ne répond pas', 'Aucune réponse sur WhatsApp ni au téléphone'], ['Autre problème', 'Explique-le en quelques mots ci-dessous']];
 var CATS = ['Formations', 'Fichiers et modèles', 'Applications et logiciels', 'Design et graphisme', 'Mode et beauté', 'Téléphones et électronique', 'Services', 'Autres'];
-var S = { user: null, vendor: null, settings: null, tab: 'commandes', atab: 'ventes', ctx: {}, orders: [], products: [], subs: [] };
+var S = { user: null, vendor: null, settings: null, tab: 'commandes', atab: 'signal', ctx: {}, orders: [], products: [], subs: [] };
 var E = null;            // produit en cours d'édition
 var rid = 0, pollT = null, armed = '';
 var $ = function (id) { return document.getElementById(id); };
@@ -73,11 +74,31 @@ function errMsg(e) {
 function setBar(html) { $('bar').classList.toggle('hide', !html); document.body.classList.toggle('has-bar', !!html); $('barIn').innerHTML = html || ''; }
 function sheet(html) { $('sheetBody').innerHTML = html; $('sheetRoot').classList.add('open'); $('sheetRoot').querySelector('.sheet').scrollTop = 0; }
 function closeSheet() { $('sheetRoot').classList.remove('open'); E = null; }
+(function () {
+  var sh = document.querySelector('#sheetRoot .sheet'), y0 = 0, dy = 0, drag = false, t0 = 0;
+  if (!sh) return;
+  sh.addEventListener('touchstart', function (e) { if (sh.scrollTop > 0) return; drag = true; y0 = e.touches[0].clientY; dy = 0; t0 = Date.now(); sh.style.transition = 'none'; }, { passive: true });
+  sh.addEventListener('touchmove', function (e) { if (!drag) return; dy = Math.max(0, e.touches[0].clientY - y0); if (dy > 0 && sh.scrollTop <= 0) sh.style.transform = 'translateY(' + (dy < 0 ? 0 : dy) + 'px)'; else if (dy <= 0) drag = false; }, { passive: true });
+  sh.addEventListener('touchend', function () { if (!drag) return; drag = false; sh.style.transition = ''; var v = dy / Math.max(1, Date.now() - t0); sh.style.transform = ''; if (dy > 120 || v > 0.6) closeSheet(); });
+})();
 function keepDraft() { try { if (E) { edRead(); localStorage.setItem('cv_draft', JSON.stringify({ t: Date.now(), id: E.id, p: E.p })); window.addEventListener('focus', function () { setTimeout(dropDraft, 2500); }, { once: true }); } } catch (e) {} }
 function dropDraft() { try { localStorage.removeItem('cv_draft'); } catch (e) {} }
 function takeDraft() { try { var d = JSON.parse(localStorage.getItem('cv_draft') || 'null'); dropDraft(); return d && Date.now() - d.t < 20 * 60 * 1000 ? d : null; } catch (e) { return null; } }
 document.addEventListener('click', function (e) { if (e.target.closest && e.target.closest('input[type=file]') && E) keepDraft(); }, true);
-function page(html) { app.innerHTML = '<div class="page">' + html + '</div>'; window.scrollTo(0, 0); tick(); countUp(); }
+var RM = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches, revObs = null;
+function reveal() {
+  if (RM || !('IntersectionObserver' in window)) return;
+  if (!revObs) revObs = new IntersectionObserver(function (es) { es.forEach(function (e) { if (e.isIntersecting) { e.target.classList.add('in'); revObs.unobserve(e.target); } }); }, { rootMargin: '0px 0px -8% 0px', threshold: 0.06 });
+  var vh = innerHeight;
+  app.querySelectorAll('.sec, .grid > .card, .ord, .box, .avis, .ex, .rv').forEach(function (el) {
+    if (el.getBoundingClientRect().top > vh * 0.92) { el.classList.add('rv'); revObs.observe(el); }
+  });
+}
+function page(html) {
+  var go = function () { app.innerHTML = '<div class="page">' + html + '</div>'; window.scrollTo(0, 0); tick(); countUp(); reveal(); };
+  if (!RM && document.startViewTransition && !page.busy && app.querySelector('.page:not(.g16)')) { page.busy = true; var t = document.startViewTransition(go); t.finished.then(function () { page.busy = false; }, function () { page.busy = false; }); }
+  else go();
+}
 function skeleton() { setBar(null); app.innerHTML = '<div class="page g16"><div class="sk" style="aspect-ratio:16/9"></div><div class="sk" style="height:28px;width:70%"></div><div class="sk" style="height:16px;width:90%"></div><div class="grid"><div class="sk" style="aspect-ratio:3/4"></div><div class="sk" style="aspect-ratio:3/4"></div></div></div>'; }
 function notFound(msg) { setBar(null); page('<div class="empty" style="margin-top:40px"><h2 style="margin-bottom:8px">Introuvable</h2><p>' + esc(msg) + '</p><a class="btn btn-ghost btn-sm" style="margin-top:16px" href="./" data-nav>Retour à l\'accueil</a></div>'); }
 function tokens() { try { var a = JSON.parse(localStorage.getItem('cv_orders') || '[]'); return Array.isArray(a) ? a : []; } catch (e) { return []; } }
@@ -501,6 +522,7 @@ async function pageProduct(id, alive) {
     '</article>' +
     '<div class="sec g12"><h2>Une question ?</h2>' + (contactRow(s) || '<p class="lead">Le vendeur n\'a pas encore indiqué de contact.</p>') + '</div>' +
     '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(plink(p.id), p.titre) + '</div>' +
+    (mine ? '' : '<div class="sec"><button class="btn btn-ghost btn-sm rep-btn" type="button" data-act="report" data-id="' + esc(p.id) + '">' + ico('i-flag') + '<span>Signaler ce produit</span></button></div>') +
     (d.autres.length ? '<div class="sec"><h2 style="margin-bottom:16px">Dans la même boutique</h2><div class="grid stag">' + d.autres.map(card).join('') + '</div></div>' : '') +
     (S.vendor && S.vendor.is_admin ? '<div class="sec"><button class="btn btn-danger btn-sm" type="button" data-act="blockProduct" data-id="' + esc(p.id) + '" data-on="' + (d.bloque ? '0' : '1') + '">' + (d.bloque ? 'Débloquer ce produit' : 'Bloquer ce produit (admin)') + '</button></div>' : ''));
   setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
@@ -739,6 +761,34 @@ var A = {
     toast('C\'est fait'); await loadAdmin(); renderAdmin();
   },
   vf: function (el) { S.vf = el.dataset.id; renderAdmin(); },
+  report: function (el) {
+    S.rep = { id: el.dataset.id, motif: '' };
+    sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Signaler ce produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+      '<p class="note">Choisis ce qui s\'est passé. L\'administrateur de cuervo.co reçoit ton signalement et peut bloquer la boutique.</p>' +
+      '<div class="rep-list stag">' + REPORTS.map(function (m, i) { return '<button class="rep-opt" type="button" data-act="repPick" data-i="' + i + '"><span class="rep-dot"></span><span class="grow"><b>' + esc(m[0]) + '</b><small>' + esc(m[1]) + '</small></span></button>'; }).join('') + '</div>' +
+      '<label>Explique en quelques mots (facultatif)<textarea id="rep-d" rows="3" maxlength="600" placeholder="Ex. : j\'ai payé le 10 novembre, le vendeur ne répond plus."></textarea></label>' +
+      '<label>Ton numéro WhatsApp (facultatif)<input id="rep-c" type="tel" maxlength="40" placeholder="Pour que l\'administrateur te recontacte"></label>' +
+      '<button class="btn btn-danger" id="rep-go" type="button" data-act="repSend" disabled><span>Envoyer le signalement</span></button></div>');
+  },
+  repPick: function (el) {
+    S.rep.motif = REPORTS[Number(el.dataset.i)][0];
+    document.querySelectorAll('.rep-opt').forEach(function (b) { b.classList.toggle('on', b === el); });
+    $('rep-go').disabled = false;
+  },
+  repSend: async function (el) {
+    if (!S.rep || !S.rep.motif) return toast('Choisis un motif');
+    try { var k = 'cv_rep_' + S.rep.id; if (localStorage.getItem(k)) { closeSheet(); return toast('Tu as déjà signalé ce produit. Merci !'); } } catch (e) {}
+    busy(el, true);
+    var r = await sb.rpc('mk_report', { p_product: S.rep.id, p_motif: S.rep.motif, p_details: ($('rep-d') || {}).value || '', p_contact: ($('rep-c') || {}).value || '' });
+    if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
+    try { localStorage.setItem('cv_rep_' + S.rep.id, '1'); } catch (e) {}
+    sheet('<div class="g16 center" style="padding:16px 0"><div class="check">' + ico('i-check') + '</div><h2>Signalement envoyé</h2><p class="lead">Merci. L\'administrateur va vérifier cette boutique.</p><button class="btn btn-ghost" type="button" data-act="closeSheet">Fermer</button></div>');
+  },
+  admRepDone: async function (el) {
+    busy(el, true); var r = await sb.rpc('mk_admin_report_done', { p_id: el.dataset.id });
+    if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
+    toast('Signalement classé'); await loadAdmin(); renderAdmin();
+  },
   admLV: async function (el) {
     var ok = el.dataset.ok === '1', inp = $('ret-' + el.dataset.id), ret = ok ? Number(inp && inp.value) : 0;
     if (!ok && armed !== 'lv' + el.dataset.id) { armed = 'lv' + el.dataset.id; el.textContent = 'Confirmer le refus'; return; }
@@ -1079,8 +1129,8 @@ document.addEventListener('change', async function (e) {
 
 /* ---------- Administration ---------- */
 async function loadAdmin() {
-  var rs = await Promise.all([sb.rpc('mk_admin_loyer_list'),sb.from('mk_vendors').select('*').order('created_at', { ascending: false }), sb.from('mk_subs').select('*').eq('statut', 'attente').order('created_at'), loadSettings()]);
-  S.adm = { lv: rs[0].data || [], vendors: rs[1].data || [], subs: rs[2].data || [] };
+  var rs = await Promise.all([sb.rpc('mk_admin_loyer_list'),sb.rpc('mk_admin_reports'),sb.from('mk_vendors').select('*').order('created_at', { ascending: false }), sb.from('mk_subs').select('*').eq('statut', 'attente').order('created_at'), loadSettings()]);
+  S.adm = { lv: rs[0].data || [], reps: rs[1].data || [], vendors: rs[2].data || [], subs: rs[3].data || [] };
 }
 async function pageAdmin(alive) {
   skeleton(); await loadMe(); if (!alive()) return;
@@ -1091,10 +1141,17 @@ function renderAdmin() {
   var a = S.adm, byId = {}; a.vendors.forEach(function (v) { byId[v.id] = v; });
   var mm = a.vendors.filter(function (v) { return v.mm_statut === 'attente'; });
   var lvp = a.lv.filter(function (o) { return o.statut === 'attente'; }).length, lvr = a.lv.filter(function (o) { return o.statut === 'paye'; }).length;
-  var tabs = [['ventes', 'Ventes-loyer' + (lvp + lvr ? ' · ' + (lvp + lvr) : '')], ['confirmer', 'Mobile Money' + (mm.length ? ' · ' + mm.length : '')], ['loyers', 'Loyers payés' + (a.subs.length ? ' · ' + a.subs.length : '')], ['vendeurs', 'Vendeurs'], ['reglages', 'Réglages']], body = '';
+  var repN = a.reps.filter(function (r) { return r.statut === 'nouveau'; }).length;
+  var tabs = [['signal', 'Signalements' + (repN ? ' · ' + repN : '')], ['ventes', 'Ventes-loyer' + (lvp + lvr ? ' · ' + (lvp + lvr) : '')], ['confirmer', 'Mobile Money' + (mm.length ? ' · ' + mm.length : '')], ['loyers', 'Loyers payés' + (a.subs.length ? ' · ' + a.subs.length : '')], ['vendeurs', 'Vendeurs'], ['reglages', 'Réglages']], body = '';
   function who(v) { return '<b>' + esc(v.boutique) + '</b><small>' + esc([v.prenom, v.nom, v.postnom].filter(Boolean).join(' ')) + ' · ' + esc(v.tel) + '</small>'; }
   var loyerG = Number((S.settings || {}).loyer || 15000);
-  if (S.atab === 'ventes') body = '<p class="note" style="margin-bottom:12px">Ventes des boutiques en mode « première vente » : le client a payé sur tes numéros. Garde le loyer (au plus ' + money(loyerG, 'CDF') + ' pour 40 jours), puis reverse le reste au vendeur.</p>' + (a.lv.length ? '<div class="g12 stag">' + a.lv.map(function (o) {
+  if (S.atab === 'signal') body = '<p class="note" style="margin-bottom:12px">Ce que les clients signalent. Vérifie, puis bloque la boutique si c\'est une arnaque.</p>' + (a.reps.length ? '<div class="g12 stag">' + a.reps.map(function (r) {
+    return '<div class="ord' + (r.statut === 'traite' ? ' done' : '') + '"><div class="top"><div><b>' + esc(r.motif) + '</b><small>' + esc(r.boutique || 'Boutique supprimée') + ' · ' + esc(r.titre || '') + '</small><small>' + fmtDate(r.created_at) + ' · ' + r.nb_boutique + ' signalement' + (r.nb_boutique > 1 ? 's' : '') + ' pour cette boutique' + (r.contact ? ' · Client : ' + esc(r.contact) : '') + '</small></div><span class="tag ' + (r.suspendu ? 'r">Bloquée' : r.statut === 'nouveau' ? 'a">Nouveau' : 'g">Classé') + '</span></div>' +
+      (r.details ? '<p class="desc" style="margin:0">' + esc(r.details) + '</p>' : '') +
+      '<div class="two">' + (r.product_id ? '<a class="btn btn-ghost btn-sm" href="?p=' + esc(r.product_id) + '" data-nav>Voir le produit</a>' : '<span></span>') + (r.vendor_id ? '<button class="btn ' + (r.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (r.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + r.vendor_id + '">' + (r.suspendu ? 'Débloquer' : 'Bloquer la boutique') + '</button>' : '<span></span>') + '</div>' +
+      (r.statut === 'nouveau' ? '<button class="btn btn-ghost btn-sm" type="button" data-act="admRepDone" data-id="' + r.id + '"><span>Marquer comme traité</span></button>' : '') + '</div>';
+  }).join('') + '</div>' : '<div class="empty">Aucun signalement. Tout va bien.</div>');
+  else if (S.atab === 'ventes') body = '<p class="note" style="margin-bottom:12px">Ventes des boutiques en mode « première vente » : le client a payé sur tes numéros. Garde le loyer (au plus ' + money(loyerG, 'CDF') + ' pour 40 jours), puis reverse le reste au vendeur.</p>' + (a.lv.length ? '<div class="g12 stag">' + a.lv.map(function (o) {
     var resteLoyer = Math.max(0, loyerG - Number(o.loyer_cycle || 0)), def = o.devise === 'CDF' ? Math.min(resteLoyer, Number(o.montant)) : resteLoyer;
     var head = '<div class="top"><div><b>' + esc(o.boutique) + '</b><small>Client : ' + esc(o.nom) + ' · ' + esc(o.tel) + ' · ' + (OPS[o.op] || '') + '</small><small>' + esc(o.titre) + ' · ' + money(o.montant, o.devise) + '</small></div><span class="tag ' + (o.statut === 'attente' ? 'a">À vérifier' : 'g">À reverser') + '</span></div>';
     if (o.statut === 'attente') return '<div class="ord">' + head + (o.capture_path ? '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>' : '<p class="note">Pas encore de capture.</p>') +
@@ -1128,7 +1185,7 @@ function renderAdmin() {
     '<label>Ton WhatsApp<input id="g-wa" type="tel" value="' + esc(g.whatsapp) + '"></label><p class="note">Ces numéros reçoivent aussi les ventes-loyer des boutiques en mode « première vente ». Ton WhatsApp sert pour « Mot de passe oublié » et pour les clients des ventes-loyer.</p><button class="btn btn-primary" type="button" data-act="admSettings"><span>Enregistrer</span></button></div>' +
     '<div class="box" style="margin-top:12px"><h3>Pages d\'aide</h3><a class="btn btn-ghost btn-sm" href="?v=aide" data-nav><span>Voir la page « Comment ça marche »</span></a><button class="btn btn-ghost btn-sm" type="button" data-act="explainer"><span>Voir la vidéo de 15 secondes</span></button></div>'; }
   page('<a class="note rowx" style="padding-top:8px" href="?v=compte" data-nav>' + ico('i-back') + 'Ma boutique</a><h1 style="margin-top:12px">Administration</h1>' +
-    '<div class="stats"><div class="stat"><b class="gt">' + a.vendors.length + '</b><span>vendeurs</span></div><div class="stat"><b>' + mm.length + '</b><span>Mobile Money à confirmer</span></div><div class="stat"><b>' + a.subs.length + '</b><span>loyers à confirmer</span></div></div>' +
+    '<div class="stats"><div class="stat"><b class="gt">' + a.vendors.length + '</b><span>vendeurs</span></div><div class="stat"><b>' + mm.length + '</b><span>Mobile Money à confirmer</span></div><div class="stat"><b>' + a.subs.length + '</b><span>loyers à confirmer</span></div><div class="stat"><b' + (repN ? ' style="color:var(--err,#E5484D)"' : '') + '>' + repN + '</b><span>signalements</span></div></div>' +
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.atab ? ' on' : '') + '" type="button" data-act="atab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div style="margin-top:16px">' + body + '</div>');
   setBar(null);
 }

@@ -6,13 +6,19 @@ var SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZ
 var sb = window.supabase.createClient(SB_URL, SB_KEY);
 var OPS = { mpesa: 'M-Pesa', airtel: 'Airtel Money', orange: 'Orange Money' };
 var CATS = ['Formations', 'Fichiers et modèles', 'Applications et logiciels', 'Design et graphisme', 'Mode et beauté', 'Téléphones et électronique', 'Services', 'Autres'];
-var S = { user: null, vendor: null, settings: null, tab: 'commandes', atab: 'confirmer', ctx: {}, orders: [], products: [], subs: [] };
+var S = { user: null, vendor: null, settings: null, tab: 'commandes', atab: 'ventes', ctx: {}, orders: [], products: [], subs: [] };
 var E = null;            // produit en cours d'édition
 var rid = 0, pollT = null, armed = '';
 var $ = function (id) { return document.getElementById(id); };
 var app = $('app');
+var MASCOT = '<svg class="masc" viewBox="0 0 120 120" aria-hidden="true"><defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFB547"/><stop offset=".5" stop-color="#FF7A1A"/><stop offset="1" stop-color="#E8430F"/></linearGradient></defs>' +
+  '<circle cx="60" cy="60" r="56" fill="url(#mg)"/><circle cx="60" cy="60" r="56" fill="none" stroke="#fff" stroke-opacity=".25" stroke-width="2"/>' +
+  '<path d="M28 74c0-22 15-38 36-38 13 0 22 6 27 15l17 6-16 6c-3 17-15 29-32 29-19 0-32-7-32-18z" fill="#140D08"/>' +
+  '<path d="M48 40l-6-14 11 9 2-15 6 16" fill="#140D08"/><path d="M91 51l17 6-16 6z" fill="#3A2416"/>' +
+  '<circle cx="75" cy="55" r="7" fill="#fff"/><circle cx="76.5" cy="55" r="3.6" fill="#FF7A1A"/>' +
+  '<path d="M96 22l2.4 6.6L105 31l-6.6 2.4L96 40l-2.4-6.6L87 31l6.6-2.4z" fill="#fff"/><path d="M40 82c8 5 20 6 30 2" stroke="#FF7A1A" stroke-width="3" fill="none" stroke-linecap="round"/></svg>';
 function theme(t) { if (t) { try { localStorage.setItem('cv_theme', t); } catch (e) {} } else { try { t = localStorage.getItem('cv_theme'); } catch (e) {} } if (!t) t = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-  document.documentElement.dataset.theme = t; var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#F3F6FD' : '#070B18';
+  document.documentElement.dataset.theme = t; var m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t === 'light' ? '#FBF6F1' : '#0A0705';
   var b = $('hTheme'); if (b) { b.innerHTML = ico(t === 'light' ? 'i-moon' : 'i-sun'); b.setAttribute('aria-label', t === 'light' ? 'Mode sombre' : 'Mode jour'); } }
 theme();
 (function () {
@@ -95,9 +101,9 @@ function countUp() {
   });
 }
 function tabnav() {
-  var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : (q.get('p') || q.get('b') || q.get('c')) ? '' : 'home';
+  var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : v === 'ia' ? 'ia' : v === 'aide' ? 'aide' : (q.get('p') || q.get('b') || q.get('c')) ? '' : 'home';
   var it = function (k, href, icn, label) { return '<a class="' + (cur === k ? 'on' : '') + '" href="' + href + '" data-nav>' + ico(icn) + label + '</a>'; };
-  $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a href="./#produits" data-act="navProducts">' + ico('i-search') + 'Produits</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
+  $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a class="' + (cur === 'ia' ? 'on' : '') + '" href="?v=ia" data-nav><span class="ia-ico">' + ico('i-cuervo') + '</span>Cuervo IA</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
 }
 function header() {
   tabnav();
@@ -278,6 +284,8 @@ async function route() {
     if (v === 'compte') return await pageAccount(alive);
     if (v === 'admin') return await pageAdmin(alive);
     if (v === 'achats') return await pagePurchases(alive);
+    if (v === 'ia') return await pageIA(alive);
+    if (v === 'aide') return pageAide();
     return await pageHome(alive);
   } catch (e) { if (alive()) notFound(errMsg(e)); }
 }
@@ -290,14 +298,14 @@ function card(p) {
     '<div class="m">' + (p.ventes > 0 ? p.ventes + ' vendu' + (p.ventes > 1 ? 's' : '') : 'Nouveau') + (p.boutique ? ' · ' + esc(p.boutique) : '') + '</div></div></a>';
 }
 function sellCta(loyer) {
-  return '<div class="cta sec"><div class="kicker">Vendeurs</div><h2>Ouvre ta boutique en ligne</h2><p class="lead" style="margin:8px 0 16px">Publie tes produits, partage ton lien sur WhatsApp et Facebook, et reçois tes paiements par Mobile Money. Loyer : ' + money(loyer, 'USD') + ' par mois.</p>' +
+  return '<div class="cta sec"><div class="kicker">Vendeurs</div><h2>Ouvre ta boutique en ligne</h2><p class="lead" style="margin:8px 0 16px">Publie tes produits, partage ton lien sur WhatsApp et Facebook, et reçois tes paiements par Mobile Money. Loyer : ' + money(loyer, 'CDF') + ' par mois.</p>' +
     '<a class="btn btn-primary" href="?v=compte" data-nav>' + (S.vendor ? 'Gérer ma boutique' : 'Créer ma boutique') + ' ' + ico('i-arrow') + '</a></div>';
 }
 var ILLU = {
-  shop: '<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="30" width="92" height="52" rx="8" fill="#1B2647"/><path d="M10 30l10-18h80l10 18" stroke="#8FB4FF" stroke-width="3" stroke-linejoin="round"/><path d="M10 30h100v6a10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0z" fill="#5B9BFF"/><rect x="48" y="52" width="24" height="30" rx="4" fill="#07100B"/><rect x="24" y="48" width="16" height="14" rx="3" fill="#2F5BFF"/><rect x="80" y="48" width="16" height="14" rx="3" fill="#2F5BFF"/><circle cx="66" cy="68" r="2" fill="#8FB4FF"/></svg>',
-  share: '<svg viewBox="0 0 120 90" fill="none"><rect x="36" y="6" width="48" height="80" rx="10" fill="#1B2647" stroke="#2F5BFF" stroke-width="3"/><rect x="44" y="18" width="32" height="24" rx="4" fill="#5B9BFF"/><rect x="44" y="48" width="24" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="56" width="18" height="4" rx="2" fill="#A3B3A7"/><circle cx="16" cy="30" r="9" fill="#8FB4FF"/><circle cx="104" cy="22" r="9" fill="#2F5BFF"/><circle cx="104" cy="64" r="9" fill="#5B9BFF"/><path d="M25 30h11M84 30l11-6M84 56l11 6" stroke="#8FB4FF" stroke-width="3" stroke-linecap="round"/></svg>',
-  pay: '<svg viewBox="0 0 120 90" fill="none"><rect x="10" y="22" width="70" height="48" rx="8" fill="#1B2647" stroke="#2F5BFF" stroke-width="3"/><rect x="10" y="32" width="70" height="8" fill="#2F5BFF"/><rect x="20" y="52" width="22" height="6" rx="3" fill="#A3B3A7"/><circle cx="90" cy="54" r="22" fill="#8FB4FF"/><path d="M80 54l7 7 13-14" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
-  files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#1B2647" stroke="#2F5BFF" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#2F5BFF" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#5B9BFF"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+  shop: '<svg viewBox="0 0 120 90" fill="none"><rect x="14" y="30" width="92" height="52" rx="8" fill="#2A1C12"/><path d="M10 30l10-18h80l10 18" stroke="#FFB547" stroke-width="3" stroke-linejoin="round"/><path d="M10 30h100v6a10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0 10 10 0 0 1-20 0z" fill="#FF7A1A"/><rect x="48" y="52" width="24" height="30" rx="4" fill="#07100B"/><rect x="24" y="48" width="16" height="14" rx="3" fill="#E8430F"/><rect x="80" y="48" width="16" height="14" rx="3" fill="#E8430F"/><circle cx="66" cy="68" r="2" fill="#FFB547"/></svg>',
+  share: '<svg viewBox="0 0 120 90" fill="none"><rect x="36" y="6" width="48" height="80" rx="10" fill="#2A1C12" stroke="#E8430F" stroke-width="3"/><rect x="44" y="18" width="32" height="24" rx="4" fill="#FF7A1A"/><rect x="44" y="48" width="24" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="56" width="18" height="4" rx="2" fill="#A3B3A7"/><circle cx="16" cy="30" r="9" fill="#FFB547"/><circle cx="104" cy="22" r="9" fill="#E8430F"/><circle cx="104" cy="64" r="9" fill="#FF7A1A"/><path d="M25 30h11M84 30l11-6M84 56l11 6" stroke="#FFB547" stroke-width="3" stroke-linecap="round"/></svg>',
+  pay: '<svg viewBox="0 0 120 90" fill="none"><rect x="10" y="22" width="70" height="48" rx="8" fill="#2A1C12" stroke="#E8430F" stroke-width="3"/><rect x="10" y="32" width="70" height="8" fill="#E8430F"/><rect x="20" y="52" width="22" height="6" rx="3" fill="#A3B3A7"/><circle cx="90" cy="54" r="22" fill="#FFB547"/><path d="M80 54l7 7 13-14" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#2A1C12" stroke="#E8430F" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#E8430F" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#FF7A1A"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 function feature(k, t, d) { return '<div class="feat"><div class="fill">' + ILLU[k] + '</div><div><h3>' + t + '</h3><p>' + d + '</p></div></div>'; }
 function homeCats() {
@@ -315,7 +323,7 @@ async function pageHome(alive) {
   skeleton();
   var r = await sb.rpc('mk_home'); if (!alive()) return;
   if (r.error) throw r.error;
-  var d = r.data || { products: [], loyer: 10 }, ps = d.products || [];
+  var d = r.data || { products: [], loyer: 15000 }, ps = d.products || [];
   S.ctx.home = { ps: ps, q: '', cat: '' };
   var top = ps.filter(function (p) { return p.ventes > 0; }).sort(function (a, b) { return b.ventes - a.ventes; }).slice(0, 4);
   var pr = ps.filter(function (p) { return p.promo; }).sort(function (a, b) { return (1 - b.prix_actuel / b.prix) - (1 - a.prix_actuel / a.prix); })[0];
@@ -323,15 +331,117 @@ async function pageHome(alive) {
     '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp et Facebook. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
     '<div class="g8" style="margin-top:20px"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><button class="btn btn-ghost" type="button" data-act="toProducts"><span>Voir les produits</span></button></div></div>' +
     '<div class="sec"><div class="kicker">Comment ça marche</div><h2 style="margin-bottom:16px">Tout ce qu\'il faut pour vendre</h2><div class="g12 stag">' +
+    '<a class="keyline" href="?v=aide" data-nav>cuervo.co ne garde aucune somme : tout va sur les numéros Mobile Money du vendeur, sauf le loyer. Voir comment ça marche →</a>' +
     feature('shop', 'Ta boutique en quelques minutes', 'Ton nom, ta photo, tes numéros Mobile Money : ta boutique est prête.') +
     feature('share', 'Un lien par produit', 'Partage-le sur WhatsApp ou Facebook : le client arrive directement sur ton produit.') +
     feature('pay', 'Paiement par Mobile Money', 'M-Pesa, Airtel Money ou Orange Money. Le client envoie sa capture, tu confirmes.') +
-    feature('files', 'Livraison automatique', 'Tu colles ton lien de téléchargement : le client y accède dès que tu confirmes son paiement.') +
+    feature('files', 'Livraison immédiate', 'Tu colles ton lien de téléchargement : le client y accède dès que tu confirmes son paiement.') +
     '</div></div>' +
     (top.length ? '<div class="sec"><div class="kicker">Les plus vendus</div><h2 style="margin-bottom:16px">Produits phares</h2><div class="grid stag">' + top.map(card).join('') + '</div></div>' : '') +
     '<div class="sec" id="produits"><div class="kicker">Catalogue</div><h2 style="margin-bottom:12px">Tous les produits</h2>' +
     (ps.length ? '<label class="search">' + ico('i-search') + '<input id="h-q" type="search" placeholder="Chercher un produit ou une boutique" autocomplete="off"></label><div id="homeCats">' + homeCats() + '</div><div id="homeGrid">' + homeGrid() + '</div>'
       : '<div class="empty">Aucun produit en ligne pour l\'instant. Sois le premier à ouvrir ta boutique.</div>') + '</div>' + sellCta(d.loyer));
+}
+
+/* ---------- Cuervo IA ---------- */
+var IA = { msgs: [], busy: false, ps: null };
+async function iaProducts() { if (IA.ps) return IA.ps; var r = await sb.rpc('mk_home'); IA.ps = (r.data && r.data.products) || []; return IA.ps; }
+function iaRender() {
+  var box = $('chat'); if (!box) return;
+  box.innerHTML = IA.msgs.map(function (m) {
+    if (m.role === 'me') return '<div class="msg me">' + esc(m.text) + '</div>';
+    var cards = (m.produits || []).map(function (id) { return (IA.ps || []).filter(function (p) { return p.id === id; })[0]; }).filter(Boolean);
+    return '<div class="msg ia"><div class="who">' + MASCOT + 'Cuervo IA</div>' + esc(m.text) + (cards.length ? '<div class="grid">' + cards.map(card).join('') + '</div>' : '') + '</div>';
+  }).join('') + (IA.busy ? '<div class="msg ia"><div class="who">' + MASCOT + 'Cuervo IA</div><span class="dots"><i></i><i></i><i></i></span></div>' : '');
+  window.scrollTo(0, document.body.scrollHeight);
+}
+async function iaAsk(text) {
+  text = String(text || '').trim(); if (!text || IA.busy) return;
+  IA.msgs.push({ role: 'me', text: text }); IA.busy = true; iaRender();
+  var inp = $('ia-q'); if (inp) inp.value = '';
+  try {
+    await iaProducts();
+    var r = await sb.functions.invoke('mk-assistant', { body: { messages: IA.msgs.filter(function (m) { return !m.err; }).map(function (m) { return { role: m.role === 'me' ? 'user' : 'ia', text: m.text }; }) } });
+    var d = r.data, m = d && d.error;
+    if (!m && r.error) { try { m = (await r.error.context.json()).error; } catch (e) {} }
+    if (d && d.reponse) IA.msgs.push({ role: 'ia', text: d.reponse, produits: d.produits || [] });
+    else IA.msgs.push({ role: 'ia', err: true, text: m || 'Cuervo IA n\'est pas disponible pour le moment. Réessaie dans un instant.' });
+  } catch (e) { IA.msgs.push({ role: 'ia', err: true, text: 'Connexion internet instable. Réessaie.' }); }
+  IA.busy = false; iaRender();
+}
+async function pageIA() {
+  setBar(null);
+  page('<div class="ia-head">' + MASCOT + '<h1>Cuervo IA</h1><p class="lead">Ton guide sur cuervo.co : je t\'aide à trouver le bon produit, à comparer les prix et à comprendre comment acheter ou vendre.</p>' +
+    (IA.msgs.length ? '' : '<div class="ia-sugg">' + ['Quels sont les produits les moins chers ?', 'Je veux apprendre à créer une application', 'Quelles sont les promos du moment ?', 'Comment acheter un produit ?', 'Comment ouvrir ma boutique ?'].map(function (q) { return '<button type="button" data-act="iaSugg">' + q + '</button>'; }).join('') + '</div>') +
+    '</div><div class="chat" id="chat"></div>' +
+    '<form class="ia-bar" id="iaForm"><div class="in"><input id="ia-q" maxlength="600" autocomplete="off" placeholder="Pose ta question à Cuervo IA…"><button type="submit" aria-label="Envoyer">' + ico('i-arrow') + '</button></div></form>');
+  iaRender(); iaProducts().catch(function () {});
+}
+document.addEventListener('submit', function (e) { if (e.target.id === 'iaForm') { e.preventDefault(); iaAsk($('ia-q').value); } });
+
+/* ---------- Vidéo de présentation (15 s) ---------- */
+var VX_ART = {
+  shop: '<svg viewBox="0 0 160 120"><rect x="20" y="44" width="120" height="66" rx="10" fill="#2A1C12"/><path d="M14 44l14-24h104l14 24z" fill="#FF7A1A"/><rect x="66" y="72" width="28" height="38" rx="4" fill="#0A0705"/><rect x="32" y="64" width="22" height="18" rx="4" fill="#FFB547"/><rect x="106" y="64" width="22" height="18" rx="4" fill="#FFB547"/></svg>',
+  mm: '<svg viewBox="0 0 160 120"><rect x="46" y="6" width="68" height="108" rx="14" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><rect x="58" y="24" width="44" height="12" rx="4" fill="#FFB547"/><rect x="58" y="44" width="44" height="12" rx="4" fill="#FF7A1A"/><rect x="58" y="64" width="44" height="12" rx="4" fill="#E8430F"/><circle cx="124" cy="88" r="20" fill="#4ADE80"/><path d="M114 88l7 7 13-14" stroke="#0A0705" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+  pay: '<svg viewBox="0 0 160 120"><rect x="8" y="36" width="44" height="72" rx="10" fill="#2A1C12" stroke="#FFB547" stroke-width="3"/><rect x="108" y="36" width="44" height="72" rx="10" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><path d="M58 72h40" stroke="#FF7A1A" stroke-width="5" stroke-linecap="round"/><path d="M90 62l12 10-12 10" stroke="#FF7A1A" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="34" r="18" fill="#FFB547"/><text x="80" y="40" text-anchor="middle" font-size="16" font-weight="800" fill="#0A0705">FC</text></svg>',
+  rent: '<svg viewBox="0 0 160 120"><rect x="26" y="20" width="108" height="88" rx="12" fill="#2A1C12"/><rect x="26" y="20" width="108" height="24" rx="12" fill="#FF7A1A"/><text x="80" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#FFB547">15 000</text><text x="80" y="100" text-anchor="middle" font-size="11" fill="#E9D6C6">FC / mois</text></svg>',
+  safe: '<svg viewBox="0 0 160 120"><path d="M80 8l52 18v34c0 30-22 48-52 56-30-8-52-26-52-56V26z" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><path d="M58 62l15 15 30-32" stroke="#4ADE80" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+};
+var VX_SC = [
+  ['shop', 'Vends tes <em>produits digitaux</em> en RDC', 'Formations, fichiers, modèles, applications : ouvre ta boutique sur cuervo.co en quelques minutes.'],
+  ['mm', 'Enregistre tes <em>Mobile Money</em>', 'M-Pesa, Airtel Money, Orange Money. L\'administrateur confirme tes numéros avant la mise en ligne.'],
+  ['pay', 'Le client te paie <em>directement</em>', 'Il paie sur ton numéro, envoie sa capture. Tu confirmes : il reçoit ses fichiers tout de suite.'],
+  ['rent', 'Loyer : <em>15 000 FC</em> par mois', 'Paie-le tout de suite, ou sur ta première vente du mois : cuervo.co garde le loyer et te reverse le reste.'],
+  ['safe', 'cuervo.co ne garde <em>aucune somme</em>', 'À part le loyer, tout l\'argent va directement sur tes numéros Mobile Money.']
+];
+var VXT = null;
+function explainer() {
+  return '<div class="vx" id="vx"><div class="bars">' + VX_SC.map(function () { return '<i><b></b></i>'; }).join('') + '</div>' +
+    VX_SC.map(function (sc, i) { return '<div class="sc" data-i="' + i + '"><div class="art">' + VX_ART[sc[0]] + '</div><div class="big">' + sc[1].replace('15 000 FC', esc(money((S.settings || {}).loyer || 15000, 'CDF'))) + '</div><div class="sm">' + esc(sc[2]).replace('15 000 FC', money((S.settings || {}).loyer || 15000, 'CDF')) + '</div></div>'; }).join('') +
+    '<div class="brandm">cuervo<span>.co</span></div></div><div class="vx-ctl"><button class="btn btn-ghost btn-sm" type="button" data-act="vxReplay" style="width:auto">' + ico('i-play') + '<span>Revoir (15 s)</span></button></div>';
+}
+function vxPlay() {
+  var root = $('vx'); if (!root) return; clearTimeout(VXT);
+  var scs = root.querySelectorAll('.sc'), bars = root.querySelectorAll('.bars b'), i = 0;
+  bars.forEach(function (b) { b.style.transition = 'none'; b.style.transform = 'scaleX(0)'; });
+  function show() {
+    if (!document.body.contains(root)) return;
+    scs.forEach(function (el, k) { el.classList.toggle('on', k === i); });
+    var b = bars[i]; void b.offsetWidth; b.style.transition = 'transform 3000ms linear'; b.style.transform = 'scaleX(1)';
+    i++; if (i < scs.length) VXT = setTimeout(show, 3000);
+  }
+  show();
+}
+function showExplainer(title) {
+  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>' + (title || 'cuervo.co en 15 secondes') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' + explainer() +
+    '<a class="btn btn-primary" href="?v=aide" data-nav><span>Tout comprendre en détail</span></a></div>');
+  vxPlay();
+}
+
+/* ---------- Comment ça marche ---------- */
+function pageAide() {
+  var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
+  setBar(null);
+  page('<div class="kicker" style="padding-top:8px">Comment ça marche</div><h1>cuervo.co, la place de marché des produits digitaux en RDC</h1>' +
+    '<p class="lead" style="margin-top:12px">Formations, fichiers, modèles, applications, designs : chacun ouvre sa boutique, publie ses produits et encaisse par Mobile Money.</p>' +
+    '<div class="sec">' + explainer() + '</div>' +
+    '<div class="sec"><div class="keyline">cuervo.co ne garde aucune somme. À part le loyer des boutiques, tout l\'argent des ventes va directement sur les numéros Mobile Money du vendeur.</div></div>' +
+    '<div class="sec"><h2 style="margin-bottom:12px">Pour acheter</h2><div class="steps">' +
+    '<div class="step"><div><b>Choisis ton produit</b><p>Parcours les boutiques ou demande conseil à Cuervo IA.</p></div></div>' +
+    '<div class="step"><div><b>Touche « Payer »</b><p>Entre ton nom et ton numéro WhatsApp. Le numéro M-Pesa, Airtel Money ou Orange Money du vendeur s\'affiche.</p></div></div>' +
+    '<div class="step"><div><b>Paie et envoie ta capture</b><p>Paie le montant exact, puis envoie la capture de confirmation depuis la page.</p></div></div>' +
+    '<div class="step"><div><b>Reçois tes fichiers</b><p>Dès que le vendeur confirme, tes liens de téléchargement s\'affichent sur la page de ta commande (retrouvée dans « Mes achats »).</p></div></div></div></div>' +
+    '<div class="sec"><h2 style="margin-bottom:12px">Pour vendre</h2><div class="steps">' +
+    '<div class="step"><div><b>Crée ton compte</b><p>Ton prénom, ton nom, ton postnom, le nom de ta boutique et ton numéro de téléphone.</p></div></div>' +
+    '<div class="step"><div><b>Enregistre tes Mobile Money</b><p>Dans Ma boutique → Boutique : le nom du compte et tes numéros M-Pesa, Airtel Money ou Orange Money. L\'administrateur les confirme avant la mise en ligne, et après chaque modification.</p></div></div>' +
+    '<div class="step"><div><b>Publie tes produits</b><p>Photos, description (Cuervo IA peut t\'aider), prix en FC ou en $, et le lien de téléchargement Google Drive de ton produit.</p></div></div>' +
+    '<div class="step"><div><b>Confirme tes ventes</b><p>Quand l\'argent arrive sur ton numéro, touche « Argent reçu » : le client reçoit son produit.</p></div></div></div></div>' +
+    '<div class="sec"><h2 style="margin-bottom:12px">Le loyer : ' + loyer + ' par mois</h2><div class="steps">' +
+    '<div class="step"><div><b>Option 1 : payer tout de suite</b><p>Tu paies le loyer sur les numéros de cuervo.co (onglet Loyer) et tu envoies ta capture. Chaque paiement confirmé donne 30 jours.</p></div></div>' +
+    '<div class="step"><div><b>Option 2 : payer sur ta première vente</b><p>Ta boutique est en ligne sans rien payer. Ta première vente du mois arrive sur les numéros de cuervo.co : l\'administrateur garde le loyer (jusqu\'à ' + loyer + ') et te reverse le reste. Les ventes suivantes du mois vont directement chez toi.</p></div></div>' +
+    '<div class="step"><div><b>Loyer non payé</b><p>L\'administrateur peut suspendre une boutique qui ne paie pas son loyer. Tu reçois un rappel 5 jours avant la fin du mois.</p></div></div></div></div>' +
+    '<div class="sec g8"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><a class="btn btn-ghost" href="?v=ia" data-nav><span>Poser une question à Cuervo IA</span></a></div>');
+  vxPlay();
 }
 
 /* ---------- Produit ---------- */
@@ -421,6 +531,9 @@ var A = {
   closeSheet: function () { closeSheet(); dropDraft(); },
   dl: function (el) { if (XHR) return toast('Un transfert est déjà en cours'); download(el.dataset.url, el.dataset.name); },
   cancelXfer: function () { if (XHR) XHR.abort(); },
+  iaSugg: function (el) { iaAsk(el.textContent); },
+  vxReplay: function () { vxPlay(); },
+  explainer: function () { showExplainer(); },
   theme: function () { theme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'); },
   navProducts: async function () { if (new URLSearchParams(location.search).toString()) { history.pushState({}, '', location.pathname); await route(); } var el = $('produits'); if (el) el.scrollIntoView(); var i = $('h-q'); if (i) i.focus(); },
   cat: function (el) { var h = S.ctx.home; if (!h) return; h.cat = el.dataset.id; $('homeCats').innerHTML = homeCats(); $('homeGrid').innerHTML = homeGrid(); },
@@ -482,7 +595,9 @@ var A = {
       }
       var v = await sb.rpc('mk_register', { p_nom: g('a-nom'), p_postnom: g('a-postnom'), p_prenom: g('a-prenom'), p_boutique: g('a-boutique'), p_tel: g('a-tel') || '' });
       if (v.error) throw v.error;
-      await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); route();
+      var md = document.querySelector('input[name=a-mode]:checked');
+      if (md && md.value !== 'premiere_vente') await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.user.id);
+      await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); await route(); showExplainer('Bienvenue sur cuervo.co');
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
   },
   forgot: function () {
@@ -592,6 +707,12 @@ var A = {
     if (r.error) return toast(errMsg(r.error));
     await loadMe(); renderDash(true); toast('Boutique enregistrée');
   },
+  saveMode: async function (el) {
+    var md = document.querySelector('input[name=l-mode]:checked'); if (!md) return;
+    busy(el, true); var r = await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.user.id); busy(el, false);
+    if (r.error) return toast(errMsg(r.error));
+    await loadMe(); renderDash(true); toast('Choix enregistré');
+  },
   paySub: async function (el) {
     var f = $('l-cap').files[0], ref = $('l-ref').value.trim();
     if (!f && !ref) return toast('Ajoute la capture ou la référence de ton paiement');
@@ -607,10 +728,24 @@ var A = {
   /* Administration */
   admVendor: async function (el) {
     var act = el.dataset.do;
-    if (act === 'suspendre' && armed !== 'sus' + el.dataset.id) { armed = 'sus' + el.dataset.id; el.textContent = 'Confirmer la suspension'; return; }
+    if (act === 'suspendre' && armed !== 'sus' + el.dataset.id) { armed = 'sus' + el.dataset.id; el.textContent = 'Confirmer le blocage'; return; }
     busy(el, true); var r = await sb.rpc('mk_admin_vendor', { p_id: el.dataset.id, p_action: act });
     if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
     toast('C\'est fait'); await loadAdmin(); renderAdmin();
+  },
+  vf: function (el) { S.vf = el.dataset.id; renderAdmin(); },
+  admLV: async function (el) {
+    var ok = el.dataset.ok === '1', inp = $('ret-' + el.dataset.id), ret = ok ? Number(inp && inp.value) : 0;
+    if (!ok && armed !== 'lv' + el.dataset.id) { armed = 'lv' + el.dataset.id; el.textContent = 'Confirmer le refus'; return; }
+    if (ok && !(ret >= 0)) return toast('Indique le montant gardé pour le loyer');
+    busy(el, true); var r = await sb.rpc('mk_admin_loyer_vente', { p_id: el.dataset.id, p_ok: ok, p_retenu: ret }); armed = '';
+    if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
+    toast(ok ? (r.data.loyer_couvert ? 'Vente confirmée : loyer payé pour 30 jours' : 'Vente confirmée : loyer partiellement payé') : 'Vente refusée'); await loadAdmin(); renderAdmin();
+  },
+  admRev: async function (el) {
+    busy(el, true); var r = await sb.rpc('mk_admin_reverse', { p_id: el.dataset.id });
+    if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
+    toast('Reversement noté'); await loadAdmin(); renderAdmin();
   },
   admSub: async function (el) {
     busy(el, true); var r = await sb.rpc('mk_admin_sub', { p_id: el.dataset.id, p_ok: el.dataset.ok === '1' });
@@ -621,6 +756,7 @@ var A = {
     var g = function (k) { return $(k).value.trim(); }, loyer = Number(g('g-loyer'));
     if (!(loyer >= 0)) return toast('Loyer invalide');
     busy(el, true);
+    if (loyer > 1000000) return toast('Loyer trop élevé');
     var r = await sb.rpc('mk_admin_settings', { p_loyer: loyer, p_mm_nom: g('g-nom'), p_mpesa: g('g-mpesa'), p_airtel: g('g-airtel'), p_orange: g('g-orange'), p_whatsapp: g('g-wa') });
     busy(el, false);
     if (r.error) return toast(errMsg(r.error));
@@ -664,7 +800,7 @@ async function pageOrder(token, alive) {
     } else {
       body = '<div class="wait"></div><div class="center"><h1 style="font-size:24px">Capture bien reçue</h1><p class="lead" style="margin-top:8px">Le vendeur vérifie ton paiement. Cette page se met à jour toute seule : tes fichiers apparaîtront ici.</p></div>' +
         '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>' +
-        (waNum(s.whatsapp || s.tel) ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + waNum(s.whatsapp || s.tel) + '?text=' + encodeURIComponent('Bonjour, je viens de payer « ' + o.titre + ' » (' + money(o.montant, o.devise) + ' par ' + (OPS[o.op] || 'Mobile Money') + ') sur cuervo.co et j\'ai envoyé ma capture. Mon nom : ' + (o.nom || '') + '. Merci de confirmer mon paiement.') + '">' + ico('i-chat') + '<span>Prévenir le vendeur sur WhatsApp</span></a><p class="note center">Le vendeur confirme plus vite quand tu le préviens.</p>' : '');
+        (waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) + '?text=' + encodeURIComponent('Bonjour, je viens de payer « ' + o.titre + ' » (' + money(o.montant, o.devise) + ' par ' + (OPS[o.op] || 'Mobile Money') + ') sur cuervo.co et j\'ai envoyé ma capture. Mon nom : ' + (o.nom || '') + '. Merci de confirmer mon paiement.') + '">' + ico('i-chat') + '<span>Prévenir le vendeur sur WhatsApp</span></a><p class="note center">Le vendeur confirme plus vite quand tu le préviens.</p>' : '');
     }
     page('<div class="prod g16" style="margin-top:8px">' + body + '</div>' +
       '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique</small></div>' + ico('i-arrow') + '</a>' +
@@ -690,7 +826,7 @@ async function loadMe() {
   var u = (await sb.auth.getSession()).data.session; S.user = u ? u.user : null; S.vendor = null;
   if (S.user) { var r = await sb.from('mk_vendors').select('*').eq('id', S.user.id).maybeSingle(); S.vendor = r.data || null; }
 }
-async function loadSettings() { var r = await sb.from('mk_settings').select('*').eq('id', 1).maybeSingle(); S.settings = r.data || { loyer: 10 }; }
+async function loadSettings() { var r = await sb.from('mk_settings').select('*').eq('id', 1).maybeSingle(); S.settings = r.data || { loyer: 15000 }; }
 async function loadDash() {
   var uid = S.user.id, rs = await Promise.all([
     sb.from('mk_orders').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(200),
@@ -699,12 +835,19 @@ async function loadDash() {
     loadSettings(), loadMe()]);
   S.orders = rs[0].data || []; S.products = rs[1].data || []; S.subs = rs[2].data || [];
 }
+function loyerChoice(cur, name) {
+  var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
+  return '<div class="choice"><div style="font-size:14px;font-weight:600">Comment veux-tu payer ton loyer de ' + loyer + ' par mois ?</div>' +
+    '<label class="opt"><input type="radio" name="' + name + '" value="premiere_vente"' + (cur !== 'immediat' ? ' checked' : '') + '><span><b>Sur ma première vente du mois</b><small>Rien à payer maintenant. Ta première vente arrive chez cuervo.co, qui garde le loyer et te reverse le reste.</small></span></label>' +
+    '<label class="opt"><input type="radio" name="' + name + '" value="immediat"' + (cur === 'immediat' ? ' checked' : '') + '><span><b>Tout de suite</b><small>Tu paies ' + loyer + ' maintenant (onglet Loyer) : toutes tes ventes vont directement chez toi.</small></span></label>' +
+    '<a class="linkbtn" href="?v=aide" data-nav style="text-align:center">Comment ça marche ?</a></div>';
+}
 function renderAuth() {
   var reg = S.ctx.auth !== 'login', need = !S.user;
-  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 10, 'USD') + ' par mois, payé par Mobile Money.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
+  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' par mois, tout de suite ou sur ta première vente.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
     (need ? '<div class="pills" style="margin-top:24px"><button class="pill' + (reg ? ' on' : '') + '" type="button" data-act="authMode" data-id="register">Créer un compte</button><button class="pill' + (reg ? '' : ' on') + '" type="button" data-act="authMode" data-id="login">J\'ai déjà un compte</button></div>' : '') +
     '<div class="box" style="margin-top:16px">' +
-    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label>' : '') +
+    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label>' + loyerChoice('premiere_vente', 'a-mode') : '') +
     (need || !reg ? '<label>Numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 0812 345 678"></label><label>Mot de passe<input id="a-pw" type="password" autocomplete="' + (reg ? 'new-password' : 'current-password') + '" placeholder="6 caractères minimum"></label>' : '<input id="a-tel" type="hidden" value="">') +
     '<div class="msg-err hide" id="a-err"></div>' +
     '<button class="btn btn-primary" type="button" data-act="' + (reg ? 'register' : 'login') + '"><span>' + (reg ? 'Créer ma boutique' : 'Me connecter') + '</span></button>' +
@@ -712,22 +855,23 @@ function renderAuth() {
   setBar(null);
 }
 function shopStatus(v) {
-  var loyer = money((S.settings || {}).loyer || 10, 'USD');
+  var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
   if (v.suspendu) return ['bad', 'Boutique suspendue', 'L\'administrateur a suspendu ta boutique. Contacte-le.'];
   var todo = [];
   if (v.mm_statut === 'vide') todo.push('ajoute tes numéros Mobile Money (onglet Boutique)');
   else if (v.mm_statut === 'attente') todo.push('tes numéros Mobile Money attendent la confirmation de l\'administrateur');
   else if (v.mm_statut === 'refuse') todo.push('tes numéros Mobile Money ont été refusés : corrige-les (onglet Boutique)');
   var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
-  if (!v.is_admin && !ok) todo.push('paie ton loyer de ' + loyer + ' (onglet Loyer)');
+  if (!v.is_admin && !ok && v.loyer_mode !== 'premiere_vente') todo.push('paie ton loyer de ' + loyer + ' (onglet Loyer)');
   if (todo.length) return ['', 'Boutique pas encore en ligne', 'Il reste à faire : ' + todo.join(' ; ') + '.'];
+  if (!v.is_admin && !ok && v.loyer_mode === 'premiere_vente') return ['ok', 'Boutique en ligne', 'Loyer à payer sur ta prochaine vente : elle arrivera chez cuervo.co, qui garde ' + loyer + ' et te reverse le reste.'];
   var left = v.is_admin ? 99 : Math.ceil((new Date(v.abo_fin + 'T23:59:59') - new Date()) / 864e5);
   if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Paie ' + loyer + ' dans l\'onglet Loyer pour qu\'elle reste visible.'];
   return ['ok', 'Boutique en ligne', v.is_admin ? 'Compte administrateur : pas de loyer.' : 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) + '.'];
 }
 async function pageAccount(alive) {
   skeleton(); await loadMe(); if (!alive()) return; header();
-  if (!S.user || !S.vendor) { if (!S.settings) { var h = await sb.rpc('mk_home'); S.settings = { loyer: (h.data || {}).loyer || 10, whatsapp: (h.data || {}).whatsapp || '' }; if (!alive()) return; } if (S.user && !S.vendor) S.ctx.auth = 'register'; return renderAuth(); }
+  if (!S.user || !S.vendor) { if (!S.settings) { var h = await sb.rpc('mk_home'); S.settings = { loyer: (h.data || {}).loyer || 15000, whatsapp: (h.data || {}).whatsapp || '' }; if (!alive()) return; } if (S.user && !S.vendor) S.ctx.auth = 'register'; return renderAuth(); }
   await loadDash(); if (!alive()) return;
   var dr = takeDraft();
   if (dr) {
@@ -763,6 +907,10 @@ function dashOrders() {
   var rank = function (o) { return o.statut === 'attente' ? (o.capture_path ? 0 : 1) : 2; };
   return h + '<div class="g12 stag">' + S.orders.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (o) {
     var s = st[o.statut] || st.attente, acts = '';
+    if (o.pour_loyer) {
+      var info = o.statut === 'attente' ? 'Cette vente paie ton loyer : le client paie cuervo.co, qui confirme la vente.' : o.statut === 'paye' ? ('Loyer retenu : ' + money(o.loyer_retenu || 0, 'CDF') + (o.a_reverser != null ? ' · reste pour toi : ' + money(o.a_reverser, 'CDF') : '') + (o.reverse_fait ? ' · reversé' : ' · en cours de reversement')) : '';
+      return '<div class="ord"><div class="top"><div><b>' + esc(o.nom) + '</b><small>' + esc(o.tel) + ' · ' + (OPS[o.op] || '') + '</small><small>' + esc(o.titre) + ' · ' + money(o.montant, o.devise) + '</small></div><span class="tag ' + s[0] + '">' + s[1] + '</span></div><div class="banner" style="margin:0"><b>Vente-loyer</b>' + info + '</div></div>';
+    }
     if (o.capture_path) acts += '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>';
     else if (o.statut === 'attente') acts += '<p class="note">Le client n\'a pas encore envoyé sa capture. Sans capture, la commande s\'efface toute seule après 48 heures.</p>';
     if (o.statut !== 'paye') acts += '<button class="btn btn-primary btn-sm" type="button" data-act="orderOk" data-id="' + o.id + '"><span>Argent reçu</span></button>';
@@ -802,8 +950,11 @@ function dashRent() {
   var v = S.vendor, g = S.settings || {}, pend = S.subs.filter(function (s) { return s.statut === 'attente'; })[0];
   if (v.is_admin) return '<div class="banner ok"><b>Compte administrateur</b>Tu ne paies pas de loyer. Les loyers des vendeurs se confirment dans l\'espace administrateur.</div>';
   var ops = Object.keys(OPS).filter(function (k) { return g[k]; });
-  var h = '<div class="box"><h3>Loyer mensuel : ' + money(g.loyer, 'USD') + '</h3><p class="note">' + (v.abo_fin ? 'Payé jusqu\'au ' + fmtDate(v.abo_fin) + '.' : 'Aucun loyer payé pour l\'instant.') + ' Chaque paiement confirmé ajoute 30 jours.</p>';
+  var h = '<div class="box"><h3>Mode de paiement du loyer</h3>' + loyerChoice(v.loyer_mode, 'l-mode') + '<button class="btn btn-ghost btn-sm" type="button" data-act="saveMode"><span>Enregistrer mon choix</span></button>' +
+    (v.loyer_mode === 'premiere_vente' && Number(v.loyer_cycle) > 0 ? '<p class="note">Déjà retenu ce mois-ci : ' + money(v.loyer_cycle, 'CDF') + '.</p>' : '') + '</div>';
+  h += '<div class="box"><h3>Loyer mensuel : ' + money(g.loyer, 'CDF') + '</h3><p class="note">' + (v.abo_fin ? 'Payé jusqu\'au ' + fmtDate(v.abo_fin) + '.' : 'Aucun loyer payé pour l\'instant.') + ' Chaque paiement confirmé ajoute 30 jours.</p>';
   if (pend) h += '<div class="banner"><b>Paiement en cours de vérification</b>Envoyé le ' + fmtDate(pend.created_at) + '. L\'administrateur va le confirmer.</div>';
+  else if (v.loyer_mode === 'premiere_vente' && !(v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date())) h += '<div class="banner ok"><b>Rien à payer maintenant</b>Ton loyer sera retenu sur ta prochaine vente. Tu peux aussi le payer tout de suite en choisissant « Tout de suite » ci-dessus.</div>';
   else if (!ops.length) h += '<div class="banner">Les numéros de paiement du loyer ne sont pas encore disponibles.</div>';
   else h += ops.map(function (k) { return '<div class="paynum"><small>' + OPS[k] + '</small><div class="n">' + esc(g[k]) + '</div>' + (g.mm_nom ? '<small>Nom du compte : ' + esc(g.mm_nom) + '</small>' : '') + '</div>'; }).join('') +
     '<label>Tu as payé avec<select id="l-op">' + ops.map(function (k) { return '<option value="' + k + '">' + OPS[k] + '</option>'; }).join('') + '</select></label>' +
@@ -811,7 +962,7 @@ function dashRent() {
     '<button class="btn btn-primary" type="button" data-act="paySub"><span>Envoyer mon paiement</span></button>';
   h += '</div>';
   var hist = S.subs.filter(function (s) { return s.statut !== 'attente'; });
-  if (hist.length) h += '<div class="sub">Historique</div><div class="g8">' + hist.map(function (s) { return '<div class="item"><span class="grow">' + fmtDate(s.created_at) + ' · ' + money(s.montant, 'USD') + '</span><span class="tag ' + (s.statut === 'confirme' ? 'g' : 'r') + '">' + (s.statut === 'confirme' ? 'Confirmé' : 'Refusé') + '</span></div>'; }).join('') + '</div>';
+  if (hist.length) h += '<div class="sub">Historique</div><div class="g8">' + hist.map(function (s) { return '<div class="item"><span class="grow">' + fmtDate(s.created_at) + ' · ' + money(s.montant, 'CDF') + '</span><span class="tag ' + (s.statut === 'confirme' ? 'g' : 'r') + '">' + (s.statut === 'confirme' ? 'Confirmé' : 'Refusé') + '</span></div>'; }).join('') + '</div>';
   return h;
 }
 
@@ -923,8 +1074,8 @@ document.addEventListener('change', async function (e) {
 
 /* ---------- Administration ---------- */
 async function loadAdmin() {
-  var rs = await Promise.all([sb.from('mk_vendors').select('*').order('created_at', { ascending: false }), sb.from('mk_subs').select('*').eq('statut', 'attente').order('created_at'), loadSettings()]);
-  S.adm = { vendors: rs[0].data || [], subs: rs[1].data || [] };
+  var rs = await Promise.all([sb.rpc('mk_admin_loyer_list'),sb.from('mk_vendors').select('*').order('created_at', { ascending: false }), sb.from('mk_subs').select('*').eq('statut', 'attente').order('created_at'), loadSettings()]);
+  S.adm = { lv: rs[0].data || [], vendors: rs[1].data || [], subs: rs[2].data || [] };
 }
 async function pageAdmin(alive) {
   skeleton(); await loadMe(); if (!alive()) return;
@@ -934,28 +1085,43 @@ async function pageAdmin(alive) {
 function renderAdmin() {
   var a = S.adm, byId = {}; a.vendors.forEach(function (v) { byId[v.id] = v; });
   var mm = a.vendors.filter(function (v) { return v.mm_statut === 'attente'; });
-  var tabs = [['confirmer', 'Mobile Money' + (mm.length ? ' · ' + mm.length : '')], ['loyers', 'Loyers' + (a.subs.length ? ' · ' + a.subs.length : '')], ['vendeurs', 'Vendeurs'], ['reglages', 'Réglages']], body = '';
+  var lvp = a.lv.filter(function (o) { return o.statut === 'attente'; }).length, lvr = a.lv.filter(function (o) { return o.statut === 'paye'; }).length;
+  var tabs = [['ventes', 'Ventes-loyer' + (lvp + lvr ? ' · ' + (lvp + lvr) : '')], ['confirmer', 'Mobile Money' + (mm.length ? ' · ' + mm.length : '')], ['loyers', 'Loyers payés' + (a.subs.length ? ' · ' + a.subs.length : '')], ['vendeurs', 'Vendeurs'], ['reglages', 'Réglages']], body = '';
   function who(v) { return '<b>' + esc(v.boutique) + '</b><small>' + esc([v.prenom, v.nom, v.postnom].filter(Boolean).join(' ')) + ' · ' + esc(v.tel) + '</small>'; }
-  if (S.atab === 'confirmer') body = mm.length ? '<div class="g12 stag">' + mm.map(function (v) {
+  var loyerG = Number((S.settings || {}).loyer || 15000);
+  if (S.atab === 'ventes') body = '<p class="note" style="margin-bottom:12px">Ventes des boutiques en mode « première vente » : le client a payé sur tes numéros. Garde le loyer (au plus ' + money(loyerG, 'CDF') + ' par mois), puis reverse le reste au vendeur.</p>' + (a.lv.length ? '<div class="g12 stag">' + a.lv.map(function (o) {
+    var resteLoyer = Math.max(0, loyerG - Number(o.loyer_cycle || 0)), def = o.devise === 'CDF' ? Math.min(resteLoyer, Number(o.montant)) : resteLoyer;
+    var head = '<div class="top"><div><b>' + esc(o.boutique) + '</b><small>Client : ' + esc(o.nom) + ' · ' + esc(o.tel) + ' · ' + (OPS[o.op] || '') + '</small><small>' + esc(o.titre) + ' · ' + money(o.montant, o.devise) + '</small></div><span class="tag ' + (o.statut === 'attente' ? 'a">À vérifier' : 'g">À reverser') + '</span></div>';
+    if (o.statut === 'attente') return '<div class="ord">' + head + (o.capture_path ? '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>' : '<p class="note">Pas encore de capture.</p>') +
+      '<label>Montant gardé pour le loyer (FC)<input id="ret-' + o.id + '" type="number" inputmode="numeric" min="0" max="' + resteLoyer + '" value="' + def + '"></label><p class="note">Loyer restant ce mois pour cette boutique : ' + money(resteLoyer, 'CDF') + (o.devise === 'USD' ? '. Vente en dollars : convertis toi-même le reste à reverser.' : '') + '</p>' +
+      '<div class="two"><button class="btn btn-primary btn-sm" type="button" data-act="admLV" data-ok="1" data-id="' + o.id + '"><span>Argent reçu</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="admLV" data-ok="0" data-id="' + o.id + '">Refuser</button></div></div>';
+    var nums = Object.keys(OPS).filter(function (k) { return o['v_' + k]; }).map(function (k) { return OPS[k] + ' : ' + esc(o['v_' + k]); }).join(' · ');
+    var wa = waNum(o.vendeur_tel), rest = o.a_reverser != null ? money(o.a_reverser, 'CDF') : 'le reste';
+    return '<div class="ord">' + head + '<div class="banner" style="margin:0"><b>À reverser : ' + rest + '</b>Loyer gardé : ' + money(o.loyer_retenu || 0, 'CDF') + (nums ? '<br>Numéros du vendeur : ' + nums + (o.mm_nom ? ' (' + esc(o.mm_nom) + ')' : '') : '') + '</div>' +
+      (wa ? '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, ta vente « ' + o.titre + ' » est confirmée. cuervo.co a gardé ' + money(o.loyer_retenu || 0, 'CDF') + ' pour ton loyer et t\'envoie ' + rest + '.') + '"><span>Prévenir le vendeur</span></a>' : '') +
+      '<button class="btn btn-primary btn-sm" type="button" data-act="admRev" data-id="' + o.id + '"><span>Reste envoyé au vendeur</span></button></div>';
+  }).join('') + '</div>' : '<div class="empty">Aucune vente-loyer à traiter.</div>');
+  else if (S.atab === 'confirmer') body = mm.length ? '<div class="g12 stag">' + mm.map(function (v) {
     return '<div class="ord"><div>' + who(v) + '</div><div class="g8">' + (v.mm_nom ? '<div class="item"><span class="grow">Nom du compte : ' + esc(v.mm_nom) + '</span></div>' : '') +
       Object.keys(OPS).filter(function (k) { return v[k]; }).map(function (k) { return '<div class="item"><span class="grow">' + OPS[k] + ' : ' + esc(v[k]) + '</span></div>'; }).join('') + '</div>' +
       '<div class="two"><button class="btn btn-primary btn-sm" type="button" data-act="admVendor" data-do="mm_ok" data-id="' + v.id + '"><span>Confirmer</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="admVendor" data-do="mm_non" data-id="' + v.id + '">Refuser</button></div></div>';
   }).join('') + '</div>' : '<div class="empty">Aucun numéro Mobile Money à confirmer.</div>';
   else if (S.atab === 'loyers') body = a.subs.length ? '<div class="g12 stag">' + a.subs.map(function (s) {
     var v = byId[s.vendor_id] || { boutique: 'Vendeur', prenom: '', nom: '', tel: '' };
-    return '<div class="ord"><div class="top"><div>' + who(v) + '<small>' + (OPS[s.op] || '') + (s.ref ? ' · Réf. ' + esc(s.ref) : '') + ' · ' + fmtDate(s.created_at) + '</small></div><span class="tag a">' + money(s.montant, 'USD') + '</span></div>' +
+    return '<div class="ord"><div class="top"><div>' + who(v) + '<small>' + (OPS[s.op] || '') + (s.ref ? ' · Réf. ' + esc(s.ref) : '') + ' · ' + fmtDate(s.created_at) + '</small></div><span class="tag a">' + money(s.montant, 'CDF') + '</span></div>' +
       (s.capture_path ? '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(s.capture_path) + '">Voir la capture</button>' : '<p class="note">Pas de capture : vérifie avec la référence.</p>') +
       '<div class="two"><button class="btn btn-primary btn-sm" type="button" data-act="admSub" data-ok="1" data-id="' + s.id + '"><span>Loyer reçu</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="admSub" data-ok="0" data-id="' + s.id + '">Refuser</button></div></div>';
   }).join('') + '</div>' : '<div class="empty">Aucun loyer à confirmer.</div>';
-  else if (S.atab === 'vendeurs') body = '<div class="g12 stag">' + a.vendors.map(function (v) {
+  else if (S.atab === 'vendeurs') body = '<div class="pills" style="margin:0 0 12px"><button class="pill' + (S.vf !== 'impaye' ? ' on' : '') + '" type="button" data-act="vf" data-id="">Tous</button><button class="pill' + (S.vf === 'impaye' ? ' on' : '') + '" type="button" data-act="vf" data-id="impaye">Loyer non payé</button></div><div class="g12 stag">' + a.vendors.filter(function (v) { return S.vf !== 'impaye' || (!v.is_admin && !(v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date())); }).map(function (v) {
     var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
-    return '<div class="ord"><div class="top"><div>' + who(v) + '<small>' + (v.is_admin ? 'Administrateur' : ok ? 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) : 'Loyer non payé') + ' · Mobile Money : ' + v.mm_statut + '</small></div>' + (v.suspendu ? '<span class="tag r">Suspendu</span>' : '') + '</div>' +
-      '<div class="two"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir</a>' + (v.is_admin ? '<span></span>' : '<button class="btn ' + (v.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (v.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + v.id + '">' + (v.suspendu ? 'Réactiver' : 'Suspendre') + '</button>') + '</div>' +
+    return '<div class="ord"><div class="top"><div>' + who(v) + '<small>' + (v.is_admin ? 'Administrateur' : ok ? 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) : 'Loyer non payé' + (v.loyer_mode === 'premiere_vente' ? ' (sur 1re vente)' : '')) + ' · Mobile Money : ' + v.mm_statut + '</small></div>' + (v.suspendu ? '<span class="tag r">Suspendu</span>' : '') + '</div>' +
+      '<div class="two"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir</a>' + (v.is_admin ? '<span></span>' : '<button class="btn ' + (v.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (v.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + v.id + '">' + (v.suspendu ? 'Débloquer' : 'Bloquer la boutique') + '</button>') + '</div>' +
       (v.is_admin ? '' : '<button class="btn btn-ghost btn-sm" type="button" data-act="admReset" data-id="' + v.id + '" data-tel="' + esc(v.tel) + '" data-name="' + esc(v.boutique) + '">Donner un nouveau mot de passe</button>') + '</div>';
   }).join('') + '</div>';
-  else { var g = S.settings || {}; body = '<div class="box"><h3>Loyer et paiement des vendeurs</h3><label>Loyer mensuel ($)<input id="g-loyer" type="number" inputmode="decimal" min="0" step="any" value="' + esc(g.loyer) + '"></label><p class="note">Les vendeurs paient leur loyer sur ces numéros.</p>' +
+  else { var g = S.settings || {}; body = '<div class="box"><h3>Loyer et paiement des vendeurs</h3><label>Loyer mensuel (FC)<input id="g-loyer" type="number" inputmode="decimal" min="0" step="any" value="' + esc(g.loyer) + '"></label><p class="note">Les vendeurs paient leur loyer sur ces numéros.</p>' +
     '<label>Nom du compte<input id="g-nom" value="' + esc(g.mm_nom) + '"></label><label>Numéro M-Pesa<input id="g-mpesa" type="tel" value="' + esc(g.mpesa) + '"></label><label>Numéro Airtel Money<input id="g-airtel" type="tel" value="' + esc(g.airtel) + '"></label><label>Numéro Orange Money<input id="g-orange" type="tel" value="' + esc(g.orange) + '"></label>' +
-    '<label>Ton WhatsApp<input id="g-wa" type="tel" value="' + esc(g.whatsapp) + '"></label><button class="btn btn-primary" type="button" data-act="admSettings"><span>Enregistrer</span></button></div>'; }
+    '<label>Ton WhatsApp<input id="g-wa" type="tel" value="' + esc(g.whatsapp) + '"></label><p class="note">Ces numéros reçoivent aussi les ventes-loyer des boutiques en mode « première vente ». Ton WhatsApp sert pour « Mot de passe oublié » et pour les clients des ventes-loyer.</p><button class="btn btn-primary" type="button" data-act="admSettings"><span>Enregistrer</span></button></div>' +
+    '<div class="box" style="margin-top:12px"><h3>Pages d\'aide</h3><a class="btn btn-ghost btn-sm" href="?v=aide" data-nav><span>Voir la page « Comment ça marche »</span></a><button class="btn btn-ghost btn-sm" type="button" data-act="explainer"><span>Voir la vidéo de 15 secondes</span></button></div>'; }
   page('<a class="note rowx" style="padding-top:8px" href="?v=compte" data-nav>' + ico('i-back') + 'Ma boutique</a><h1 style="margin-top:12px">Administration</h1>' +
     '<div class="stats"><div class="stat"><b class="gt">' + a.vendors.length + '</b><span>vendeurs</span></div><div class="stat"><b>' + mm.length + '</b><span>Mobile Money à confirmer</span></div><div class="stat"><b>' + a.subs.length + '</b><span>loyers à confirmer</span></div></div>' +
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.atab ? ' on' : '') + '" type="button" data-act="atab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div><div style="margin-top:16px">' + body + '</div>');

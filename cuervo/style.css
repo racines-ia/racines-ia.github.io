@@ -457,3 +457,14 @@ html{scroll-behavior:smooth}
 .soc i{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;color:#fff;font-style:normal;font-size:13px;font-weight:800}
 .boost{margin-top:4px;padding:14px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(135deg,rgba(24,119,242,.14),transparent);display:grid;gap:8px}
 .boost p{font-size:13px;color:var(--muted);line-height:1.5}
+
+.bchips{display:flex;flex-wrap:wrap;gap:8px}
+.bchip{padding:8px 13px;border-radius:99px;border:1px solid var(--line);background:var(--bg);color:var(--text);font:600 13px var(--f-body);cursor:pointer}
+.bchip.on{background:var(--grad);color:#1a0a00;border-color:transparent}
+.btot{font-size:15px;margin-top:6px}.btot b{color:var(--brand)}
+.bstep{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:18px;background:var(--surface)}
+.bstep>span{flex:none;width:28px;height:28px;border-radius:50%;background:var(--grad);color:#1a0a00;display:grid;place-items:center;font-weight:800;font-size:14px}
+.bstep .grow{display:grid;gap:8px;min-width:0}.bstep p{font-size:13px;color:var(--muted);line-height:1.5}
+.brow{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:14px;background:var(--bg);border:1px solid var(--line)}
+.brow small{display:block;color:var(--muted);font-size:12px}.brow b{font-size:14px;word-break:break-word}
+.brow .btn{flex:none;width:auto;padding:0 14px}

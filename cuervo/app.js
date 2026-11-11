@@ -493,9 +493,66 @@ function shareRow(url, text, img) {
     (navigator.share ? '<button class="btn btn-ghost btn-sm" type="button" data-act="natShare" data-url="' + esc(url) + '" data-text="' + esc(text) + '" data-img="' + esc(img || '') + '">' + ico('i-share') + 'Statut, Instagram, TikTok…</button>' : '') +
     '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + esc(url) + '">Copier le lien</button></div>';
 }
-function boostBox() {
-  return '<div class="boost"><b>Booster sur Facebook</b><p>1. Touche « Facebook » ci-dessus et publie le lien sur ta page Facebook.<br>2. Touche « Booster » : Facebook ouvre ton espace publicité. Choisis la publication, ton budget, la durée et la ville (ex. Kinshasa), puis paie directement à Facebook.</p>' +
-    '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://business.facebook.com/latest/ad_center">Booster</a></div>';
+function bPrix(p) {
+  var pr = p.prix_actuel != null ? p.prix_actuel : ((p.promo_prix > 0 && (!p.promo_fin || new Date(p.promo_fin) > new Date())) ? p.promo_prix : p.prix);
+  return pr ? money(pr, p.devise) : '';
+}
+function boostBox(id, titre, prix) {
+  return '<div class="boost"><b>Booster sur Facebook</b><p>L\'Assistant Boost prépare ta publicité ici : budget, villes, âge, texte. Sur Facebook, tu n\'as plus qu\'à recopier, puis à payer.</p>' +
+    '<button class="btn btn-primary btn-sm" type="button" data-act="boost" data-id="' + esc(id) + '" data-title="' + esc(titre) + '" data-prix="' + esc(prix || '') + '">Ouvrir l\'Assistant Boost</button></div>';
+}
+/* ---------- Assistant Boost ---------- */
+var BV = ['Kinshasa', 'Lubumbashi', 'Goma', 'Bukavu', 'Kisangani', 'Mbuji-Mayi', 'Kananga', 'Kolwezi', 'Matadi', 'Likasi', 'Kikwit', 'Brazzaville'];
+var BI = ['Entrepreneuriat', 'Petites entreprises', 'Smartphones', 'Applications mobiles', 'Développement web', 'Intelligence artificielle', 'Marketing digital', 'Formation en ligne', 'Mode', 'Beauté', 'Technologie', 'Commerce en ligne'];
+var BG = { id: '', title: '', prix: '', st: null, step: 'form' };
+function bLoad(id, title, prix) {
+  var st = null; try { st = JSON.parse(localStorage.getItem('cv_boost_' + id) || 'null'); } catch (e) { }
+  return st || { obj: 'msg', bj: 3, jours: 7, villes: ['Kinshasa'], amin: 18, amax: 45, sexe: 'tous', inter: ['Entrepreneuriat', 'Smartphones', 'Formation en ligne'],
+    texte: '🔥 ' + title + (prix ? '\n💰 ' + prix : '') + '\n✅ Paiement facile par Mobile Money (M-Pesa, Airtel Money, Orange Money)\n👉 Commande ici : ' + plink(id) };
+}
+function bSave() { try { localStorage.setItem('cv_boost_' + BG.id, JSON.stringify(BG.st)); } catch (e) { } }
+function bRead() {
+  var st = BG.st, q = function (k) { return $(k); };
+  if (!q('b-bj')) return;
+  st.obj = (document.querySelector('input[name=b-obj]:checked') || {}).value || 'msg';
+  st.bj = Math.max(1, Number(q('b-bj').value) || 1); st.jours = Math.max(1, Math.min(90, Number(q('b-jours').value) || 1));
+  st.amin = Math.max(18, Math.min(65, Number(q('b-amin').value) || 18)); st.amax = Math.max(st.amin, Math.min(65, Number(q('b-amax').value) || 65));
+  st.sexe = q('b-sexe').value; st.texte = q('b-texte').value;
+  var extra = q('b-ville').value.trim(); if (extra && st.villes.indexOf(extra) < 0) st.villes.push(extra);
+}
+var BOBJ = { msg: ['Recevoir des messages WhatsApp', 'Les clients t\'écrivent directement sur WhatsApp.', 'Envoyer un message WhatsApp'], vis: ['Visites du lien', 'Les clients arrivent sur la page du produit pour payer.', 'En savoir plus'] };
+function bChips(list, sel, act) { return '<div class="bchips">' + list.map(function (x) { return '<button type="button" class="bchip' + (sel.indexOf(x) >= 0 ? ' on' : '') + '" data-act="' + act + '" data-v="' + esc(x) + '">' + esc(x) + '</button>'; }).join('') + '</div>'; }
+function bForm() {
+  var st = BG.st, tot = st.bj * st.jours;
+  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Assistant Boost</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+    '<p class="lead">« ' + esc(BG.title) + ' » · Remplis ici une fois, le site garde tes choix.</p>' +
+    '<div class="box"><h3>1. Objectif</h3>' + Object.keys(BOBJ).map(function (k) { return '<label class="opt"><input type="radio" name="b-obj" value="' + k + '"' + (st.obj === k ? ' checked' : '') + '><span><b>' + BOBJ[k][0] + '</b><small>' + BOBJ[k][1] + '</small></span></label>'; }).join('') + '</div>' +
+    '<div class="box"><h3>2. Budget et durée</h3><div class="two"><label>Budget par jour ($)<input id="b-bj" type="number" inputmode="decimal" min="1" step="1" value="' + st.bj + '" oninput="bTot()"></label><label>Nombre de jours<input id="b-jours" type="number" inputmode="numeric" min="1" max="90" oninput="bTot()" value="' + st.jours + '"></label></div>' +
+    '<div class="btot">Total : <b>' + tot + ' $</b> sur ' + st.jours + ' jour' + (st.jours > 1 ? 's' : '') + '</div><p class="note">Conseil : commence avec 2 à 3 $ par jour pendant 5 à 7 jours.</p></div>' +
+    '<div class="box"><h3>3. Villes</h3>' + bChips(BV.concat(st.villes.filter(function (v) { return BV.indexOf(v) < 0; })), st.villes, 'bVille') + '<label>Autre ville<input id="b-ville" placeholder="Ex. Kindu"></label></div>' +
+    '<div class="box"><h3>4. Personnes ciblées</h3><div class="two"><label>Âge minimum<input id="b-amin" type="number" inputmode="numeric" min="18" max="65" value="' + st.amin + '"></label><label>Âge maximum<input id="b-amax" type="number" inputmode="numeric" min="18" max="65" value="' + st.amax + '"></label></div>' +
+    '<label>Sexe<select id="b-sexe"><option value="tous"' + (st.sexe === 'tous' ? ' selected' : '') + '>Tous</option><option value="hommes"' + (st.sexe === 'hommes' ? ' selected' : '') + '>Hommes</option><option value="femmes"' + (st.sexe === 'femmes' ? ' selected' : '') + '>Femmes</option></select></label>' +
+    '<div class="lbl" style="margin-top:6px">Centres d\'intérêt</div>' + bChips(BI, st.inter, 'bInter') + '</div>' +
+    '<div class="box"><h3>5. Texte de la publicité</h3><textarea id="b-texte" rows="6">' + esc(st.texte) + '</textarea></div>' +
+    '<button class="btn btn-primary" type="button" data-act="bGo"><span>Préparer mon boost</span></button></div>');
+}
+window.bTot = function () { var a = Math.max(0, Number($('b-bj').value) || 0), j = Math.max(0, Number($('b-jours').value) || 0), t = document.querySelector('.btot'); if (t) t.innerHTML = 'Total : <b>' + (a * j) + ' $</b> sur ' + j + ' jour' + (j > 1 ? 's' : ''); };
+function bRow(lbl, val, cp) { return '<div class="brow"><div class="grow"><small>' + lbl + '</small><b>' + esc(val).replace(/\n/g, '<br>') + '</b></div>' + (cp !== false ? '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-msg="Copié" data-text="' + esc(val) + '">Copier</button>' : '') + '</div>'; }
+function bGuide() {
+  var st = BG.st, url = plink(BG.id), sx = { tous: 'Tous', hommes: 'Hommes', femmes: 'Femmes' }[st.sexe];
+  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Ton boost est prêt</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+    '<p class="lead">Suis les étapes dans l\'ordre. Touche « Copier » puis colle dans Facebook.</p>' +
+    '<div class="bstep"><span>1</span><div class="grow"><b>Publie le produit sur ta page Facebook</b><p>Colle ce texte dans ta publication.</p>' + bRow('Texte de la publication', st.texte) +
+    '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(url) + '">Publier sur Facebook</a></div></div>' +
+    '<div class="bstep"><span>2</span><div class="grow"><b>Ouvre « Booster »</b><p>Dans ton espace publicité, choisis « Booster une publication » puis la publication que tu viens de faire.</p>' +
+    '<a class="btn btn-primary btn-sm" target="_blank" rel="noopener" href="https://business.facebook.com/latest/ad_center">Ouvrir Facebook Booster</a></div></div>' +
+    '<div class="bstep"><span>3</span><div class="grow"><b>Objectif</b>' + bRow('Choisis', BOBJ[st.obj][0], false) + bRow('Bouton de la pub', BOBJ[st.obj][2], false) + '</div></div>' +
+    '<div class="bstep"><span>4</span><div class="grow"><b>Audience</b><p>Touche « Créer une audience » (ou « Modifier »).</p>' +
+    bRow('Lieux (villes)', st.villes.join(', ')) + bRow('Âge', st.amin + ' – ' + (st.amax >= 65 ? '65+' : st.amax) + ' ans', false) + bRow('Sexe', sx, false) +
+    (st.inter.length ? bRow('Centres d\'intérêt (un par un)', st.inter.join(', ')) : '') + '</div></div>' +
+    '<div class="bstep"><span>5</span><div class="grow"><b>Budget et durée</b>' + bRow('Budget par jour', st.bj + ' $', false) + bRow('Durée', st.jours + ' jours', false) + bRow('Total', (st.bj * st.jours) + ' $', false) + '</div></div>' +
+    '<div class="bstep"><span>6</span><div class="grow"><b>Paie et lance</b><p>Touche « Booster maintenant ». La première fois, Facebook te demande d\'ajouter un moyen de paiement (carte Visa ou Mastercard). Facebook vérifie ensuite ta pub, en général en moins de 24 h, puis elle démarre.</p></div></div>' +
+    '<button class="btn btn-ghost" type="button" data-act="bEdit"><span>Modifier mes réglages</span></button></div>');
 }
 function contactRow(s) {
   var wa = waNum(s.whatsapp), h = '';
@@ -525,7 +582,7 @@ async function pageProduct(id, alive) {
     '<div class="cover' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
     '<article class="prod"><div class="phead"><div class="sq' + (safeUrl(p.image_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.image_url)) : '') + '">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
-    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
+    (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '" data-prix="' + esc(bPrix(p)) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
     (p.description ? '<div class="sub">Description</div><p class="desc">' + esc(p.description) + '</p>' : '') +
     ((p.points || []).length ? '<div class="sub">Les points forts</div><ul class="ck">' + p.points.map(function (t) { return '<li>' + ico('i-check') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ul>' : '') +
     (vids.length ? '<div class="sub">Vidéos explicatives</div><div class="g16">' + vids.join('') + '</div>' : '') +
@@ -579,7 +636,7 @@ var A = {
   navProducts: async function () { if (new URLSearchParams(location.search).toString()) { history.pushState({}, '', location.pathname); await route(); } var el = $('produits'); if (el) el.scrollIntoView(); var i = $('h-q'); if (i) i.focus(); },
   cat: function (el) { var h = S.ctx.home; if (!h) return; h.cat = el.dataset.id; $('homeCats').innerHTML = homeCats(); $('homeGrid').innerHTML = homeGrid(); },
   toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView(); },
-  copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast('Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
+  copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast(el.dataset.msg || 'Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
     var p = S.ctx.product, s = S.ctx.shop; if (!p) return;
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Paiement</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
@@ -681,6 +738,11 @@ var A = {
 
   /* Produits du vendeur */
   newProduct: function () { openEditor(null); },
+  boost: function (el) { var d = el.dataset; BG = { id: d.id, title: d.title, prix: d.prix, st: bLoad(d.id, d.title, d.prix) }; bForm(); },
+  bVille: function (el) { bRead(); var v = el.dataset.v, a = BG.st.villes, i = a.indexOf(v); if (i >= 0) a.splice(i, 1); else a.push(v); bForm(); },
+  bInter: function (el) { bRead(); var v = el.dataset.v, a = BG.st.inter, i = a.indexOf(v); if (i >= 0) a.splice(i, 1); else a.push(v); bForm(); },
+  bGo: function () { bRead(); if (!BG.st.villes.length) return toast('Choisis au moins une ville'); if (!BG.st.texte.trim()) return toast('Écris le texte de la publicité'); bSave(); bGuide(); },
+  bEdit: function () { bForm(); },
   natShare: async function (el) {
     var d = el.dataset, data = { title: d.text, text: d.text + ' ' + d.url };
     try {
@@ -695,7 +757,7 @@ var A = {
     var url = plink(el.dataset.id);
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Partager le produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
       '<p class="lead">Ce lien ouvre directement « ' + esc(el.dataset.title) + ' ». Depuis le produit, le client peut aussi visiter ta boutique.</p>' +
-      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title, el.dataset.img) + boostBox() + '</div>');
+      '<div class="linkbox">' + esc(url) + '</div>' + shareRow(url, el.dataset.title, el.dataset.img) + boostBox(el.dataset.id, el.dataset.title, el.dataset.prix) + '</div>');
   },
   editHere: async function (el) {
     var r = await sb.from('mk_products').select('*').eq('id', el.dataset.id).maybeSingle();
@@ -1009,7 +1071,7 @@ function dashProducts() {
       return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</small>' +
         '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div>' +
         '<div class="two"><button class="btn btn-ghost btn-sm" type="button" data-act="editProduct" data-id="' + p.id + '"><span>Modifier</span></button>' +
-        '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
+        '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '" data-prix="' + esc(bPrix(p)) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
     }).join('') : '<div class="empty">Tu n\'as pas encore de produit. Ajoute le premier.</div>') + '</div>';
 }
 function upBox(key, url, label, cls) {
@@ -1080,7 +1142,7 @@ function aiBlock() {
 function edRender() {
   var p = E.p, url = E.id ? plink(E.id) : '', keep = $('sheetRoot').querySelector('.sheet').scrollTop, was = $('sheetRoot').classList.contains('open') && $('e-titre');
   sheet('<div class="shead"><h2>' + (E.id ? 'Modifier le produit' : 'Nouveau produit') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div><div class="g12">' +
-    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre, safeUrl(p.image_url)) + boostBox() + '</div>' : '') +
+    (E.id ? '<div class="box"><h3>Lien à partager</h3><div class="linkbox">' + esc(url) + '</div>' + shareRow(url, p.titre, safeUrl(p.image_url)) + boostBox(E.id, p.titre, bPrix(p)) + '</div>' : '') +
     '<div class="box"><h3>Le produit</h3><label>Titre<input id="e-titre" maxlength="120" value="' + esc(p.titre) + '"></label>' +
     '<div class="two"><label>Prix<input id="e-prix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.prix == null ? '' : p.prix) + '"></label><label>Devise<select id="e-devise"><option value="USD"' + (p.devise === 'USD' ? ' selected' : '') + '>Dollars ($)</option><option value="CDF"' + (p.devise === 'CDF' ? ' selected' : '') + '>Francs (FC)</option></select></label></div>' +
     '<label>Catégorie<select id="e-cat"><option value="">Choisir…</option>' + CATS.map(function (c) { return '<option' + (p.categorie === c ? ' selected' : '') + '>' + c + '</option>'; }).join('') + '</select></label>' +

@@ -739,6 +739,7 @@ var A = {
     var g = function (k) { return ($(k) ? $(k).value : '').trim(); }, err = $('a-err');
     var tel = waNum(g('a-tel')), pw = $('a-pw') ? $('a-pw').value : '';
     if (!g('a-prenom') || !g('a-nom') || g('a-boutique').length < 2) { err.textContent = 'Remplis ton prénom, ton nom et le nom de ta boutique.'; err.classList.remove('hide'); return; }
+    if (g('a-email') && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(g('a-email'))) { err.textContent = 'Ton adresse e-mail n\'est pas valide.'; err.classList.remove('hide'); return; }
     busy(el, true);
     try {
       if (!S.user) {
@@ -751,6 +752,8 @@ var A = {
       if (v.error) throw v.error;
       var md = document.querySelector('input[name=a-mode]:checked');
       if (md && md.value !== 'premiere_vente') await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.user.id);
+      var em = g('a-email').toLowerCase();
+      if (em && /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)) await sb.from('mk_vendors').update({ email: em }).eq('id', S.user.id);
       await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); await route(); showExplainer('Bienvenue sur cuervo.co');
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
   },
@@ -1069,7 +1072,7 @@ function renderAuth() {
   page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 35 jours, tout de suite ou sur ta première vente.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
     (need ? '<div class="pills" style="margin-top:24px"><button class="pill' + (reg ? ' on' : '') + '" type="button" data-act="authMode" data-id="register">Créer un compte</button><button class="pill' + (reg ? '' : ' on') + '" type="button" data-act="authMode" data-id="login">J\'ai déjà un compte</button></div>' : '') +
     '<div class="box" style="margin-top:16px">' +
-    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label>' + loyerChoice('premiere_vente', 'a-mode') : '') +
+    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label><label>Ton e-mail <small style="font-weight:500;opacity:.7">(pour recevoir chaque notification de vente)</small><input id="a-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com"></label>' + loyerChoice('premiere_vente', 'a-mode') : '') +
     (need || !reg ? '<label>Numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 0812 345 678"></label><label>Mot de passe<input id="a-pw" type="password" autocomplete="' + (reg ? 'new-password' : 'current-password') + '" placeholder="6 caractères minimum"></label>' : '<input id="a-tel" type="hidden" value="">') +
     '<div class="msg-err hide" id="a-err"></div>' +
     '<button class="btn btn-primary" type="button" data-act="' + (reg ? 'register' : 'login') + '"><span>' + (reg ? 'Créer ma boutique' : 'Me connecter') + '</span></button>' +

@@ -5,30 +5,30 @@
 :root{--ink:#14213d;--ink2:#2a3a5e;--gold:#c2a15b;--gold2:#e9d8ae;--ivory:#faf7f1;--line:#e7e0d1;--mut:#6b7385;--ok:#2f8f5b;--r:16px;
 --sh1:0 1px 2px #14213d0f,0 4px 14px #14213d0d;--sh2:0 10px 30px #14213d1f;--e:cubic-bezier(.22,1,.36,1)}
 *{box-sizing:border-box}body{margin:0;font-family:Manrope,sans-serif;background:var(--ivory);color:var(--ink);-webkit-font-smoothing:antialiased}
-header{background:linear-gradient(160deg,#14213d,#22355e);color:#fff;text-align:right;padding:28px 20px 30px;border-radius:0 0 28px 28px;box-shadow:var(--sh2);position:relative}
+header{background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);color:#fff;text-align:right;padding:28px 20px 30px;border-radius:0 0 28px 28px;box-shadow:var(--sh2);position:relative}
 header:after{content:"";position:absolute;right:20px;bottom:16px;width:64px;height:2px;background:var(--gold)}
 header h1{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;line-height:1.15;margin:0;letter-spacing:1px}
 header p{margin:8px 0 0;color:var(--gold2);font-size:12px;letter-spacing:2px;text-transform:uppercase}
 main{max-width:720px;margin:auto;padding:20px 16px 40px}
-.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh1);animation:up .45s var(--e) both}
+.card{background:#fff;border:1px solid #dfe6f3;border-top:0;background-image:linear-gradient(#fff,#fff),linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);background-origin:border-box;background-clip:padding-box,border-box;border-top:4px solid transparent;border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh1);animation:up .45s var(--e) both}
 .card:nth-of-type(2){animation-delay:.06s}.card:nth-of-type(3){animation-delay:.12s}
 @keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--ink);margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line);position:relative}
-h2:after{content:"";position:absolute;left:0;bottom:-1px;width:40px;height:2px;background:var(--gold)}
+h2:after{content:"";position:absolute;left:0;bottom:-1px;width:56px;height:3px;border-radius:3px;background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%)}
 h3{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ink2);margin:20px 0 8px}
 label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px;font-weight:600;letter-spacing:.3px}
 input{width:100%;height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;font:500 15px Manrope,sans-serif;color:var(--ink);background:#fdfcf9;transition:border-color .15s,box-shadow .15s}
 input:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px #c2a15b26;background:#fff}
 .chk label{display:flex;gap:12px;align-items:center;font-size:14px;color:var(--ink);font-weight:500;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0}
 .chk input{width:20px;height:20px;accent-color:var(--ink)}
-button{min-height:48px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:0 22px;font:700 14px Manrope,sans-serif;margin:10px 6px 0 0;transition:transform .15s var(--e),box-shadow .15s;box-shadow:var(--sh1)}
+button{min-height:48px;background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);color:#fff;border:0;border-radius:999px;padding:0 22px;font:700 14px Manrope,sans-serif;margin:10px 6px 0 0;transition:transform .15s var(--e),box-shadow .15s;box-shadow:var(--sh1)}
 button:active{transform:scale(.96)}button.or{background:linear-gradient(135deg,#c9a862,#b08d47);color:#14213d}
 button.l{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
 canvas{width:100%;height:160px;border:1.5px dashed var(--gold);border-radius:12px;background:#fffdf8;touch-action:none}
 .sig img{max-width:240px;height:84px;object-fit:contain;border-bottom:1px solid var(--line)}
 .tabs{display:flex;gap:6px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px;margin-bottom:16px;box-shadow:var(--sh1)}
 .tabs button{flex:1 0 auto;margin:0;min-height:40px;background:transparent;color:var(--mut);box-shadow:none;padding:0 14px}
-.tabs button.on{background:var(--ink);color:#fff}
+.tabs button.on{background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);color:#fff}
 .link{font:12px monospace;word-break:break-all;background:var(--ivory);border:1px solid var(--line);padding:10px;border-radius:10px;color:var(--ink2)}
 .ok{color:var(--ok);font-size:13px;font-weight:700;margin-left:6px}.muted{color:var(--mut);font-size:13px;line-height:1.5}
 .badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#eef0f4;color:var(--mut);margin-left:6px}.badge.v{background:#e3f4ea;color:var(--ok)}
@@ -38,17 +38,25 @@ canvas{width:100%;height:160px;border:1.5px dashed var(--gold);border-radius:12p
 #print{display:none}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 @media print{@page{margin:10mm}body{background:#fff}header,main{display:none}#print{display:block;font:11px Manrope,sans-serif;color:#14213d;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#print .ent{text-align:right;background:#14213d;color:#fff;padding:10px 14px;border-radius:10px;border-bottom:3px solid #c2a15b;margin-bottom:8px}
+#print .ent{text-align:right;background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);color:#fff;padding:10px 14px;border-radius:10px;border-bottom:3px solid #c2a15b;margin-bottom:8px}
 #print .ent b{display:block;font:700 18px 'Cormorant Garamond',serif;letter-spacing:1px}#print .ent i{color:#e9d8ae;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-style:normal}
-#print h2{font:700 13px 'Cormorant Garamond',serif;font-size:14px;color:#14213d;border-bottom:2px solid #c2a15b;padding:2px 0;margin:10px 0 5px}
+#print h2{font:700 14px 'Cormorant Garamond',serif;color:#fff;background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);padding:4px 10px;border-radius:6px;margin:10px 0 5px}
 #print table{width:100%;border-collapse:collapse}#print td{border:1px solid #e0d8c6;padding:3px 6px;vertical-align:top}
 #print td:first-child{width:38%;color:#4a5570;background:#faf7f1}.bx{border:1px solid #e0d8c6;border-radius:6px;padding:6px 8px}
 .pg{display:flex;gap:8px}.pg table{flex:1}.pp{width:28mm;height:35mm;border:1.5px solid #c2a15b;border-radius:4px;object-fit:cover;flex:none;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:9px}
 .sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.sgrid div{border:1px solid #e0d8c6;border-radius:6px;padding:5px;min-height:68px}.sgrid img{height:52px}}
+#fs{position:fixed;inset:0;z-index:99;background:#fff;display:none;flex-direction:column}
+#fs.on{display:flex;animation:up .3s var(--e)}
+#fs .top{background:linear-gradient(135deg,#0b1f4d 0%,#1a3f8f 55%,#2f6fc4 100%);color:#fff;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;font-weight:700}
+#fs canvas{flex:1;width:100%;height:auto;border:0;border-radius:0;background:#fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10'/%3E")}
+#fs .line{position:absolute;left:8%;right:8%;bottom:110px;border-bottom:1.5px dashed #9fb3d9;pointer-events:none}
+#fs .bar{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ebf5}#fs .bar button{flex:1;margin:0}
 </style></head><body>
 <header><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><p>Fiche d'identification des candidats au mariage chrétien</p></header>
 <main id="app"><div class="card">Chargement…</div></main>
 <div id="print"></div>
+<div id="fs"><div class="top"><span id="fst">Signature</span><span style="font-size:12px;opacity:.8">Signez dans la zone blanche</span></div><canvas id="fcv"></canvas><div class="line"></div>
+<div class="bar"><button class="l" onclick="fsClose()">Annuler</button><button class="l" onclick="fsClr()">Effacer</button><button class="or" onclick="fsOk()">Valider</button></div></div>
 <script>
 const SB="https://eebqtggnmuzfrwgunpsa.supabase.co",KEY="sb_publishable_lOSLDkJ_SGGKmW5dnLQTig_i8Wa-Vp0";
 async function rpc(fn,args){const r=await fetch(SB+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify(args||{})});if(!r.ok)throw new Error(await r.text());return r.json()}
@@ -92,7 +100,7 @@ function formPart(r){const d=S.data[r]||{},p=P[r],me=S.role==="fiance"||S.role==
  ${p.f.map((f,i)=>`<label>${f}</label><input id="f${i}" value="${esc(d[f])}" ${f.startsWith("Date")?'placeholder="jj/mm/aaaa"':""}>`).join("")}
  <h3>Engagement</h3><p style="font-size:14px">${ENG[p.e]}</p>
  <h3>Signature ${LBL[r]==="Fiancée"?"de la":"du"} ${LBL[r]}</h3>
- ${d.signature?`<div class="sig"><img src="${d.signature}"></div><button class="l" onclick="S.data['${r}'].signature=null;render()">Refaire la signature</button>`:`<canvas id="cv"></canvas><button class="l" onclick="clr()">Effacer</button>`}
+ ${d.signature?`<div class="sig"><img src="${d.signature}"></div><button class="l" onclick="S.data['${r}'].signature=null;render()">Refaire la signature</button>`:`<div id="sigprev"></div><canvas id="cv"></canvas><button class="or" onclick="fsOpen('${r}')">Signer en plein écran</button><button class="l" onclick="clr()">Effacer</button>`}
  <br><button class="or" onclick="enreg('${r}')">Enregistrer</button><span id="msg" class="ok"></span></div>`}
 
 function formMariage(){const d=S.data.mariage||{},pc=d.pieces||{};
@@ -103,7 +111,16 @@ function formMariage(){const d=S.data.mariage||{},pc=d.pieces||{};
  <label>Nom du Pasteur Responsable</label><input id="pasteur" value="${esc(d.pasteur)}">
  <br><button class="or" onclick="enregM()">Enregistrer</button><span id="msg" class="ok"></span></div>`}
 
-let cv,ctx,drawn=false;const PH={};
+let cv,ctx,drawn=false;const PH={},SIG={};let fr=null,fc,fx,fd=false;
+function fsOpen(r){fr=r;const o=document.getElementById("fs");o.classList.add("on");document.getElementById("fst").textContent="Signature – "+LBL[r];
+ try{document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen().then(()=>screen.orientation&&screen.orientation.lock&&screen.orientation.lock("landscape").catch(()=>{})).catch(()=>{})}catch(e){}
+ setTimeout(()=>{fc=document.getElementById("fcv");const b=fc.getBoundingClientRect(),d=devicePixelRatio||1;fc.width=b.width*d;fc.height=b.height*d;fx=fc.getContext("2d");fx.scale(d,d);fx.lineWidth=3;fx.lineCap="round";fx.lineJoin="round";fx.strokeStyle="#0b1f4d";fd=false;let on=false;
+ const pt=e=>{const q=fc.getBoundingClientRect();return[e.clientX-q.left,e.clientY-q.top]};
+ fc.onpointerdown=e=>{on=true;fd=true;fc.setPointerCapture(e.pointerId);fx.beginPath();fx.moveTo(...pt(e))};fc.onpointermove=e=>{if(on){fx.lineTo(...pt(e));fx.stroke()}};fc.onpointerup=()=>on=false},350)}
+function fsClr(){fx.clearRect(0,0,fc.width,fc.height);fd=false}
+function fsClose(){document.getElementById("fs").classList.remove("on");try{screen.orientation&&screen.orientation.unlock&&screen.orientation.unlock()}catch(e){}if(document.fullscreenElement)document.exitFullscreen().catch(()=>{})}
+function fsOk(){if(!fd){fsClose();return}const t=document.createElement("canvas");t.width=fc.width;t.height=fc.height;const c=t.getContext("2d");c.fillStyle="#fff";c.drawImage(fc,0,0);SIG[fr]=t.toDataURL("image/png");
+ const pv=document.getElementById("sigprev");if(pv){pv.innerHTML=`<div class="sig"><img src="${SIG[fr]}"></div><p class="ok">Signature prête – appuyez sur Enregistrer</p>`;const cv0=document.getElementById("cv");if(cv0)cv0.style.display="none"}fsClose()}
 function photo(inp,r){const f=inp.files[0];if(!f)return;const im=new Image();im.onload=()=>{const W=360,sc=Math.min(1,W/im.width),c=document.createElement("canvas");c.width=im.width*sc;c.height=im.height*sc;c.getContext("2d").drawImage(im,0,0,c.width,c.height);PH[r]=c.toDataURL("image/jpeg",.8);const a=document.getElementById("av");a.style.backgroundImage=`url(${PH[r]})`;a.style.color="transparent"};im.src=URL.createObjectURL(f)}
 function initCanvas(){cv=document.getElementById("cv");drawn=false;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx=cv.getContext("2d");ctx.scale(dpr,dpr);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.strokeStyle="#0b1d5a";let on=false;
  const pt=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
@@ -112,7 +129,7 @@ function initCanvas(){cv=document.getElementById("cv");drawn=false;if(!cv)return
 function clr(){ctx.clearRect(0,0,cv.width,cv.height);drawn=false}
 
 async function save(part,obj){const ok=await rpc("mf_save",{p_id:ID,p_key:K,p_part:part,p_payload:obj});S.data[part]=obj;const m=document.getElementById("msg");if(m)m.textContent=ok?" ✔ Enregistré et transmis":" ✖ Erreur";return ok}
-async function enreg(r){const o={};P[r].f.forEach((f,i)=>o[f]=document.getElementById("f"+i).value.trim());o.signature=(S.data[r]||{}).signature||null;o.photo=PH[r]!==undefined?PH[r]:((S.data[r]||{}).photo||null);if(cv&&drawn)o.signature=cv.toDataURL("image/png");
+async function enreg(r){const o={};P[r].f.forEach((f,i)=>o[f]=document.getElementById("f"+i).value.trim());o.signature=(S.data[r]||{}).signature||null;o.photo=PH[r]!==undefined?PH[r]:((S.data[r]||{}).photo||null);if(cv&&drawn)o.signature=cv.toDataURL("image/png");if(SIG[r])o.signature=SIG[r];
  try{await save(r,o);render();document.getElementById("msg").textContent=" ✔ Enregistré et transmis"}catch(e){alert("Erreur de connexion, réessayez.")}}
 async function enregM(){const o={pieces:{}};MAR.forEach((f,i)=>o[f]=document.getElementById("m"+i).value.trim());PIECES.forEach((p,i)=>o.pieces[p]=document.getElementById("p"+i).checked);["autres","faita","le","pasteur"].forEach(k=>o[k]=document.getElementById(k).value.trim());
  try{await save("mariage",o)}catch(e){alert("Erreur de connexion.")}}

@@ -8,14 +8,14 @@
 header{background:#fff;color:#0a1a4a;padding:22px 18px 18px;position:relative;overflow:hidden;border-bottom:5px solid transparent;border-image:linear-gradient(110deg,#0a1a4a 0%,#1d4ed8 50%,#5ab4f0 100%) 1;box-shadow:0 6px 20px #0a1a4a14}
 header .dots{position:absolute;top:10px;right:14px;display:flex;gap:7px;align-items:center;opacity:.9}
 header .dots i{display:block;border-radius:50%}
-header .top{display:flex;justify-content:flex-end;align-items:center;gap:12px;margin-top:14px}
-header .tr{text-align:right;min-width:0;padding-right:12px;border-right:2px solid #e3e8f1}
-header h1,header p{white-space:nowrap}header h1{font-size:clamp(11px,3.9vw,18px);font-weight:800;margin:0;letter-spacing:.3px}
-header p{margin:4px 0 0;font-size:clamp(8.5px,2.8vw,13px);color:#5b6475}
-header .logo{width:clamp(54px,16vw,78px);height:auto;flex:none}
-header .tl{display:flex;align-items:center;gap:10px;margin-top:18px;flex-wrap:wrap}
-header .tl b{font-size:clamp(28px,9vw,40px);font-weight:800;letter-spacing:1px;line-height:1;color:#0a1a4a}
-header .tl span{background:linear-gradient(110deg,#0a1a4a 0%,#1d4ed8 50%,#5ab4f0 100%);color:#fff;font-weight:700;font-size:13px;padding:6px 12px;border-radius:4px;letter-spacing:.5px}
+header .top{display:flex;justify-content:space-between;align-items:center;gap:14px;margin-top:18px}
+header .tr{text-align:left;padding-left:12px;border-left:4px solid #1d4ed8}
+header h1{font-size:clamp(18px,6vw,28px);font-weight:800;margin:0;line-height:1.1;letter-spacing:.5px;color:#0a1a4a}
+header h1 span{background:linear-gradient(110deg,#0a1a4a 0%,#1d4ed8 50%,#5ab4f0 100%);-webkit-background-clip:text;background-clip:text;color:transparent}
+header .logo{width:clamp(96px,30vw,140px);height:auto;flex:none}
+header .tl{margin-top:20px;padding-top:14px;border-top:1px solid #e3e8f1}
+header .tl b{display:block;font-size:clamp(20px,6.6vw,30px);font-weight:800;letter-spacing:.5px;line-height:1.1;color:#0a1a4a}
+header .tl span{display:inline-block;margin-top:8px;background:linear-gradient(110deg,#0a1a4a 0%,#1d4ed8 50%,#5ab4f0 100%);color:#fff;font-weight:700;font-size:clamp(10px,3.3vw,14px);padding:6px 12px;border-radius:4px;letter-spacing:.5px}
 main{max-width:720px;margin:0 auto;padding:18px 14px 40px;background:#fff;min-height:60vh}body{background:#eef1f6}
 .card{background:#fff;border:0;box-shadow:none!important;padding:8px 6px 18px!important;border-bottom:1px solid #eef0f4!important;border-top:0;border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh1);animation:up .45s var(--e) both}
 .card:nth-of-type(2){animation-delay:.06s}.card:nth-of-type(3){animation-delay:.12s}
@@ -60,8 +60,8 @@ canvas{width:100%;height:160px;border:1.5px dashed #1d4ed8;border-radius:12px;ba
 #fs .bar{display:flex;gap:8px;padding:12px;border-top:1px solid #e6ebf5}#fs .bar button{flex:1;margin:0}
 </style></head><body>
 <header><div class="dots"><i style="width:9px;height:9px;background:#5ab4f0"></i><i style="width:14px;height:14px;border:3px solid #c9d6ee"></i><i style="width:7px;height:7px;background:#1d4ed8"></i><i style="width:18px;height:18px;background:#0a1a4a"></i></div>
-<div class="top"><div class="tr"><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><p>Fiche d'identification des candidats au mariage chrétien</p></div><img class="logo" src="logo.png" alt="Logo"></div>
-<div class="tl"><b>MARIAGE</b><span>CHRÉTIEN</span></div></header>
+<div class="top"><div class="tr"><h1>ÉGLISE DE LA<br>RÉSURRECTION<br><span>KIMBWALA</span></h1></div><img class="logo" src="logo.png" alt="Logo"></div>
+<div class="tl"><b>FICHE D'IDENTIFICATION</b><span>DES CANDIDATS AU MARIAGE CHRÉTIEN</span></div></header>
 <main id="app"><div class="card">Chargement…</div></main>
 <div id="print"></div>
 <div id="fs"><div class="top"><span id="fst">Signature</span><span style="font-size:12px;opacity:.8">Signez dans la zone blanche</span></div><canvas id="fcv"></canvas><div class="line"></div>
@@ -151,7 +151,7 @@ function tp(d,f){return `<div class="pg">${tbl(d,f)}${d.photo?`<img class="pp" s
 function tbl(d,fields){return `<table>${fields.map(f=>`<tr><td>${f}</td><td>${esc(d[f])}</td></tr>`).join("")}</table>`}
 function sg(r){const s=(S.data[r]||{}).signature;return `<div><b>Signature ${r==="fiancee"?"de la Fiancée":r==="marraine"?"de la Marraine":"du "+LBL[r]}</b><br>${s?`<img src="${s}">`:""}</div>`}
 function buildPrint(){const d=S.data,m=d.mariage||{},pc=m.pieces||{};
- document.getElementById("print").innerHTML=`<div class="ent"><div><b style="font-size:30px;font-weight:800;color:#0a1a4a">MARIAGE</b> <span class="tag">CHRÉTIEN</span><br><span style="font-size:10px;color:#5b6475">Date : ${new Date().toLocaleDateString("fr-FR")}</span></div><div style="display:flex;align-items:center;gap:10px"><div style="text-align:right;border-right:2px solid #e3e8f1;padding-right:10px"><b>ÉGLISE DE LA RÉSURRECTION KIMBWALA</b><i>Fiche d'identification des candidats au mariage chrétien</i></div><img src="logo.png" style="width:20mm"></div></div><div class="sheet">
+ document.getElementById("print").innerHTML=`<div class="ent"><div><div style="border-left:4px solid #1d4ed8;padding-left:8px"><b style="font-size:17px;line-height:1.1">ÉGLISE DE LA RÉSURRECTION<br>KIMBWALA</b></div><div style="margin-top:8px"><b style="font-size:20px">FICHE D'IDENTIFICATION</b><span class="tag">DES CANDIDATS AU MARIAGE CHRÉTIEN</span></div><span style="font-size:10px;color:#5b6475">Date : ${new Date().toLocaleDateString("fr-FR")}</span></div><img src="logo.png" style="width:30mm"></div><div class="sheet">
  <h2>I. IDENTIFICATION DU FIANCÉ</h2>${tp(d.fiance||{},PERS)}<h2>II. IDENTIFICATION DE LA FIANCÉE</h2>${tp(d.fiancee||{},PERS)}
  <h2>III. INFORMATIONS SUR LE MARIAGE</h2>${tbl(m,MAR)}
  <h2>IV. IDENTIFICATION DU COUPLE PARRAIN</h2><b>Parrain</b>${tp(d.parrain||{},PAR)}<b>Marraine</b>${tp(d.marraine||{},PAR)}

@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fiche Mariage – Église de la Résurrection Kimbwala</title>
+<style>
+:root{--or:#333;--bl:#111;--bg:#fff}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,serif;background:var(--bg);color:#222}
+header{text-align:center;padding:22px 12px 12px;border-bottom:1px solid #ddd}
+header h1{font-size:17px;margin:0;letter-spacing:1px}header p{margin:6px 0 0;color:#555;font-size:13px}
+main{max-width:760px;margin:auto;padding:14px}
+.card{padding:12px 0 18px;margin-bottom:8px;border-bottom:1px solid #eee}
+h2{font-size:16px;color:var(--bl);margin:0 0 12px}h3{font-size:14px;color:var(--or);margin:14px 0 8px}
+label{display:block;font-size:12px;color:#666;margin-top:8px;font-family:sans-serif}
+input{width:100%;padding:8px 2px;border:0;border-bottom:1px solid #bbb;font-size:15px;background:#fff;font-family:Georgia,serif}input:focus{outline:0;border-color:#111}
+.chk label{display:flex;gap:8px;align-items:center;font-size:14px;color:#222}.chk input{width:auto}
+button{background:var(--bl);color:#fff;border:0;border-radius:6px;padding:10px 14px;font-size:15px;margin:6px 4px 0 0;font-family:sans-serif}
+button.or{background:var(--or)}button.l{background:#eee;color:#222}
+canvas{width:100%;height:150px;border:1px solid #ccc;border-radius:4px;background:#fff;touch-action:none}
+.sig img{max-width:220px;height:80px;object-fit:contain;border-bottom:1px solid #999}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{flex:1;min-width:110px}
+.tabs button.on{background:var(--or)}
+.link{font-size:12px;word-break:break-all;background:#f5f5f5;padding:8px;border-radius:8px;font-family:monospace}
+.ok{color:green;font-family:sans-serif;font-size:13px}.muted{color:#888;font-size:13px;font-family:sans-serif}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#eee;font-family:sans-serif}
+.badge.v{background:#d8f0d8;color:#1d6b1d}
+#print{display:none}
+@media print{body{background:#fff}header,main{display:none}#print{display:block;font-size:11.5px;padding:10mm}
+#print h1{text-align:center;font-size:15px;margin:0}#print h2{font-size:12.5px;border-bottom:1px solid #000;padding:2px 0;margin:10px 0 4px}
+#print table{width:100%;border-collapse:collapse}#print td{border:1px solid #bbb;padding:3px 5px;vertical-align:top}
+#print td:first-child{width:38%;color:#444}.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sgrid div{border:1px solid #bbb;padding:5px;min-height:70px}
+.sgrid img{height:55px}}
+</style></head><body>
+<header><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><p>Fiche d'identification des candidats au mariage chrétien</p></header>
+<main id="app"><div class="card">Chargement…</div></main>
+<div id="print"></div>
+<script>
+const SB="https://eebqtggnmuzfrwgunpsa.supabase.co",KEY="sb_publishable_lOSLDkJ_SGGKmW5dnLQTig_i8Wa-Vp0";
+async function rpc(fn,args){const r=await fetch(SB+"/rest/v1/rpc/"+fn,{method:"POST",headers:{apikey:KEY,"Content-Type":"application/json"},body:JSON.stringify(args||{})});if(!r.ok)throw new Error(await r.text());return r.json()}
+const PERS=["Nom","Post-nom","Prénom","Date de naissance","Lieu de naissance","Nationalité","Profession","Adresse","Téléphone","E-mail","Église d'appartenance","Date de conversion","Date de baptême"];
+const PAR=["Nom","Post-nom","Prénom","Profession","Adresse","Téléphone","Église d'appartenance","Fonction dans l'Église"];
+const MAR=["Date prévue du mariage","Lieu de célébration","Officiant","Date de début des enseignements prénuptiaux","Date prévue de fin des enseignements"];
+const PIECES=["Copie de la carte d'identité des deux fiancés","Actes de naissance","Certificats de baptême","Deux photos d'identité de chaque fiancé(e)","Attestation de célibat (si exigée)","Lettre de recommandation pastorale (si nécessaire)"];
+const P={fiance:{t:"I. Identification du Fiancé",f:PERS,e:"fiances"},fiancee:{t:"II. Identification de la Fiancée",f:PERS,e:"fiances"},parrain:{t:"IV. Parrain",f:PAR,e:"parrains"},marraine:{t:"IV. Marraine",f:PAR,e:"parrains"}};
+const ENG={fiances:"Nous déclarons que les renseignements fournis sont exacts et nous nous engageons à suivre fidèlement les enseignements de préparation au mariage chrétien, à respecter les principes bibliques du mariage et les règlements de l'Église.",
+parrains:"Nous acceptons d'accompagner les futurs époux tout au long de leur préparation au mariage chrétien. Nous nous engageons à les soutenir par la prière, les conseils, l'exemple d'un foyer chrétien et à demeurer disponibles pour leur accompagnement même après la célébration de leur mariage."};
+const LBL={fiance:"Fiancé",fiancee:"Fiancée",parrain:"Parrain",marraine:"Marraine"};
+const q=new URLSearchParams(location.search);let ID=q.get("f"),K=q.get("k"),S=null,tab="fiance";
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const app=document.getElementById("app");
+
+async function start(){
+ if(!ID){const saved=localStorage.getItem("mf_admin");if(saved){location.search=saved;return}
+  app.innerHTML=`<div class="card"><p>Appuyez pour ouvrir la fiche. Vous recevrez ensuite les liens pour la fiancée, le parrain et la marraine.</p><button onclick="creer()">Commencer la fiche</button></div>`;return}
+ try{S=await rpc("mf_get",{p_id:ID,p_key:K})}catch(e){S=null}
+ if(!S){app.innerHTML=`<div class="card">Lien invalide.</div>`;return}
+ if(S.role==="fiance")localStorage.setItem("mf_admin",location.search); else tab=S.role;
+ render()}
+async function creer(){const r=await rpc("mf_create");location.search=`?f=${r.id}&k=${r.admin}`}
+
+function lien(role){return location.origin+location.pathname+`?f=${ID}&k=${S.keys[role]}`}
+function status(r){const d=S.data[r]||{};return d.signature?'<span class="badge v">✔ signé</span>':(Object.keys(d).length?'<span class="badge">en cours</span>':'<span class="badge">vide</span>')}
+
+function render(){
+ const admin=S.role==="fiance";let h="";
+ if(admin){
+  h+=`<div class="card"><h2>Liens à envoyer</h2>`+["fiancee","parrain","marraine"].map(r=>`<p><b>${LBL[r]}</b> ${status(r)}</p><div class="link">${lien(r)}</div><button class="l" onclick="partager('${r}')">Envoyer</button><button class="l" onclick="copier('${r}')">Copier</button>`).join("")+
+  `<p class="muted">Gardez ce lien pour vous seul.</p><button class="l" onclick="recharger()">Actualiser les réponses</button></div>`;
+  h+=`<div class="tabs">`+Object.keys(P).map(r=>`<button class="${tab===r?'on':''}" onclick="tab='${r}';render()">${LBL[r]}</button>`).join("")+`<button class="${tab==='mariage'?'on':''}" onclick="tab='mariage';render()">Mariage & pièces</button></div>`;
+ }
+ if(tab==="mariage")h+=formMariage(); else h+=formPart(tab);
+ if(admin)h+=`<div class="card"><h2>Fiche complète</h2><p class="muted">Génère le PDF (choisir « Enregistrer en PDF ») puis partagez-le.</p><button class="or" onclick="pdf()">Télécharger le PDF</button><button onclick="partagerFiche()">Partager</button></div>`;
+ app.innerHTML=h;initCanvas()}
+
+function formPart(r){const d=S.data[r]||{},p=P[r],me=S.role==="fiance"||S.role===r;
+ return `<div class="card"><h2>${p.t}</h2>${S.role!=="fiance"?`<p class="muted">Bonjour ! Remplissez votre partie puis signez en bas. Tout sera transmis automatiquement.</p>`:""}
+ ${p.f.map((f,i)=>`<label>${f}</label><input id="f${i}" value="${esc(d[f])}" ${f.startsWith("Date")?'placeholder="jj/mm/aaaa"':""}>`).join("")}
+ <h3>Engagement</h3><p style="font-size:14px">${ENG[p.e]}</p>
+ <h3>Signature ${LBL[r]==="Fiancée"?"de la":"du"} ${LBL[r]}</h3>
+ ${d.signature?`<div class="sig"><img src="${d.signature}"></div><button class="l" onclick="S.data['${r}'].signature=null;render()">Refaire la signature</button>`:`<canvas id="cv"></canvas><button class="l" onclick="clr()">Effacer</button>`}
+ <br><button class="or" onclick="enreg('${r}')">Enregistrer</button><span id="msg" class="ok"></span></div>`}
+
+function formMariage(){const d=S.data.mariage||{},pc=d.pieces||{};
+ return `<div class="card"><h2>III. Informations sur le mariage</h2>${MAR.map((f,i)=>`<label>${f}</label><input id="m${i}" value="${esc(d[f])}">`).join("")}
+ <h2 style="margin-top:18px">V. Pièces à fournir</h2><div class="chk">${PIECES.map((p,i)=>`<label><input type="checkbox" id="p${i}" ${pc[p]?"checked":""}>${p}</label>`).join("")}</div>
+ <label>Autres</label><input id="autres" value="${esc(d.autres)}">
+ <h2 style="margin-top:18px">Clôture</h2><label>Fait à</label><input id="faita" value="${esc(d.faita)}"><label>Le</label><input id="le" value="${esc(d.le)}" placeholder="jj/mm/aaaa">
+ <label>Nom du Pasteur Responsable</label><input id="pasteur" value="${esc(d.pasteur)}">
+ <br><button class="or" onclick="enregM()">Enregistrer</button><span id="msg" class="ok"></span></div>`}
+
+let cv,ctx,drawn=false;
+function initCanvas(){cv=document.getElementById("cv");drawn=false;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx=cv.getContext("2d");ctx.scale(dpr,dpr);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.strokeStyle="#0b1d5a";let on=false;
+ const pt=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
+ cv.onpointerdown=e=>{on=true;drawn=true;cv.setPointerCapture(e.pointerId);ctx.beginPath();ctx.moveTo(...pt(e))};
+ cv.onpointermove=e=>{if(on){ctx.lineTo(...pt(e));ctx.stroke()}};cv.onpointerup=()=>on=false}
+function clr(){ctx.clearRect(0,0,cv.width,cv.height);drawn=false}
+
+async function save(part,obj){const ok=await rpc("mf_save",{p_id:ID,p_key:K,p_part:part,p_payload:obj});S.data[part]=obj;const m=document.getElementById("msg");if(m)m.textContent=ok?" ✔ Enregistré et transmis":" ✖ Erreur";return ok}
+async function enreg(r){const o={};P[r].f.forEach((f,i)=>o[f]=document.getElementById("f"+i).value.trim());o.signature=(S.data[r]||{}).signature||null;if(cv&&drawn)o.signature=cv.toDataURL("image/png");
+ try{await save(r,o);render();document.getElementById("msg").textContent=" ✔ Enregistré et transmis"}catch(e){alert("Erreur de connexion, réessayez.")}}
+async function enregM(){const o={pieces:{}};MAR.forEach((f,i)=>o[f]=document.getElementById("m"+i).value.trim());PIECES.forEach((p,i)=>o.pieces[p]=document.getElementById("p"+i).checked);["autres","faita","le","pasteur"].forEach(k=>o[k]=document.getElementById(k).value.trim());
+ try{await save("mariage",o)}catch(e){alert("Erreur de connexion.")}}
+async function recharger(){S=await rpc("mf_get",{p_id:ID,p_key:K});render()}
+function copier(r){navigator.clipboard.writeText(lien(r));alert("Lien copié")}
+function partager(r){const t=`Bonjour, merci de remplir et signer votre partie (${LBL[r]}) de la fiche de mariage :\n${lien(r)}`;
+ if(navigator.share)navigator.share({text:t}).catch(()=>{});else window.open("https://wa.me/?text="+encodeURIComponent(t))}
+
+function tbl(d,fields){return `<table>${fields.map(f=>`<tr><td>${f}</td><td>${esc(d[f])}</td></tr>`).join("")}</table>`}
+function sg(r){const s=(S.data[r]||{}).signature;return `<div><b>Signature ${r==="fiancee"?"de la Fiancée":r==="marraine"?"de la Marraine":"du "+LBL[r]}</b><br>${s?`<img src="${s}">`:""}</div>`}
+function buildPrint(){const d=S.data,m=d.mariage||{},pc=m.pieces||{};
+ document.getElementById("print").innerHTML=`<p>Date : ${new Date().toLocaleDateString("fr-FR")}</p><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><h1 style="font-size:13px">FICHE D'IDENTIFICATION DES CANDIDATS AU MARIAGE CHRÉTIEN</h1>
+ <h2>I. IDENTIFICATION DU FIANCÉ</h2>${tbl(d.fiance||{},PERS)}<h2>II. IDENTIFICATION DE LA FIANCÉE</h2>${tbl(d.fiancee||{},PERS)}
+ <h2>III. INFORMATIONS SUR LE MARIAGE</h2>${tbl(m,MAR)}
+ <h2>IV. IDENTIFICATION DU COUPLE PARRAIN</h2><b>Parrain</b>${tbl(d.parrain||{},PAR)}<b>Marraine</b>${tbl(d.marraine||{},PAR)}
+ <h2>V. PIÈCES À FOURNIR</h2>${PIECES.map(p=>`${pc[p]?"☑":"☐"} ${p}`).join("<br>")}<br>☐ Autres : ${esc(m.autres)}
+ <h2>VI. ENGAGEMENT DES FIANCÉS</h2><p>${ENG.fiances}</p><h2>VII. ENGAGEMENT DU COUPLE PARRAIN</h2><p>${ENG.parrains}</p>
+ <p>Fait à : ${esc(m.faita)||"________"} &nbsp; Le : ${esc(m.le)||"___/___/_____"}</p>
+ <div class="sgrid">${sg("fiance")}${sg("fiancee")}${sg("parrain")}${sg("marraine")}<div><b>Visa du Pasteur Responsable</b><br>${esc(m.pasteur)}</div><div><b>Cachet de l'Église</b></div></div>`}
+function pdf(){buildPrint();setTimeout(()=>print(),300)}
+function partagerFiche(){const t="Fiche de mariage – Église de la Résurrection Kimbwala (PDF en pièce jointe)";
+ alert("Étape 1 : « Télécharger le PDF » → Enregistrer en PDF.\nÉtape 2 : partagez le fichier PDF depuis vos Téléchargements (WhatsApp, e-mail…).");pdf()}
+start();
+</script></body></html>

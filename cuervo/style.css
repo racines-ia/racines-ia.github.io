@@ -386,17 +386,17 @@ body.has-bar .tabnav{display:none}
 .keyline{border-radius:var(--r-card);padding:16px;background:var(--grad);color:#fff;font-weight:700;font-size:15px;line-height:1.45;box-shadow:0 12px 28px var(--glow)}
 /* Vidéo de présentation (15 s) */
 .vx{position:relative;aspect-ratio:9/16;max-height:72vh;margin:0 auto;border-radius:24px;overflow:hidden;background:radial-gradient(80% 60% at 70% 10%,rgba(255,122,26,.45),transparent 60%),linear-gradient(180deg,#140D08,#050302);color:#fff;box-shadow:var(--sh-2)}
-.vx .sc{position:absolute;inset:0;padding:28px 22px;display:grid;align-content:center;gap:14px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity 280ms var(--out),transform 380ms var(--out)}
+.vx .sc{position:absolute;inset:0;padding:28px 26px;display:grid;align-content:center;gap:10px;text-align:center;opacity:0;transform:translateY(16px);transition:opacity 280ms var(--out),transform 380ms var(--out)}
 .vx .sc.on{opacity:1;transform:none}
-.vx .big{font:800 28px/1.1 var(--f-head);letter-spacing:-.02em}
+.vx .big{font:800 21px/1.15 var(--f-head);letter-spacing:-.02em}
 .vx .big em{font-style:normal;background:linear-gradient(135deg,#FFB547,#FF7A1A,#E8430F);-webkit-background-clip:text;background-clip:text;color:transparent}
-.vx .sm{font-size:14px;line-height:1.5;color:#E9D6C6}
-.vx .art{height:150px;display:grid;place-items:center}
+.vx .sm{font-size:12.5px;line-height:1.5;color:#E9D6C6}
+.vx .art{height:96px;display:grid;place-items:center}
 .vx .art svg{height:100%;max-width:100%}
 .vx .bars{position:absolute;left:14px;right:14px;top:12px;display:flex;gap:4px;z-index:2}
 .vx .bars i{flex:1;height:3px;border-radius:3px;background:rgba(255,255,255,.25);overflow:hidden}
 .vx .bars i b{display:block;height:100%;width:100%;background:#fff;transform:scaleX(0);transform-origin:left}
-.vx .brandm{position:absolute;left:0;right:0;bottom:16px;font:800 14px var(--f-head);opacity:.85;text-align:center}
+.vx .brandm{position:absolute;left:0;right:0;bottom:14px;font:800 12px var(--f-head);opacity:.85;text-align:center}
 .vx .brandm span{color:#FF7A1A}
 .vx-ctl{display:flex;gap:8px;justify-content:center;margin-top:12px}
 

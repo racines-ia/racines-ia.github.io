@@ -799,6 +799,19 @@ var A = {
     if (r.error) return toast(errMsg(r.error));
     document.querySelectorAll('.lsty').forEach(function (b) { b.classList.toggle('on', b === el); }); toast('Style enregistré');
   },
+  pushOn: async function (el) {
+    if (!pushOk()) return toast('Ce navigateur ne gère pas les notifications');
+    busy(el, true);
+    try {
+      var perm = await Notification.requestPermission();
+      if (perm !== 'granted') { busy(el, false); return toast('Autorise les notifications pour cuervo.co dans les réglages du navigateur'); }
+      var reg = await navigator.serviceWorker.register('sw.js', { scope: './' }); await navigator.serviceWorker.ready;
+      var sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(VAPID_PUB) });
+      var r = await savePush(sub); if (r.error) throw r.error;
+      S.pushOn = true; toast('Notifications activées sur ce téléphone'); renderDash(true);
+    } catch (e) { console.warn(e); toast('Activation impossible. Réessaie dans Chrome.'); }
+    busy(el, false);
+  },
   natShare: async function (el) {
     var d = el.dataset, data = { title: d.text, text: d.text + ' ' + d.url };
     try {
@@ -1035,11 +1048,12 @@ async function loadMe() {
 async function loadSettings() { var r = await sb.from('mk_settings').select('*').eq('id', 1).maybeSingle(); S.settings = r.data || { loyer: 15000 }; }
 async function loadDash() {
   var uid = S.user.id, rs = await Promise.all([
-    sb.from('mk_orders').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(200),
+    sb.from('mk_orders').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(1000),
     sb.from('mk_products').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }),
     sb.from('mk_subs').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(12),
     loadSettings(), loadMe()]);
   S.orders = rs[0].data || []; S.products = rs[1].data || []; S.subs = rs[2].data || [];
+  await pushCheck();
 }
 function loyerChoice(cur, name) {
   var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
@@ -1089,6 +1103,38 @@ async function pageAccount(alive) {
   }
   renderDash();
 }
+/* Total des ventes confirmées (prix payé x nombre de ventes) */
+function salesSum(pid) {
+  var t = { CDF: 0, USD: 0, n: 0 };
+  S.orders.forEach(function (o) { if (o.statut !== 'paye' || (pid && o.product_id !== pid)) return; t[o.devise === 'CDF' ? 'CDF' : 'USD'] += Number(o.montant || 0); t.n++; });
+  return t;
+}
+function sumTxt(t) { var a = []; if (t.CDF || !t.USD) a.push(money(t.CDF, 'CDF')); if (t.USD) a.push(money(t.USD, 'USD')); return a.join(' + '); }
+function prodTotal(p) {
+  var t = salesSum(p.id);
+  if (!t.n) { var u = p.promo_prix > 0 && (!p.promo_fin || new Date(p.promo_fin) > new Date()) ? Number(p.promo_prix) : Number(p.prix); t[p.devise === 'CDF' ? 'CDF' : 'USD'] = u * p.ventes; t.n = p.ventes; }
+  return sumTxt(t) + ' <small>(' + t.n + ' vente' + (t.n > 1 ? 's' : '') + ')</small>';
+}
+function salesCard() {
+  var t = salesSum();
+  return '<div class="salescard"><small>Total de tes ventes</small><b>' + sumTxt(t) + '</b><span>' + t.n + ' vente' + (t.n > 1 ? 's' : '') + ' confirmée' + (t.n > 1 ? 's' : '') + '</span></div>';
+}
+/* Notifications de paiement (Web Push) */
+var VAPID_PUB = 'BLtRAGJQHR_PdDY53BuJclpFDnRcntA05a7vsZUsj3l3h8-fyr6U2hlleG6hoVJMeY885Hdgddgw4bwazZ7mlik';
+function pushOk() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
+function pushCard() {
+  if (!pushOk()) return '<div class="pushcard"><b>Notifications</b><p>Ce navigateur ne peut pas recevoir de notifications. Ouvre cuervo.co dans Chrome.</p></div>';
+  var on = Notification.permission === 'granted' && S.pushOn;
+  return '<div class="pushcard' + (on ? ' on' : '') + '">' + ico(on ? 'i-check' : 'i-clock') + '<div class="grow"><b>' + (on ? 'Notifications activées' : 'Sois prévenu à chaque paiement') + '</b><p>' +
+    (on ? 'Ce téléphone sonne dès qu\'un client envoie sa capture de paiement.' : 'Ton téléphone sonne dès qu\'un client envoie sa capture, même si cuervo.co est fermé.') + '</p></div>' +
+    (on ? '' : '<button class="btn btn-primary btn-sm" type="button" data-act="pushOn">Activer</button>') + '</div>';
+}
+function b64u(s) { var p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
+async function pushCheck() {
+  if (!pushOk() || Notification.permission !== 'granted') { S.pushOn = false; return; }
+  try { var reg = await navigator.serviceWorker.getRegistration('./'); var sub = reg && await reg.pushManager.getSubscription(); S.pushOn = !!sub; if (sub) savePush(sub); } catch (e) { S.pushOn = false; }
+}
+function savePush(sub) { var j = sub.toJSON(); return sb.rpc('mk_push_save', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth }); }
 function renderDash(keepScroll) {
   var v = S.vendor, st = shopStatus(v), y = window.scrollY;
   var pend = S.orders.filter(function (o) { return o.statut === 'attente'; }).length;
@@ -1096,6 +1142,7 @@ function renderDash(keepScroll) {
   var body = { commandes: dashOrders, produits: dashProducts, boutique: dashShop, loyer: dashRent }[S.tab]();
   page('<div class="rowx" style="padding-top:8px">' + avatar(v) + '<div class="grow"><h1 style="font-size:24px">' + esc(v.boutique) + '</h1><p class="note">' + esc(v.prenom + ' ' + v.nom) + '</p></div></div>' +
     '<div class="banner ' + st[0] + '"><b>' + st[1] + '</b>' + esc(st[2]) + '</div>' +
+    salesCard() + pushCard() +
     '<div class="two" style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir ma boutique</a><button class="btn btn-ghost btn-sm" type="button" data-act="newProduct">' + ico('i-plus') + '<span>Produit</span></button></div>' +
     (v.is_admin ? '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="?v=admin" data-nav>Espace administrateur ' + ico('i-arrow') + '</a>' : '') +
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.tab ? ' on' : '') + '" type="button" data-act="tab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
@@ -1106,7 +1153,7 @@ function renderDash(keepScroll) {
 function dashOrders() {
   var done = S.orders.filter(function (o) { return o.statut === 'paye'; }), usd = 0, cdf = 0;
   done.forEach(function (o) { if (o.devise === 'CDF') cdf += Number(o.montant); else usd += Number(o.montant); });
-  var h = '<div class="stats" style="margin:0 0 16px"><div class="stat"><b class="gt">' + done.length + '</b><span>ventes réussies</span></div><div class="stat"><b>' + money(usd, 'USD') + '</b><span>' + (cdf ? '+ ' + money(cdf, 'CDF') : 'encaissés') + '</span></div><div class="stat"><b>' + S.orders.filter(function (o) { return o.statut === 'attente'; }).length + '</b><span>à vérifier</span></div></div>';
+  var h = '<div class="stats" style="margin:0 0 16px"><div class="stat"><b class="gt">' + done.length + '</b><span>ventes réussies</span></div><div class="stat"><b>' + (cdf || !usd ? money(cdf, 'CDF') : money(usd, 'USD')) + '</b><span>' + (cdf && usd ? '+ ' + money(usd, 'USD') : 'encaissés') + '</span></div><div class="stat"><b>' + S.orders.filter(function (o) { return o.statut === 'attente'; }).length + '</b><span>à vérifier</span></div></div>';
   if (!S.orders.length) return h + '<div class="empty">Aucune commande pour l\'instant. Partage le lien de tes produits pour recevoir tes premiers clients.</div>';
   var st = { attente: ['a', 'À vérifier'], paye: ['g', 'Vente réussie'], refuse: ['r', 'Refusée'] };
   var rank = function (o) { return o.statut === 'attente' ? (o.capture_path ? 0 : 1) : 2; };
@@ -1130,6 +1177,7 @@ function dashProducts() {
     '<div class="g12 stag" style="margin-top:16px">' +
     (S.products.length ? S.products.map(function (p) {
       return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + ' · ' + nVues(p.vues) + (p.vues_fb ? ' (dont ' + p.vues_fb + ' via Facebook)' : '') + '</small>' +
+        (p.ventes ? '<div class="ptotal">Total vendu : <b>' + prodTotal(p) + '</b></div>' : '') +
         '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div>' +
         '<div class="two"><button class="btn btn-ghost btn-sm" type="button" data-act="editProduct" data-id="' + p.id + '"><span>Modifier</span></button>' +
         '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '" data-prix="' + esc(bPrix(p)) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';

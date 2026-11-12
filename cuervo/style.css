@@ -534,3 +534,11 @@ body[data-lt=clair] .lp-pay,body[data-lt=cuenca] .lp-pay,body[data-lt=clair] .ba
 .dlname{display:flex;align-items:center;gap:10px}.dlname .i{color:var(--brand);flex:none}.dlname b{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
 .dlbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px}.dlbtns .btn{width:100%;min-width:0;padding:0 10px}
 .dlcard small{color:var(--muted);font-size:12px}
+
+.salescard{margin-top:12px;padding:18px;border-radius:20px;background:var(--grad);color:#1a0a00;display:grid;gap:2px;box-shadow:var(--sh-2)}
+.salescard small{font-weight:700;font-size:13px;opacity:.8}.salescard b{font:800 30px/1.1 var(--f-head);letter-spacing:-.5px}.salescard span{font-weight:600;font-size:13px;opacity:.85}
+.pushcard{margin-top:12px;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:flex;align-items:center;gap:12px}
+.pushcard>.i{flex:none;width:36px;height:36px;padding:8px;border-radius:12px;background:color-mix(in srgb,var(--brand) 16%,transparent);color:var(--brand)}
+.pushcard.on>.i{background:rgba(74,222,128,.15);color:#4ade80}
+.pushcard p{font-size:12.5px;color:var(--muted);line-height:1.4;margin-top:2px}.pushcard .btn{width:auto;flex:none;padding:0 16px}
+.ptotal{margin-top:6px;font-size:13px;color:var(--muted)}.ptotal b{color:var(--text)}

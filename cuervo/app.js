@@ -886,7 +886,9 @@ var A = {
     RS.forEach(function (x) { var u = g('s-rs-' + x[0]); if (!u) return; if (!/^https?:\/\//i.test(u)) u = 'https://' + u.replace(/^\/+/, ''); u = u.replace(/^http:/i, 'https:'); if (!safeUrl(u)) bad = x[1]; else rs[x[0]] = u; });
     if (bad) return toast('Le lien ' + bad + ' n\'est pas valide');
     busy(el, true);
-    var r = await sb.from('mk_vendors').update({ reseaux: rs, boutique: g('s-boutique'), bio: g('s-bio'), tel: g('s-tel'), whatsapp: g('s-wa'), prenom: g('s-prenom'), nom: g('s-nom'), postnom: g('s-postnom'),
+    var em = ($('s-email') ? g('s-email') : (S.vendor.email || '')).toLowerCase();
+    if (em && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)) return toast('Adresse e-mail invalide');
+    var r = await sb.from('mk_vendors').update({ email: em || null, reseaux: rs, boutique: g('s-boutique'), bio: g('s-bio'), tel: g('s-tel'), whatsapp: g('s-wa'), prenom: g('s-prenom'), nom: g('s-nom'), postnom: g('s-postnom'),
       mm_nom: g('s-mmnom'), mpesa: g('s-mpesa'), airtel: g('s-airtel'), orange: g('s-orange') }).eq('id', S.user.id);
     busy(el, false);
     if (r.error) return toast(errMsg(r.error));
@@ -1192,7 +1194,8 @@ function dashShop() {
     upBox('cover', v.cover_url, 'Couverture de la boutique', 'cover wide') +
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
-    '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label></div>' +
+    '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label>' +
+    '<label>E-mail pour être prévenu des paiements<input id="s-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com" value="' + esc(v.email || '') + '"></label><p class="note">À chaque capture de paiement, tu reçois un e-mail pour aller confirmer. Il n\'est jamais affiché aux clients. Pense à regarder aussi dans les spams.</p></div>' +
     '<div class="box"><h3>Mes réseaux sociaux</h3><p class="note">Colle le lien de tes pages. Ils s\'affichent sur ta boutique et tes produits. Ton WhatsApp ci-dessus s\'affiche aussi.</p>' +
     RS.map(function (x) { return '<label>' + x[1] + '<input id="s-rs-' + x[0] + '" type="url" inputmode="url" placeholder="https://' + (x[0] === 'tiktok' ? 'www.tiktok.com/@ton_compte' : 'www.' + x[0] + '.com/ta_page') + '" value="' + esc((v.reseaux || {})[x[0]] || '') + '"></label>'; }).join('') + '</div>' +
     '<div class="box"><h3>Mon identité</h3><label>Prénom<input id="s-prenom" value="' + esc(v.prenom) + '"></label><div class="two"><label>Nom<input id="s-nom" value="' + esc(v.nom) + '"></label><label>Postnom<input id="s-postnom" value="' + esc(v.postnom) + '"></label></div></div>' +

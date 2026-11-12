@@ -1,36 +1,50 @@
 <!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Fiche Mariage – Église de la Résurrection Kimbwala</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet"><title>Fiche Mariage – Église de la Résurrection Kimbwala</title>
 <style>
-:root{--bl:#1b2b4b;--or:#b8913f;--bg:#f4f1ea}
-*{box-sizing:border-box}body{margin:0;font-family:Georgia,serif;background:var(--bg);color:#1f1f1f}
-header{background:var(--bl);color:#fff;text-align:right;padding:22px 20px 16px;border-bottom:4px solid var(--or)}
-header h1{font-size:18px;margin:0;letter-spacing:1.5px}header p{margin:6px 0 0;color:#e6cf9a;font-size:13px;font-style:italic}
-main{max-width:760px;margin:auto;padding:16px}
-.card{background:#fff;border:1px solid #d9cfb8;border-left:5px solid var(--or);border-radius:10px;padding:16px 16px 18px;margin-bottom:16px;box-shadow:0 2px 8px #1b2b4b14}
-h2{font-size:15px;color:var(--bl);margin:-16px -16px 14px;padding:10px 16px;background:#f8f4ea;border-bottom:1px solid #e6dcc4;border-radius:0 9px 0 0;text-transform:uppercase;letter-spacing:.5px}
-h3{font-size:14px;color:var(--or);margin:16px 0 8px}
-label{display:block;font-size:12px;color:#5b6475;margin-top:10px;font-family:sans-serif;font-weight:600}
-input{width:100%;padding:10px;border:1px solid #cfd5df;border-radius:6px;font-size:15px;background:#fcfcfd;font-family:Georgia,serif}
-input:focus{outline:0;border-color:var(--or);box-shadow:0 0 0 3px #b8913f33}
-.chk label{display:flex;gap:8px;align-items:center;font-size:14px;color:#222;font-weight:400}.chk input{width:auto}
-button{background:var(--bl);color:#fff;border:0;border-radius:6px;padding:11px 16px;font-size:14px;margin:8px 4px 0 0;font-family:sans-serif;font-weight:600}
-button.or{background:var(--or)}button.l{background:#fff;color:var(--bl);border:1px solid var(--bl)}
-canvas{width:100%;height:150px;border:1px solid #cfd5df;border-radius:6px;background:#fff;touch-action:none}
-.sig img{max-width:220px;height:80px;object-fit:contain;border-bottom:1px solid #999}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{flex:1;min-width:110px;margin:0;background:#fff;color:var(--bl);border:1px solid var(--bl)}
-.tabs button.on{background:var(--bl);color:#fff}
-.link{font-size:12px;word-break:break-all;background:#f8f4ea;border:1px solid #e6dcc4;padding:8px;border-radius:6px;font-family:monospace}
-.ok{color:#1d6b1d;font-family:sans-serif;font-size:13px}.muted{color:#6b7280;font-size:13px;font-family:sans-serif}
-.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#eee;font-family:sans-serif}.badge.v{background:#d8f0d8;color:#1d6b1d}
+:root{--ink:#14213d;--ink2:#2a3a5e;--gold:#c2a15b;--gold2:#e9d8ae;--ivory:#faf7f1;--line:#e7e0d1;--mut:#6b7385;--ok:#2f8f5b;--r:16px;
+--sh1:0 1px 2px #14213d0f,0 4px 14px #14213d0d;--sh2:0 10px 30px #14213d1f;--e:cubic-bezier(.22,1,.36,1)}
+*{box-sizing:border-box}body{margin:0;font-family:Manrope,sans-serif;background:var(--ivory);color:var(--ink);-webkit-font-smoothing:antialiased}
+header{background:linear-gradient(160deg,#14213d,#22355e);color:#fff;text-align:right;padding:28px 20px 30px;border-radius:0 0 28px 28px;box-shadow:var(--sh2);position:relative}
+header:after{content:"";position:absolute;right:20px;bottom:16px;width:64px;height:2px;background:var(--gold)}
+header h1{font-family:'Cormorant Garamond',serif;font-weight:700;font-size:24px;line-height:1.15;margin:0;letter-spacing:1px}
+header p{margin:8px 0 0;color:var(--gold2);font-size:12px;letter-spacing:2px;text-transform:uppercase}
+main{max-width:720px;margin:auto;padding:20px 16px 40px}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--r);padding:20px;margin-bottom:16px;box-shadow:var(--sh1);animation:up .45s var(--e) both}
+.card:nth-of-type(2){animation-delay:.06s}.card:nth-of-type(3){animation-delay:.12s}
+@keyframes up{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+h2{font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;color:var(--ink);margin:0 0 4px;padding-bottom:10px;border-bottom:1px solid var(--line);position:relative}
+h2:after{content:"";position:absolute;left:0;bottom:-1px;width:40px;height:2px;background:var(--gold)}
+h3{font-family:'Cormorant Garamond',serif;font-size:18px;color:var(--ink2);margin:20px 0 8px}
+label{display:block;font-size:12px;color:var(--mut);margin:14px 0 6px;font-weight:600;letter-spacing:.3px}
+input{width:100%;height:48px;padding:0 14px;border:1px solid var(--line);border-radius:12px;font:500 15px Manrope,sans-serif;color:var(--ink);background:#fdfcf9;transition:border-color .15s,box-shadow .15s}
+input:focus{outline:0;border-color:var(--gold);box-shadow:0 0 0 4px #c2a15b26;background:#fff}
+.chk label{display:flex;gap:12px;align-items:center;font-size:14px;color:var(--ink);font-weight:500;padding:12px 14px;border:1px solid var(--line);border-radius:12px;margin:8px 0}
+.chk input{width:20px;height:20px;accent-color:var(--ink)}
+button{min-height:48px;background:var(--ink);color:#fff;border:0;border-radius:999px;padding:0 22px;font:700 14px Manrope,sans-serif;margin:10px 6px 0 0;transition:transform .15s var(--e),box-shadow .15s;box-shadow:var(--sh1)}
+button:active{transform:scale(.96)}button.or{background:linear-gradient(135deg,#c9a862,#b08d47);color:#14213d}
+button.l{background:#fff;color:var(--ink);border:1px solid var(--line);box-shadow:none}
+canvas{width:100%;height:160px;border:1.5px dashed var(--gold);border-radius:12px;background:#fffdf8;touch-action:none}
+.sig img{max-width:240px;height:84px;object-fit:contain;border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:6px;overflow-x:auto;background:#fff;border:1px solid var(--line);border-radius:999px;padding:5px;margin-bottom:16px;box-shadow:var(--sh1)}
+.tabs button{flex:1 0 auto;margin:0;min-height:40px;background:transparent;color:var(--mut);box-shadow:none;padding:0 14px}
+.tabs button.on{background:var(--ink);color:#fff}
+.link{font:12px monospace;word-break:break-all;background:var(--ivory);border:1px solid var(--line);padding:10px;border-radius:10px;color:var(--ink2)}
+.ok{color:var(--ok);font-size:13px;font-weight:700;margin-left:6px}.muted{color:var(--mut);font-size:13px;line-height:1.5}
+.badge{display:inline-block;font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;background:#eef0f4;color:var(--mut);margin-left:6px}.badge.v{background:#e3f4ea;color:var(--ok)}
+.ph{display:flex;align-items:center;gap:16px;margin:16px 0 4px}
+.ph .av{width:96px;height:120px;border-radius:14px;border:2px solid var(--gold);background:#f3efe5 center/cover;display:flex;align-items:center;justify-content:center;color:var(--gold);font-size:12px;text-align:center;flex:none}
+.ph input{display:none}.ph label{margin:0}.ph .bt{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;border:1px solid var(--ink);color:var(--ink);font-size:13px;font-weight:700}
 #print{display:none}
-@media print{@page{margin:10mm}body{background:#fff}header,main{display:none}#print{display:block;font-size:11.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-#print .ent{text-align:right;border-bottom:3px solid #b8913f;padding-bottom:6px;margin-bottom:6px}
-#print .ent b{display:block;font-size:15px;color:#1b2b4b;letter-spacing:1px}#print .ent i{color:#8a6d2e;font-size:12px}
-#print h2{font-size:12px;background:#1b2b4b;color:#fff;padding:4px 8px;margin:10px 0 0;border-radius:4px 4px 0 0}
-#print table{width:100%;border-collapse:collapse;border:1px solid #1b2b4b}#print td{border:1px solid #c9c2b0;padding:3px 6px;vertical-align:top}
-#print td:first-child{width:38%;color:#1b2b4b;background:#f8f4ea}.bx{border:1px solid #1b2b4b;padding:6px 8px}
-.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.sgrid div{border:1px solid #1b2b4b;border-radius:4px;padding:5px;min-height:70px}.sgrid img{height:55px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+@media print{@page{margin:10mm}body{background:#fff}header,main{display:none}#print{display:block;font:11px Manrope,sans-serif;color:#14213d;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#print .ent{text-align:right;background:#14213d;color:#fff;padding:10px 14px;border-radius:10px;border-bottom:3px solid #c2a15b;margin-bottom:8px}
+#print .ent b{display:block;font:700 18px 'Cormorant Garamond',serif;letter-spacing:1px}#print .ent i{color:#e9d8ae;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;font-style:normal}
+#print h2{font:700 13px 'Cormorant Garamond',serif;font-size:14px;color:#14213d;border-bottom:2px solid #c2a15b;padding:2px 0;margin:10px 0 5px}
+#print table{width:100%;border-collapse:collapse}#print td{border:1px solid #e0d8c6;padding:3px 6px;vertical-align:top}
+#print td:first-child{width:38%;color:#4a5570;background:#faf7f1}.bx{border:1px solid #e0d8c6;border-radius:6px;padding:6px 8px}
+.pg{display:flex;gap:8px}.pg table{flex:1}.pp{width:28mm;height:35mm;border:1.5px solid #c2a15b;border-radius:4px;object-fit:cover;flex:none;display:flex;align-items:center;justify-content:center;color:#aaa;font-size:9px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.sgrid div{border:1px solid #e0d8c6;border-radius:6px;padding:5px;min-height:68px}.sgrid img{height:52px}}
 </style></head><body>
 <header><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><p>Fiche d'identification des candidats au mariage chrétien</p></header>
 <main id="app"><div class="card">Chargement…</div></main>
@@ -74,7 +88,7 @@ function render(){
  app.innerHTML=h;initCanvas()}
 
 function formPart(r){const d=S.data[r]||{},p=P[r],me=S.role==="fiance"||S.role===r;
- return `<div class="card"><h2>${p.t}</h2>${S.role!=="fiance"?`<p class="muted">Bonjour ! Remplissez votre partie puis signez en bas. Tout sera transmis automatiquement.</p>`:""}
+ return `<div class="card"><h2>${p.t}</h2><div class="ph"><div class="av" id="av" style="${(PH[r]!==undefined?PH[r]:d.photo)?`background-image:url(${PH[r]!==undefined?PH[r]:d.photo});color:transparent`:""}">Photo</div><label><span class="bt">Ajouter une photo</span><input type="file" accept="image/*" onchange="photo(this,'${r}')"></label></div>${S.role!=="fiance"?`<p class="muted">Bonjour ! Remplissez votre partie puis signez en bas. Tout sera transmis automatiquement.</p>`:""}
  ${p.f.map((f,i)=>`<label>${f}</label><input id="f${i}" value="${esc(d[f])}" ${f.startsWith("Date")?'placeholder="jj/mm/aaaa"':""}>`).join("")}
  <h3>Engagement</h3><p style="font-size:14px">${ENG[p.e]}</p>
  <h3>Signature ${LBL[r]==="Fiancée"?"de la":"du"} ${LBL[r]}</h3>
@@ -89,7 +103,8 @@ function formMariage(){const d=S.data.mariage||{},pc=d.pieces||{};
  <label>Nom du Pasteur Responsable</label><input id="pasteur" value="${esc(d.pasteur)}">
  <br><button class="or" onclick="enregM()">Enregistrer</button><span id="msg" class="ok"></span></div>`}
 
-let cv,ctx,drawn=false;
+let cv,ctx,drawn=false;const PH={};
+function photo(inp,r){const f=inp.files[0];if(!f)return;const im=new Image();im.onload=()=>{const W=360,sc=Math.min(1,W/im.width),c=document.createElement("canvas");c.width=im.width*sc;c.height=im.height*sc;c.getContext("2d").drawImage(im,0,0,c.width,c.height);PH[r]=c.toDataURL("image/jpeg",.8);const a=document.getElementById("av");a.style.backgroundImage=`url(${PH[r]})`;a.style.color="transparent"};im.src=URL.createObjectURL(f)}
 function initCanvas(){cv=document.getElementById("cv");drawn=false;if(!cv)return;const r=cv.getBoundingClientRect(),dpr=devicePixelRatio||1;cv.width=r.width*dpr;cv.height=r.height*dpr;ctx=cv.getContext("2d");ctx.scale(dpr,dpr);ctx.lineWidth=2.4;ctx.lineCap="round";ctx.strokeStyle="#0b1d5a";let on=false;
  const pt=e=>{const b=cv.getBoundingClientRect();return[e.clientX-b.left,e.clientY-b.top]};
  cv.onpointerdown=e=>{on=true;drawn=true;cv.setPointerCapture(e.pointerId);ctx.beginPath();ctx.moveTo(...pt(e))};
@@ -97,7 +112,7 @@ function initCanvas(){cv=document.getElementById("cv");drawn=false;if(!cv)return
 function clr(){ctx.clearRect(0,0,cv.width,cv.height);drawn=false}
 
 async function save(part,obj){const ok=await rpc("mf_save",{p_id:ID,p_key:K,p_part:part,p_payload:obj});S.data[part]=obj;const m=document.getElementById("msg");if(m)m.textContent=ok?" ✔ Enregistré et transmis":" ✖ Erreur";return ok}
-async function enreg(r){const o={};P[r].f.forEach((f,i)=>o[f]=document.getElementById("f"+i).value.trim());o.signature=(S.data[r]||{}).signature||null;if(cv&&drawn)o.signature=cv.toDataURL("image/png");
+async function enreg(r){const o={};P[r].f.forEach((f,i)=>o[f]=document.getElementById("f"+i).value.trim());o.signature=(S.data[r]||{}).signature||null;o.photo=PH[r]!==undefined?PH[r]:((S.data[r]||{}).photo||null);if(cv&&drawn)o.signature=cv.toDataURL("image/png");
  try{await save(r,o);render();document.getElementById("msg").textContent=" ✔ Enregistré et transmis"}catch(e){alert("Erreur de connexion, réessayez.")}}
 async function enregM(){const o={pieces:{}};MAR.forEach((f,i)=>o[f]=document.getElementById("m"+i).value.trim());PIECES.forEach((p,i)=>o.pieces[p]=document.getElementById("p"+i).checked);["autres","faita","le","pasteur"].forEach(k=>o[k]=document.getElementById(k).value.trim());
  try{await save("mariage",o)}catch(e){alert("Erreur de connexion.")}}
@@ -106,13 +121,14 @@ function copier(r){navigator.clipboard.writeText(lien(r));alert("Lien copié")}
 function partager(r){const t=`Bonjour, merci de remplir et signer votre partie (${LBL[r]}) de la fiche de mariage :\n${lien(r)}`;
  if(navigator.share)navigator.share({text:t}).catch(()=>{});else window.open("https://wa.me/?text="+encodeURIComponent(t))}
 
+function tp(d,f){return `<div class="pg">${tbl(d,f)}${d.photo?`<img class="pp" src="${d.photo}">`:`<div class="pp">Photo</div>`}</div>`}
 function tbl(d,fields){return `<table>${fields.map(f=>`<tr><td>${f}</td><td>${esc(d[f])}</td></tr>`).join("")}</table>`}
 function sg(r){const s=(S.data[r]||{}).signature;return `<div><b>Signature ${r==="fiancee"?"de la Fiancée":r==="marraine"?"de la Marraine":"du "+LBL[r]}</b><br>${s?`<img src="${s}">`:""}</div>`}
 function buildPrint(){const d=S.data,m=d.mariage||{},pc=m.pieces||{};
  document.getElementById("print").innerHTML=`<div class="ent"><span style="float:left;font-size:11px">Date : ${new Date().toLocaleDateString("fr-FR")}</span><b>ÉGLISE DE LA RÉSURRECTION KIMBWALA</b><i>Fiche d'identification des candidats au mariage chrétien</i></div>
- <h2>I. IDENTIFICATION DU FIANCÉ</h2>${tbl(d.fiance||{},PERS)}<h2>II. IDENTIFICATION DE LA FIANCÉE</h2>${tbl(d.fiancee||{},PERS)}
+ <h2>I. IDENTIFICATION DU FIANCÉ</h2>${tp(d.fiance||{},PERS)}<h2>II. IDENTIFICATION DE LA FIANCÉE</h2>${tp(d.fiancee||{},PERS)}
  <h2>III. INFORMATIONS SUR LE MARIAGE</h2>${tbl(m,MAR)}
- <h2>IV. IDENTIFICATION DU COUPLE PARRAIN</h2><b>Parrain</b>${tbl(d.parrain||{},PAR)}<b>Marraine</b>${tbl(d.marraine||{},PAR)}
+ <h2>IV. IDENTIFICATION DU COUPLE PARRAIN</h2><b>Parrain</b>${tp(d.parrain||{},PAR)}<b>Marraine</b>${tp(d.marraine||{},PAR)}
  <h2>V. PIÈCES À FOURNIR</h2><div class="bx">${PIECES.map(p=>`${pc[p]?"☑":"☐"} ${p}`).join("<br>")}<br>☐ Autres : ${esc(m.autres)}</div>
  <h2>VI. ENGAGEMENT DES FIANCÉS</h2><div class="bx">${ENG.fiances}</div><h2>VII. ENGAGEMENT DU COUPLE PARRAIN</h2><div class="bx">${ENG.parrains}</div>
  <p>Fait à : ${esc(m.faita)||"________"} &nbsp; Le : ${esc(m.le)||"___/___/_____"}</p>

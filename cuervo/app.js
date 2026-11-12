@@ -635,7 +635,7 @@ async function pageShop(slug, alive) {
   var d = r.data, s = d.shop, ps = d.products || [];
   document.title = s.boutique + ' — cuervo.co';
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette boutique n\'est pas encore visible du public.</div><div style="height:16px"></div>' : '') +
-    (safeUrl(s.cover_url) ? '<div class="cover zoom" data-zoom="' + esc(safeUrl(s.cover_url)) + '">' + pic(s.cover_url) + '</div>' : '<div class="shopbanner"></div>') +
+    (safeUrl(s.cover_url) ? '<div class="cover wide zoom" data-zoom="' + esc(safeUrl(s.cover_url)) + '">' + pic(s.cover_url) + '</div>' : '<div class="shopbanner"></div>') +
     '<div style="padding:0 8px"><span' + (safeUrl(s.avatar_url) ? ' class="zoom" data-zoom="' + esc(safeUrl(s.avatar_url)) + '"' : '') + ' style="display:inline-block">' + avatar(s, 'lg') + '</span><h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
     socialRow(s) +
     '<div class="stats" style="grid-template-columns:1fr 1fr"><div class="stat"><b class="gt" data-count="' + (s.ventes || 0) + '">0</b><span>produits vendus</span></div><div class="stat"><b>' + ps.length + '</b><span>produit' + (ps.length > 1 ? 's' : '') + ' en ligne</span></div></div>' +
@@ -1107,8 +1107,8 @@ function upBox(key, url, label, cls) {
 }
 function dashShop() {
   var v = S.vendor, mm = { vide: ['a', 'À remplir'], attente: ['a', 'En attente de confirmation'], confirme: ['g', 'Confirmés'], refuse: ['r', 'Refusés'] }[v.mm_statut];
-  return '<div class="g12"><div class="box"><h3>Photos de la boutique</h3><p class="note">Couverture de la page boutique (paysage 1920 × 1080) et photo de profil carrée. Chaque produit a aussi sa propre couverture.</p>' +
-    upBox('cover', v.cover_url, 'Couverture de la boutique', 'cover') +
+  return '<div class="g12"><div class="box"><h3>Photos de la boutique</h3><p class="note">Couverture de la page boutique (bannière 1600 × 600) et photo de profil carrée. Chaque produit a aussi sa propre couverture.</p>' +
+    upBox('cover', v.cover_url, 'Couverture de la boutique', 'cover wide') +
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
     '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label></div>' +
@@ -1218,7 +1218,7 @@ document.addEventListener('change', async function (e) {
   try {
     if (k === 'cover' || k === 'avatar') {
       
-      var url = k === 'cover' ? await upImage(f, 1280, 720, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
+      var url = k === 'cover' ? await upImage(f, 1600, 600, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
       var r = await sb.from('mk_vendors').update(patch).eq('id', S.user.id); if (r.error) throw r.error;
       S.vendor[k + '_url'] = url; renderDash(true); toast('Photo enregistrée');
     } else if (k === 'pcover') { edRead(); E.p.cover_url = await upImage(f, 1600, 600, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }

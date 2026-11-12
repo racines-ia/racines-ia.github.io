@@ -414,6 +414,16 @@ table.cjt td.mt,table.cjt th.mt{text-align:right;white-space:nowrap}
 table.cjt tr.tot td{background:var(--sunk);font-weight:700;border-bottom:0}
 table.cjt .cj-del{display:block;margin:3px 0 0 auto;border:0;background:none;padding:2px 0;font:inherit;font-size:11.5px;font-weight:700;color:var(--bad);text-decoration:underline;cursor:pointer}
 table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;border-radius:8px;padding:3px 8px}
+/* Activité : effectif du jour de toute l'école */
+.efj{background:var(--sunk);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.efj-h b{display:block;font-size:15px}
+.efj-h small{color:var(--muted);font-weight:600;font-size:12px}
+.efj-t{width:100%;border-collapse:collapse}
+.efj-t th,.efj-t td{padding:7px 4px;text-align:center;border-top:1px solid var(--line);font-size:15px;font-weight:700}
+.efj-t thead th{border-top:0;font-size:11.5px;font-weight:700;color:var(--muted);padding-top:0}
+.efj-t tbody th{text-align:left;font-size:13.5px;font-weight:600}
+.efj-t td.p{color:var(--good)}.efj-t td.a{color:var(--bad)}
+.efj-t tr.tot th,.efj-t tr.tot td{font-size:16.5px;font-weight:800;border-top:2px solid var(--line)}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -2918,6 +2928,7 @@ function vActivite(){
   }).join('');
   return band({back:'accueil',kicker:'Direction et surécole',title:'Activité',sub:`Aujourd’hui : appel clôturé dans ${tdA} classe${tdA>1?'s':''} sur ${ids.length} · cotes clôturées dans ${tdC}`})+page(`
    <div class="card pad stack"><div class="chips" role="group" aria-label="Classe"><button class="chipb" data-act="fact" data-v="" aria-pressed="${!S.fAct}">Toutes les classes</button>${ids.map(c=>`<button class="chipb" data-act="fact" data-v="${h(c)}" aria-pressed="${S.fAct===c}">${h(S.classes[c].nom.replace(' année primaire',' année'))}</button>`).join('')}</div>
+   ${(()=>{const r=ecoleJour(td);const row=(l,x,c)=>`<tr class="${c}"><th>${l}</th><td>${x.i}</td><td class="p">${x.p}</td><td class="a">${x.a}</td></tr>`;return `<div class="efj"><div class="efj-h"><b>Effectif du jour · toute l’école</b><small class="num">${r.T.i?Math.round(r.T.p/r.T.i*100):0} % présents · appel fait dans ${r.cls} classe${r.cls>1?'s':''} sur ${r.n}</small></div><table class="efj-t num"><thead><tr><th></th><th>Inscrits</th><th>Présents</th><th>Absents</th></tr></thead><tbody>${row('Garçons',r.G,'')}${row('Filles',r.F,'')}${row('Total',r.T,'tot')}</tbody></table>${r.T.i-r.T.p-r.T.a>0?`<small class="muted num">${r.T.i-r.T.p-r.T.a} élève${r.T.i-r.T.p-r.T.a>1?'s':''} pas encore marqué${r.T.i-r.T.p-r.T.a>1?'s':''} aujourd’hui.</small>`:''}</div>`})()}
    <div class="today-grid">${ids.map(c=>{const st=dayState(c,td);return `<button class="tg" data-act="tgday" data-id="${h(c)}" aria-label="Détail du jour, ${h(S.classes[c].nom)}"><b>${h(S.classes[c].nom.replace(' année primaire',''))}</b>
      <span class="${st.ap}">Appel <em class="num">${st.apTxt}</em></span><span class="${st.co}">Cotes <em class="num">${st.coTxt}</em></span></button>`}).join('')}</div>
    <p class="muted small" style="margin:0"><span class="lg-dot on"></span> Fait et clôturé · <span class="lg-dot mid"></span> En cours · <span class="lg-dot"></span> Pas encore fait (clignote). Touchez une classe pour voir le bilan du jour.</p></div>
@@ -2953,7 +2964,8 @@ function daySheet(cid){
    <button class="btn grad" data-act="open" data-id="${h(cid)}">Ouvrir la classe</button></div>`);
 }
 
-function gfSplit(cid,d){const a=S.appel[aid(cid,d)]?.p||{};const es=elevesOf(cid);const c=(s,m)=>es.filter(e=>(s==='F')===(e.sexe==='F')&&a[e.id]===m).length;return{PG:c('M','P'),PF:c('F','P'),AG:c('M','A'),AF:c('F','A')}}
+function gfSplit(cid,d){const a=S.appel[aid(cid,d)]?.p||{};const es=elevesOf(cid);const c=(s,m)=>es.filter(e=>(s==='F')===(e.sexe==='F')&&a[e.id]===m).length;return{PG:c('M','P'),PF:c('F','P'),AG:c('M','A')+c('M','M'),AF:c('F','A')+c('F','M')}}
+function ecoleJour(d){const r={G:{i:0,p:0,a:0},F:{i:0,p:0,a:0},cls:0,n:0};for(const cid of classIds()){const a=S.appel[aid(cid,d)]?.p;r.n++;if(a&&Object.keys(a).length)r.cls++;for(const e of elevesOf(cid)){const k=e.sexe==='F'?'F':'G';r[k].i++;const m=a?.[e.id];if(m==='P')r[k].p++;else if(m==='A'||m==='M')r[k].a++}}r.T={i:r.G.i+r.F.i,p:r.G.p+r.F.p,a:r.G.a+r.F.a};return r}
 
 /* ---------- simulation ---------- */
 function rng(seed){let x=seed>>>0;return()=>{x=(Math.imul(x,1664525)+1013904223)>>>0;return x/4294967296}}

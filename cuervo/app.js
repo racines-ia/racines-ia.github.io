@@ -557,7 +557,7 @@ async function pageProduct(id, alive) {
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
     '<a class="shoprow top" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Visiter la boutique</small></div>' + ico('i-arrow') + '</a>' +
     socialRow(s) +
-    '<div class="cover' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
+    '<div class="cover wide' + (safeUrl(p.cover_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.cover_url)) : '') + '">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '<div class="ph"><div><b>' + esc(s.boutique) + '</b></div></div>') + '</div>' +
     '<article class="prod"><div class="phead"><div class="sq' + (safeUrl(p.image_url) ? ' zoom" data-zoom="' + esc(safeUrl(p.image_url)) : '') + '">' + pic(p.image_url) + '</div><div style="min-width:0"><span class="sold">' + sold + '</span><h1>' + esc(p.titre) + '</h1>' +
     '<div class="price-row"><div class="price">' + money(p.prix_actuel, p.devise) + '</div>' + (p.promo ? '<div class="old"><s>' + money(p.prix, p.devise) + '</s></div>' : '') + '</div></div></div>' + promo +
     (mine ? '<div class="ownbar"><button class="btn btn-ghost btn-sm" type="button" data-act="editHere" data-id="' + esc(p.id) + '"><span>Modifier</span></button><button class="btn btn-ghost btn-sm" type="button" data-act="shareProduct" data-id="' + esc(p.id) + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '" data-prix="' + esc(bPrix(p)) + '">' + ico('i-share') + '<span>Partager</span></button></div>' : '') +
@@ -610,7 +610,8 @@ async function pageLanding(id, alive) {
     ['J\'ai une question avant d\'acheter', waNum(s.whatsapp) ? 'Écris directement au vendeur sur WhatsApp avec le bouton ci-dessous.' : 'Visite la boutique du vendeur pour le contacter.']];
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette page n\'est pas encore visible du public.</div><div style="height:12px"></div>' : '') +
     '<div class="lp">' +
-    '<div class="lp-cover">' + (safeUrl(p.cover_url) ? pic(p.cover_url) : '') + '<a class="lp-shop" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<span>' + esc(s.boutique) + '</span></a></div>' +
+    '<a class="lp-shop" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<span>' + esc(s.boutique) + '</span></a>' +
+    (safeUrl(p.cover_url) ? '<div class="lp-cover zoom" data-zoom="' + esc(safeUrl(p.cover_url)) + '">' + pic(p.cover_url) + '</div>' : '') +
     '<div class="lp-head">' + (safeUrl(p.image_url) ? '<div class="lp-sq zoom" data-zoom="' + esc(safeUrl(p.image_url)) + '">' + pic(p.image_url) + '</div>' : '') +
     (p.promo ? '<span class="lp-badge">Promo −' + remise + ' %' + (p.promo_places != null ? ' · plus que ' + p.promo_places + ' place' + (p.promo_places > 1 ? 's' : '') : '') + '</span>' : '') +
     '<h1>' + esc(p.titre) + '</h1>' + (p.description ? '<p class="lp-desc">' + esc(p.description) + '</p>' : '') +
@@ -1181,7 +1182,7 @@ function edRender() {
     '<div class="switch"><span>Visible dans ma boutique</span><input id="e-actif" type="checkbox"' + (p.actif ? ' checked' : '') + '></div></div>' +
     '<div class="box"><h3>Promotion limitée (facultatif)</h3><div class="two"><label>Prix promo<input id="e-pprix" type="number" inputmode="decimal" min="0" step="any" value="' + (p.promo_prix == null ? '' : p.promo_prix) + '"></label><label>Places<input id="e-places" type="number" inputmode="numeric" min="0" step="1" placeholder="Illimité" value="' + (p.promo_places == null ? '' : p.promo_places) + '"></label></div>' +
     '<label>Fin de la promo<input id="e-fin" type="datetime-local" value="' + localDT(p.promo_fin) + '"></label></div>' +
-    '<div class="box"><h3>Photo de couverture du produit</h3><p class="note">Format paysage 1920 × 1080. Elle s\'affiche en haut de la page du produit.</p>' + upBox('pcover', p.cover_url, 'Photo de couverture', 'cover') + '</div>' +
+    '<div class="box"><h3>Photo de couverture du produit</h3><p class="note">Format bannière 1600 × 600 (large et peu haute). Elle s\'affiche en entier en haut de la page du produit et de ta landing page.</p>' + upBox('pcover', p.cover_url, 'Photo de couverture', 'cover wide') + '</div>' +
     '<div class="box"><h3>Photo du produit (carrée)</h3><div style="width:160px">' + upBox('pimg', p.image_url, 'Photo du produit', 'sq') + '</div></div>' +
     '<div class="box"><h3>Photos d\'exemples</h3><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
     (p.exemples.length < 4 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
@@ -1220,7 +1221,7 @@ document.addEventListener('change', async function (e) {
       var url = k === 'cover' ? await upImage(f, 1280, 720, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
       var r = await sb.from('mk_vendors').update(patch).eq('id', S.user.id); if (r.error) throw r.error;
       S.vendor[k + '_url'] = url; renderDash(true); toast('Photo enregistrée');
-    } else if (k === 'pcover') { edRead(); E.p.cover_url = await upImage(f, 1280, 720, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
+    } else if (k === 'pcover') { edRead(); E.p.cover_url = await upImage(f, 1600, 600, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
     else if (k === 'pimg') { edRead(); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
     else if (k === 'pex') { edRead(); E.p.exemples.push({ url: await upImage(f, 800, 800, true), legende: '' }); edRender(); toast('Exemple ajouté : pense à enregistrer'); }
     else if (k === 'pvid') {

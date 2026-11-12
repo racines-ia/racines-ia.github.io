@@ -2,32 +2,35 @@
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Fiche Mariage – Église de la Résurrection Kimbwala</title>
 <style>
-:root{--or:#333;--bl:#111;--bg:#fff}
-*{box-sizing:border-box}body{margin:0;font-family:Georgia,serif;background:var(--bg);color:#222}
-header{text-align:center;padding:22px 12px 12px;border-bottom:1px solid #ddd}
-header h1{font-size:17px;margin:0;letter-spacing:1px}header p{margin:6px 0 0;color:#555;font-size:13px}
-main{max-width:760px;margin:auto;padding:14px}
-.card{padding:12px 0 18px;margin-bottom:8px;border-bottom:1px solid #eee}
-h2{font-size:16px;color:var(--bl);margin:0 0 12px}h3{font-size:14px;color:var(--or);margin:14px 0 8px}
-label{display:block;font-size:12px;color:#666;margin-top:8px;font-family:sans-serif}
-input{width:100%;padding:8px 2px;border:0;border-bottom:1px solid #bbb;font-size:15px;background:#fff;font-family:Georgia,serif}input:focus{outline:0;border-color:#111}
-.chk label{display:flex;gap:8px;align-items:center;font-size:14px;color:#222}.chk input{width:auto}
-button{background:var(--bl);color:#fff;border:0;border-radius:6px;padding:10px 14px;font-size:15px;margin:6px 4px 0 0;font-family:sans-serif}
-button.or{background:var(--or)}button.l{background:#eee;color:#222}
-canvas{width:100%;height:150px;border:1px solid #ccc;border-radius:4px;background:#fff;touch-action:none}
+:root{--bl:#1b2b4b;--or:#b8913f;--bg:#f4f1ea}
+*{box-sizing:border-box}body{margin:0;font-family:Georgia,serif;background:var(--bg);color:#1f1f1f}
+header{background:var(--bl);color:#fff;text-align:right;padding:22px 20px 16px;border-bottom:4px solid var(--or)}
+header h1{font-size:18px;margin:0;letter-spacing:1.5px}header p{margin:6px 0 0;color:#e6cf9a;font-size:13px;font-style:italic}
+main{max-width:760px;margin:auto;padding:16px}
+.card{background:#fff;border:1px solid #d9cfb8;border-left:5px solid var(--or);border-radius:10px;padding:16px 16px 18px;margin-bottom:16px;box-shadow:0 2px 8px #1b2b4b14}
+h2{font-size:15px;color:var(--bl);margin:-16px -16px 14px;padding:10px 16px;background:#f8f4ea;border-bottom:1px solid #e6dcc4;border-radius:0 9px 0 0;text-transform:uppercase;letter-spacing:.5px}
+h3{font-size:14px;color:var(--or);margin:16px 0 8px}
+label{display:block;font-size:12px;color:#5b6475;margin-top:10px;font-family:sans-serif;font-weight:600}
+input{width:100%;padding:10px;border:1px solid #cfd5df;border-radius:6px;font-size:15px;background:#fcfcfd;font-family:Georgia,serif}
+input:focus{outline:0;border-color:var(--or);box-shadow:0 0 0 3px #b8913f33}
+.chk label{display:flex;gap:8px;align-items:center;font-size:14px;color:#222;font-weight:400}.chk input{width:auto}
+button{background:var(--bl);color:#fff;border:0;border-radius:6px;padding:11px 16px;font-size:14px;margin:8px 4px 0 0;font-family:sans-serif;font-weight:600}
+button.or{background:var(--or)}button.l{background:#fff;color:var(--bl);border:1px solid var(--bl)}
+canvas{width:100%;height:150px;border:1px solid #cfd5df;border-radius:6px;background:#fff;touch-action:none}
 .sig img{max-width:220px;height:80px;object-fit:contain;border-bottom:1px solid #999}
-.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}.tabs button{flex:1;min-width:110px}
-.tabs button.on{background:var(--or)}
-.link{font-size:12px;word-break:break-all;background:#f5f5f5;padding:8px;border-radius:8px;font-family:monospace}
-.ok{color:green;font-family:sans-serif;font-size:13px}.muted{color:#888;font-size:13px;font-family:sans-serif}
-.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#eee;font-family:sans-serif}
-.badge.v{background:#d8f0d8;color:#1d6b1d}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}.tabs button{flex:1;min-width:110px;margin:0;background:#fff;color:var(--bl);border:1px solid var(--bl)}
+.tabs button.on{background:var(--bl);color:#fff}
+.link{font-size:12px;word-break:break-all;background:#f8f4ea;border:1px solid #e6dcc4;padding:8px;border-radius:6px;font-family:monospace}
+.ok{color:#1d6b1d;font-family:sans-serif;font-size:13px}.muted{color:#6b7280;font-size:13px;font-family:sans-serif}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:20px;background:#eee;font-family:sans-serif}.badge.v{background:#d8f0d8;color:#1d6b1d}
 #print{display:none}
-@media print{body{background:#fff}header,main{display:none}#print{display:block;font-size:11.5px;padding:10mm}
-#print h1{text-align:center;font-size:15px;margin:0}#print h2{font-size:12.5px;border-bottom:1px solid #000;padding:2px 0;margin:10px 0 4px}
-#print table{width:100%;border-collapse:collapse}#print td{border:1px solid #bbb;padding:3px 5px;vertical-align:top}
-#print td:first-child{width:38%;color:#444}.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.sgrid div{border:1px solid #bbb;padding:5px;min-height:70px}
-.sgrid img{height:55px}}
+@media print{@page{margin:10mm}body{background:#fff}header,main{display:none}#print{display:block;font-size:11.5px;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+#print .ent{text-align:right;border-bottom:3px solid #b8913f;padding-bottom:6px;margin-bottom:6px}
+#print .ent b{display:block;font-size:15px;color:#1b2b4b;letter-spacing:1px}#print .ent i{color:#8a6d2e;font-size:12px}
+#print h2{font-size:12px;background:#1b2b4b;color:#fff;padding:4px 8px;margin:10px 0 0;border-radius:4px 4px 0 0}
+#print table{width:100%;border-collapse:collapse;border:1px solid #1b2b4b}#print td{border:1px solid #c9c2b0;padding:3px 6px;vertical-align:top}
+#print td:first-child{width:38%;color:#1b2b4b;background:#f8f4ea}.bx{border:1px solid #1b2b4b;padding:6px 8px}
+.sgrid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px}.sgrid div{border:1px solid #1b2b4b;border-radius:4px;padding:5px;min-height:70px}.sgrid img{height:55px}}
 </style></head><body>
 <header><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><p>Fiche d'identification des candidats au mariage chrétien</p></header>
 <main id="app"><div class="card">Chargement…</div></main>
@@ -106,12 +109,12 @@ function partager(r){const t=`Bonjour, merci de remplir et signer votre partie (
 function tbl(d,fields){return `<table>${fields.map(f=>`<tr><td>${f}</td><td>${esc(d[f])}</td></tr>`).join("")}</table>`}
 function sg(r){const s=(S.data[r]||{}).signature;return `<div><b>Signature ${r==="fiancee"?"de la Fiancée":r==="marraine"?"de la Marraine":"du "+LBL[r]}</b><br>${s?`<img src="${s}">`:""}</div>`}
 function buildPrint(){const d=S.data,m=d.mariage||{},pc=m.pieces||{};
- document.getElementById("print").innerHTML=`<p>Date : ${new Date().toLocaleDateString("fr-FR")}</p><h1>ÉGLISE DE LA RÉSURRECTION KIMBWALA</h1><h1 style="font-size:13px">FICHE D'IDENTIFICATION DES CANDIDATS AU MARIAGE CHRÉTIEN</h1>
+ document.getElementById("print").innerHTML=`<div class="ent"><span style="float:left;font-size:11px">Date : ${new Date().toLocaleDateString("fr-FR")}</span><b>ÉGLISE DE LA RÉSURRECTION KIMBWALA</b><i>Fiche d'identification des candidats au mariage chrétien</i></div>
  <h2>I. IDENTIFICATION DU FIANCÉ</h2>${tbl(d.fiance||{},PERS)}<h2>II. IDENTIFICATION DE LA FIANCÉE</h2>${tbl(d.fiancee||{},PERS)}
  <h2>III. INFORMATIONS SUR LE MARIAGE</h2>${tbl(m,MAR)}
  <h2>IV. IDENTIFICATION DU COUPLE PARRAIN</h2><b>Parrain</b>${tbl(d.parrain||{},PAR)}<b>Marraine</b>${tbl(d.marraine||{},PAR)}
- <h2>V. PIÈCES À FOURNIR</h2>${PIECES.map(p=>`${pc[p]?"☑":"☐"} ${p}`).join("<br>")}<br>☐ Autres : ${esc(m.autres)}
- <h2>VI. ENGAGEMENT DES FIANCÉS</h2><p>${ENG.fiances}</p><h2>VII. ENGAGEMENT DU COUPLE PARRAIN</h2><p>${ENG.parrains}</p>
+ <h2>V. PIÈCES À FOURNIR</h2><div class="bx">${PIECES.map(p=>`${pc[p]?"☑":"☐"} ${p}`).join("<br>")}<br>☐ Autres : ${esc(m.autres)}</div>
+ <h2>VI. ENGAGEMENT DES FIANCÉS</h2><div class="bx">${ENG.fiances}</div><h2>VII. ENGAGEMENT DU COUPLE PARRAIN</h2><div class="bx">${ENG.parrains}</div>
  <p>Fait à : ${esc(m.faita)||"________"} &nbsp; Le : ${esc(m.le)||"___/___/_____"}</p>
  <div class="sgrid">${sg("fiance")}${sg("fiancee")}${sg("parrain")}${sg("marraine")}<div><b>Visa du Pasteur Responsable</b><br>${esc(m.pasteur)}</div><div><b>Cachet de l'Église</b></div></div>`}
 function pdf(){buildPrint();setTimeout(()=>print(),300)}

@@ -2977,7 +2977,7 @@ function events(){const out=[];for(const j of Object.values(S.journal)){if(!S.cl
 function unseen(){const s=seenGet();return events().filter(x=>!s||x.at>s).length}
 function personOf(id,cid){const all=ensList();return all.find(p=>p.id===id)||teachersOf(cid)[0]||{nom:'Enseignant',id:''}}
 function vActivite(){
-  const evs=events().filter(x=>!S.fAct||x.j.classeId===S.fAct);const seen=S.seenAt||'';const td=today();
+  const evs=events();const seen=S.seenAt||'';const td=today();
   const ids=classIds();
   const tdA=ids.filter(c=>appelClos(c,td)).length,tdC=ids.filter(c=>cotesClos(c,td)).length;
   let lastDay='';
@@ -2994,7 +2994,7 @@ function vActivite(){
         <ol>${it.eleves.map(e=>`<li><span>${h(e.nom)}</span><b class="num ${e.pts!=null&&e.pts<it.max/2?'low':''}">${e.pts==null?'–':fmt(e.pts)} / ${fmt(it.max)}</b></li>`).join('')}</ol></details>`}).join('')}</article>`;
   }).join('');
   return band({back:'accueil',kicker:'Direction et surécole',title:'Activité',sub:`Aujourd’hui : appel clôturé dans ${tdA} classe${tdA>1?'s':''} sur ${ids.length} · cotes clôturées dans ${tdC}`})+page(`
-   <div class="card pad stack"><div class="chips" role="group" aria-label="Classe"><button class="chipb" data-act="fact" data-v="" aria-pressed="${!S.fAct}">Toutes les classes</button>${ids.map(c=>`<button class="chipb" data-act="fact" data-v="${h(c)}" aria-pressed="${S.fAct===c}">${h(S.classes[c].nom.replace(' année primaire',' année'))}</button>`).join('')}</div>
+   <div class="card pad stack">
    ${(()=>{const r=ecoleJour(td);const row=(l,x,c)=>`<tr class="${c}"><th>${l}</th><td>${x.i}</td><td class="p">${x.p}</td><td class="a">${x.a}</td></tr>`;if(spEcole(td))return `<div class="closebar ok"><span class="cb-ic">${spCode(spEcole(td))}</span><span class="grow"><b>${h(spLbl(spEcole(td)))}</b><small>Journée barrée pour toute l’école : pas d’appel aujourd’hui.</small></span></div>`;return `<div class="efj"><div class="efj-h"><b>Effectif du jour · toute l’école</b><small class="num">${r.T.i?Math.round(r.T.p/r.T.i*100):0} % présents · appel fait dans ${r.cls} classe${r.cls>1?'s':''} sur ${r.n}</small></div><table class="efj-t num"><thead><tr><th></th><th>Inscrits</th><th>Présents</th><th>Absents</th></tr></thead><tbody>${row('Garçons',r.G,'')}${row('Filles',r.F,'')}${row('Total',r.T,'tot')}</tbody></table>${r.T.i-r.T.p-r.T.a>0?`<small class="muted num">${r.T.i-r.T.p-r.T.a} élève${r.T.i-r.T.p-r.T.a>1?'s':''} pas encore marqué${r.T.i-r.T.p-r.T.a>1?'s':''} aujourd’hui.</small>`:''}</div>`})()}
    <div class="today-grid">${ids.map(c=>{const st=dayState(c,td);return `<button class="tg" data-act="tgday" data-id="${h(c)}" aria-label="Détail du jour, ${h(S.classes[c].nom)}"><b>${h(S.classes[c].nom.replace(' année primaire',''))}</b>
      <span class="${st.ap}">Appel <em class="num">${st.apTxt}</em></span><span class="${st.co}">Cotes <em class="num">${st.coTxt}</em></span></button>`}).join('')}</div>

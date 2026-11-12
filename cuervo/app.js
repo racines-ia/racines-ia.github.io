@@ -58,6 +58,21 @@ function avatar(shop, cls) {
 }
 function link(q) { return location.origin + location.pathname + (q || ''); }
 function llink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'l/' + id + '/'; }
+/* Visites : compte 1 visite par visiteur et par produit toutes les 6 h ; repère les visites venues de Facebook */
+function fromFb() {
+  var q = location.search;
+  if (/[?&](fbclid|utm_source=(facebook|fb|instagram|ig))/i.test(q)) { try { sessionStorage.setItem('cv_fb', '1'); } catch (e) { } return true; }
+  try { return sessionStorage.getItem('cv_fb') === '1'; } catch (e) { return false; }
+}
+function countView(id, mine) {
+  if (mine || !id) return;
+  var k = 'cv_v_' + id, now = Date.now(), t = 0;
+  try { t = Number(localStorage.getItem(k) || 0); } catch (e) { }
+  if (now - t < 6 * 3600 * 1000) return;
+  try { localStorage.setItem(k, String(now)); } catch (e) { }
+  sb.rpc('mk_vue', { p_id: id, p_fb: fromFb() }).then(function () { }, function () { });
+}
+function nVues(n) { n = Number(n || 0); return n.toLocaleString('fr-FR') + ' vue' + (n > 1 ? 's' : ''); }
 function plink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'p/' + id + '/'; }
 function norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function busy(btn, on, label) { if (!btn) return; btn.disabled = on; btn.classList.toggle('busy', on); if (label) btn.lastChild.textContent = label; }
@@ -551,7 +566,8 @@ async function pageProduct(id, alive) {
   var vids = (p.videos || []).map(videoHtml).filter(Boolean);
   var canPay = (s.ops || []).length > 0 && !d.apercu;
   var mine = S.vendor && S.vendor.id === p.vendor_id;
-  var sold = '<b>' + (p.ventes || 0) + '</b> vente' + (p.ventes > 1 ? 's' : '');
+  var sold = '<b>' + (p.ventes || 0) + '</b> vente' + (p.ventes > 1 ? 's' : '') + ' <span class="vues">' + ico('i-eye') + nVues(p.vues) + '</span>';
+  countView(p.id, mine);
   document.title = p.titre + ' — ' + s.boutique;
   page(
     (d.apercu ? '<div class="banner"><b>Aperçu</b>Ce produit n\'est pas encore visible du public' + (d.bloque ? ' : il a été bloqué par l\'administrateur.' : '. Vérifie le loyer et les numéros Mobile Money de la boutique.') + '</div><div style="height:16px"></div>' : '') +
@@ -597,6 +613,7 @@ async function pageLanding(id, alive) {
   var d = r.data, p = d.product, s = d.shop; S.ctx = { product: p, shop: s };
   var st = LSTY.some(function (x) { return x[0] === p.landing_style; }) ? p.landing_style : 'orange';
   document.body.setAttribute('data-lt', st);
+  countView(p.id, S.vendor && S.vendor.id === p.vendor_id);
   document.title = p.titre + ' — ' + s.boutique;
   var canPay = (s.ops || []).length > 0 && !d.apercu, end = p.promo_fin ? new Date(p.promo_fin).getTime() : null;
   var remise = p.promo ? Math.round((1 - p.prix_actuel / p.prix) * 100) : 0;
@@ -615,7 +632,8 @@ async function pageLanding(id, alive) {
     '<div class="lp-head">' + (safeUrl(p.image_url) ? '<div class="lp-sq zoom" data-zoom="' + esc(safeUrl(p.image_url)) + '">' + pic(p.image_url) + '</div>' : '') +
     (p.promo ? '<span class="lp-badge">Promo −' + remise + ' %' + (p.promo_places != null ? ' · plus que ' + p.promo_places + ' place' + (p.promo_places > 1 ? 's' : '') : '') + '</span>' : '') +
     '<h1>' + esc(p.titre) + '</h1>' + (p.description ? '<p class="lp-desc">' + esc(p.description) + '</p>' : '') +
-    '<div class="lp-price"><b>' + money(p.prix_actuel, p.devise) + '</b>' + (p.promo ? '<s>' + money(p.prix, p.devise) + '</s>' : '') + (p.ventes ? '<span>' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</span>' : '') + '</div>' +
+    '<div class="lp-stats">' + ico('i-eye') + nVues(p.vues) + (p.ventes ? ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') : '') + '</div>' +
+    '<div class="lp-price"><b>' + money(p.prix_actuel, p.devise) + '</b>' + (p.promo ? '<s>' + money(p.prix, p.devise) + '</s>' : '') + '</div>' +
     (p.promo && end ? '<div class="cd" data-end="' + end + '"></div>' : '') + payBtn + '</div>' +
     ((p.points || []).length ? sec('Pourquoi ce produit', '<div class="lp-pts">' + p.points.map(function (t) { return '<div>' + ico('i-check') + '<b>' + esc(t) + '</b></div>'; }).join('') + '</div>') : '') +
     (vids.length ? sec('En vidéo', '<div class="g16">' + vids.join('') + '</div>') : '') +
@@ -1096,7 +1114,7 @@ function dashProducts() {
     (S.products.length ? '<p class="note" style="margin-top:12px">Partage le lien de chaque produit : le client arrive directement sur le produit, et peut ensuite visiter ta boutique.</p>' : '') +
     '<div class="g12 stag" style="margin-top:16px">' +
     (S.products.length ? S.products.map(function (p) {
-      return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + '</small>' +
+      return '<div class="ord"><div class="prow"><div class="sq">' + pic(p.image_url) + '</div><div style="min-width:0"><b style="display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">' + esc(p.titre) + '</b><small>' + money(p.prix, p.devise) + ' · ' + p.ventes + ' vente' + (p.ventes > 1 ? 's' : '') + ' · ' + nVues(p.vues) + (p.vues_fb ? ' (dont ' + p.vues_fb + ' via Facebook)' : '') + '</small>' +
         '<span class="tag ' + (p.bloque ? 'r' : p.actif ? 'g' : 'a') + '" style="margin-top:8px">' + (p.bloque ? 'Bloqué' : p.actif ? 'Publié' : 'Masqué') + '</span></div></div>' +
         '<div class="two"><button class="btn btn-ghost btn-sm" type="button" data-act="editProduct" data-id="' + p.id + '"><span>Modifier</span></button>' +
         '<button class="btn btn-primary btn-sm" type="button" data-act="shareProduct" data-id="' + p.id + '" data-title="' + esc(p.titre) + '" data-img="' + esc(safeUrl(p.image_url)) + '" data-prix="' + esc(bPrix(p)) + '">' + ico('i-share') + '<span>Partager</span></button></div></div>';
@@ -1185,7 +1203,7 @@ function edRender() {
     '<div class="box"><h3>Photo de couverture du produit</h3><p class="note">Format bannière 1600 × 600 (large et peu haute). Elle s\'affiche en entier en haut de la page du produit et de ta landing page.</p>' + upBox('pcover', p.cover_url, 'Photo de couverture', 'cover wide') + '</div>' +
     '<div class="box"><h3>Photo du produit (carrée)</h3><div style="width:160px">' + upBox('pimg', p.image_url, 'Photo du produit', 'sq') + '</div></div>' +
     '<div class="box"><h3>Photos d\'exemples</h3><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
-    (p.exemples.length < 4 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
+    (p.exemples.length < 5 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
     '<div class="box"><h3>Vidéos explicatives</h3><p class="note">Comment utiliser ou installer le produit. 3 vidéos maximum. Une vidéo de plus de 50 Mo est compressée automatiquement. Formats : horizontale 16:9 ou verticale 9:16 (touche le format pour le changer).</p>' +
     p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="fmt" type="button" data-act="edVidFmt" data-i="' + i + '" title="Changer le format">' + (v.format === '9:16' ? '9:16' : '16:9') + '</button><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
     (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +

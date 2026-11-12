@@ -524,3 +524,8 @@ body[data-lt=clair] .lp-pay,body[data-lt=cuenca] .lp-pay,body[data-lt=clair] .ba
 .lp-head{margin-top:18px}
 .lp-sq{width:96px;height:96px;border:1px solid var(--line)}
 .lp-shop{position:static;display:inline-flex;margin:14px 16px 0;background:var(--surface);color:var(--text);border:1px solid var(--line);backdrop-filter:none}
+
+.vues{display:inline-flex;align-items:center;gap:4px;margin-left:8px;color:var(--muted);font-weight:600}
+.vues .i,.lp-price span .i{width:15px;height:15px;vertical-align:-2px;margin-right:3px}
+.lp-price span+span{margin-left:12px}
+.lp-stats{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;font-weight:600;margin-bottom:-6px}.lp-stats .i{width:16px;height:16px}

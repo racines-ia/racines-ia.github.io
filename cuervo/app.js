@@ -326,7 +326,7 @@ function card(p) {
     '<div class="m">' + (p.ventes > 0 ? p.ventes + ' vendu' + (p.ventes > 1 ? 's' : '') : 'Nouveau') + (p.boutique ? ' · ' + esc(p.boutique) : '') + '</div></div></a>';
 }
 function sellCta(loyer) {
-  return '<div class="cta sec"><div class="kicker">Vendeurs</div><h2>Ouvre ta boutique en ligne</h2><p class="lead" style="margin:8px 0 16px">Publie tes produits, partage ton lien sur WhatsApp et Facebook, et reçois tes paiements par Mobile Money. Loyer : ' + money(loyer, 'CDF') + ' pour 40 jours.</p>' +
+  return '<div class="cta sec"><div class="kicker">Vendeurs</div><h2>Ouvre ta boutique en ligne</h2><p class="lead" style="margin:8px 0 16px">Publie tes produits, partage ton lien sur WhatsApp et Facebook, et reçois tes paiements par Mobile Money. Loyer : ' + money(loyer, 'CDF') + ' pour 35 jours.</p>' +
     '<a class="btn btn-primary" href="?v=compte" data-nav>' + (S.vendor ? 'Gérer ma boutique' : 'Créer ma boutique') + ' ' + ico('i-arrow') + '</a></div>';
 }
 var ILLU = {
@@ -412,14 +412,14 @@ var VX_ART = {
   shop: '<svg viewBox="0 0 160 120"><rect x="20" y="44" width="120" height="66" rx="10" fill="#2A1C12"/><path d="M14 44l14-24h104l14 24z" fill="#FF7A1A"/><rect x="66" y="72" width="28" height="38" rx="4" fill="#0A0705"/><rect x="32" y="64" width="22" height="18" rx="4" fill="#FFB547"/><rect x="106" y="64" width="22" height="18" rx="4" fill="#FFB547"/></svg>',
   mm: '<svg viewBox="0 0 160 120"><rect x="46" y="6" width="68" height="108" rx="14" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><rect x="58" y="24" width="44" height="12" rx="4" fill="#FFB547"/><rect x="58" y="44" width="44" height="12" rx="4" fill="#FF7A1A"/><rect x="58" y="64" width="44" height="12" rx="4" fill="#E8430F"/><circle cx="124" cy="88" r="20" fill="#4ADE80"/><path d="M114 88l7 7 13-14" stroke="#0A0705" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>',
   pay: '<svg viewBox="0 0 160 120"><rect x="8" y="36" width="44" height="72" rx="10" fill="#2A1C12" stroke="#FFB547" stroke-width="3"/><rect x="108" y="36" width="44" height="72" rx="10" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><path d="M58 72h40" stroke="#FF7A1A" stroke-width="5" stroke-linecap="round"/><path d="M90 62l12 10-12 10" stroke="#FF7A1A" stroke-width="5" fill="none" stroke-linecap="round" stroke-linejoin="round"/><circle cx="80" cy="34" r="18" fill="#FFB547"/><text x="80" y="40" text-anchor="middle" font-size="16" font-weight="800" fill="#0A0705">FC</text></svg>',
-  rent: '<svg viewBox="0 0 160 120"><rect x="26" y="20" width="108" height="88" rx="12" fill="#2A1C12"/><rect x="26" y="20" width="108" height="24" rx="12" fill="#FF7A1A"/><text x="80" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#FFB547">15 000</text><text x="80" y="100" text-anchor="middle" font-size="11" fill="#E9D6C6">FC / 40 jours</text></svg>',
+  rent: '<svg viewBox="0 0 160 120"><rect x="26" y="20" width="108" height="88" rx="12" fill="#2A1C12"/><rect x="26" y="20" width="108" height="24" rx="12" fill="#FF7A1A"/><text x="80" y="84" text-anchor="middle" font-size="26" font-weight="800" fill="#FFB547">15 000</text><text x="80" y="100" text-anchor="middle" font-size="11" fill="#E9D6C6">FC / 35 jours</text></svg>',
   safe: '<svg viewBox="0 0 160 120"><path d="M80 8l52 18v34c0 30-22 48-52 56-30-8-52-26-52-56V26z" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><path d="M58 62l15 15 30-32" stroke="#4ADE80" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 var VX_SC = [
   ['shop', 'Vends tes <em>produits digitaux</em> en RDC', 'Formations, fichiers, modèles, applications : ouvre ta boutique sur cuervo.co en quelques minutes.'],
   ['mm', 'Enregistre tes <em>Mobile Money</em>', 'M-Pesa, Airtel Money, Orange Money. L\'administrateur confirme tes numéros avant la mise en ligne.'],
   ['pay', 'Le client te paie <em>directement</em>', 'Il paie sur ton numéro, envoie sa capture. Tu confirmes : il reçoit ses fichiers tout de suite.'],
-  ['rent', 'Loyer : <em>15 000 FC</em> pour 40 jours', 'Paie-le tout de suite, ou sur ta première vente : cuervo.co garde le loyer et te reverse le reste.'],
+  ['rent', 'Loyer : <em>15 000 FC</em> pour 35 jours', 'Paie-le tout de suite, ou sur ta première vente : cuervo.co garde le loyer et te reverse le reste.'],
   ['safe', 'cuervo.co ne garde <em>aucune somme</em>', 'À part le loyer, tout l\'argent va directement sur tes numéros Mobile Money.']
 ];
 var VXT = null;
@@ -464,10 +464,10 @@ function pageAide() {
     '<div class="step"><div><b>Enregistre tes Mobile Money</b><p>Dans Ma boutique → Boutique : le nom du compte et tes numéros M-Pesa, Airtel Money ou Orange Money. L\'administrateur les confirme avant la mise en ligne, et après chaque modification.</p></div></div>' +
     '<div class="step"><div><b>Publie tes produits</b><p>Photos, description (Cuervo IA peut t\'aider), prix en FC ou en $, et le lien de téléchargement Google Drive de ton produit.</p></div></div>' +
     '<div class="step"><div><b>Confirme tes ventes</b><p>Quand l\'argent arrive sur ton numéro, touche « Argent reçu » : le client reçoit son produit.</p></div></div></div></div>' +
-    '<div class="sec"><h2 style="margin-bottom:12px">Le loyer : ' + loyer + ' pour 40 jours</h2><div class="steps">' +
-    '<div class="step"><div><b>Option 1 : payer tout de suite</b><p>Tu paies le loyer sur les numéros de cuervo.co (onglet Loyer) et tu envoies ta capture. Chaque paiement confirmé donne 40 jours.</p></div></div>' +
-    '<div class="step"><div><b>Option 2 : payer sur ta première vente</b><p>Ta boutique est en ligne sans rien payer. Ta première vente arrive sur les numéros de cuervo.co : l\'administrateur garde le loyer (jusqu\'à ' + loyer + ') et te reverse le reste. Les ventes suivantes vont directement chez toi.</p></div></div>' +
-    '<div class="step"><div><b>Loyer non payé</b><p>L\'administrateur peut suspendre une boutique qui ne paie pas son loyer. Tu reçois un rappel 5 jours avant la fin de la période.</p></div></div></div></div>' +
+    '<div class="sec"><h2 style="margin-bottom:12px">Le loyer : ' + loyer + ' pour 35 jours</h2><div class="steps">' +
+    '<div class="step"><div><b>Option 1 : payer tout de suite</b><p>Tu paies le loyer sur les numéros de cuervo.co (onglet Loyer) et tu envoies ta capture. Chaque paiement confirmé donne 35 jours.</p></div></div>' +
+    '<div class="step"><div><b>Option 2 : payer sur ta première vente</b><p>Ta boutique est en ligne sans rien payer. Ta première vente arrive sur les numéros de cuervo.co : l\'administrateur garde le loyer (jusqu\'à ' + loyer + ') et te reverse le reste. Les ventes suivantes vont directement chez toi pendant 35 jours.</p></div></div>' +
+    '<div class="step"><div><b>Après les 35 jours</b><p>Ta boutique n\'est jamais suspendue pour le loyer : elle reste en ligne. Quand les 35 jours sont finis, le loyer redevient dû automatiquement : ta vente suivante arrive sur les numéros de cuervo.co, qui garde ' + loyer + ' et te reverse le reste. Puis 35 nouveaux jours commencent. Tu peux aussi payer à l\'avance (option 1).</p></div></div></div></div>' +
     '<div class="sec g8"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><a class="btn btn-ghost" href="?v=ia" data-nav><span>Poser une question à Cuervo IA</span></a></div>');
   vxPlay();
 }
@@ -884,7 +884,7 @@ var A = {
     if (ok && !(ret >= 0)) return toast('Indique le montant gardé pour le loyer');
     busy(el, true); var r = await sb.rpc('mk_admin_loyer_vente', { p_id: el.dataset.id, p_ok: ok, p_retenu: ret }); armed = '';
     if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
-    toast(ok ? (r.data.loyer_couvert ? 'Vente confirmée : loyer payé pour 40 jours' : 'Vente confirmée : loyer partiellement payé') : 'Vente refusée'); await loadAdmin(); renderAdmin();
+    toast(ok ? (r.data.loyer_couvert ? 'Vente confirmée : loyer payé pour 35 jours' : 'Vente confirmée : loyer partiellement payé') : 'Vente refusée'); await loadAdmin(); renderAdmin();
   },
   admRev: async function (el) {
     busy(el, true); var r = await sb.rpc('mk_admin_reverse', { p_id: el.dataset.id });
@@ -894,7 +894,7 @@ var A = {
   admSub: async function (el) {
     busy(el, true); var r = await sb.rpc('mk_admin_sub', { p_id: el.dataset.id, p_ok: el.dataset.ok === '1' });
     if (r.error) { busy(el, false); return toast(errMsg(r.error)); }
-    toast(el.dataset.ok === '1' ? 'Loyer confirmé : 40 jours ajoutés' : 'Paiement refusé'); await loadAdmin(); renderAdmin();
+    toast(el.dataset.ok === '1' ? 'Loyer confirmé : 35 jours ajoutés' : 'Paiement refusé'); await loadAdmin(); renderAdmin();
   },
   admSettings: async function (el) {
     var g = function (k) { return $(k).value.trim(); }, loyer = Number(g('g-loyer'));
@@ -981,14 +981,14 @@ async function loadDash() {
 }
 function loyerChoice(cur, name) {
   var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
-  return '<div class="choice"><div style="font-size:14px;font-weight:600">Comment veux-tu payer ton loyer de ' + loyer + ' pour 40 jours ?</div>' +
+  return '<div class="choice"><div style="font-size:14px;font-weight:600">Comment veux-tu payer ton loyer de ' + loyer + ' pour 35 jours ?</div>' +
     '<label class="opt"><input type="radio" name="' + name + '" value="premiere_vente"' + (cur !== 'immediat' ? ' checked' : '') + '><span><b>Sur ma première vente</b><small>Rien à payer maintenant. Ta première vente arrive chez cuervo.co, qui garde le loyer et te reverse le reste.</small></span></label>' +
-    '<label class="opt"><input type="radio" name="' + name + '" value="immediat"' + (cur === 'immediat' ? ' checked' : '') + '><span><b>Tout de suite</b><small>Tu paies ' + loyer + ' maintenant (onglet Loyer) : toutes tes ventes vont directement chez toi.</small></span></label>' +
+    '<label class="opt"><input type="radio" name="' + name + '" value="immediat"' + (cur === 'immediat' ? ' checked' : '') + '><span><b>Tout de suite</b><small>Tu paies ' + loyer + ' maintenant (onglet Loyer) : tes ventes vont directement chez toi pendant 35 jours.</small></span></label>' +
     '<a class="linkbtn" href="?v=aide" data-nav style="text-align:center">Comment ça marche ?</a></div>';
 }
 function renderAuth() {
   var reg = S.ctx.auth !== 'login', need = !S.user;
-  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 40 jours, tout de suite ou sur ta première vente.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
+  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 35 jours, tout de suite ou sur ta première vente.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
     (need ? '<div class="pills" style="margin-top:24px"><button class="pill' + (reg ? ' on' : '') + '" type="button" data-act="authMode" data-id="register">Créer un compte</button><button class="pill' + (reg ? '' : ' on') + '" type="button" data-act="authMode" data-id="login">J\'ai déjà un compte</button></div>' : '') +
     '<div class="box" style="margin-top:16px">' +
     (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label>' + loyerChoice('premiere_vente', 'a-mode') : '') +
@@ -1006,11 +1006,10 @@ function shopStatus(v) {
   else if (v.mm_statut === 'attente') todo.push('tes numéros Mobile Money attendent la confirmation de l\'administrateur');
   else if (v.mm_statut === 'refuse') todo.push('tes numéros Mobile Money ont été refusés : corrige-les (onglet Boutique)');
   var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
-  if (!v.is_admin && !ok && v.loyer_mode !== 'premiere_vente') todo.push('paie ton loyer de ' + loyer + ' (onglet Loyer)');
   if (todo.length) return ['', 'Boutique pas encore en ligne', 'Il reste à faire : ' + todo.join(' ; ') + '.'];
-  if (!v.is_admin && !ok && v.loyer_mode === 'premiere_vente') return ['ok', 'Boutique en ligne', 'Loyer à payer sur ta prochaine vente : elle arrivera chez cuervo.co, qui garde ' + loyer + ' et te reverse le reste.'];
+  if (!v.is_admin && !ok) return ['ok', 'Boutique en ligne', 'Loyer à payer sur ta prochaine vente : elle arrivera chez cuervo.co, qui garde ' + loyer + ' et te reverse le reste.'];
   var left = v.is_admin ? 99 : Math.ceil((new Date(v.abo_fin + 'T23:59:59') - new Date()) / 864e5);
-  if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Paie ' + loyer + ' dans l\'onglet Loyer pour qu\'elle reste visible.'];
+  if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Ensuite, ta vente suivante arrivera chez cuervo.co, qui gardera ' + loyer + ' et te reversera le reste. Tu peux aussi payer à l\'avance dans l\'onglet Loyer.'];
   return ['ok', 'Boutique en ligne', v.is_admin ? 'Compte administrateur : pas de loyer.' : 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) + '.'];
 }
 async function pageAccount(alive) {
@@ -1098,9 +1097,9 @@ function dashRent() {
   var ops = Object.keys(OPS).filter(function (k) { return g[k]; });
   var h = '<div class="box"><h3>Mode de paiement du loyer</h3>' + loyerChoice(v.loyer_mode, 'l-mode') + '<button class="btn btn-ghost btn-sm" type="button" data-act="saveMode"><span>Enregistrer mon choix</span></button>' +
     (v.loyer_mode === 'premiere_vente' && Number(v.loyer_cycle) > 0 ? '<p class="note">Déjà retenu sur la période : ' + money(v.loyer_cycle, 'CDF') + '.</p>' : '') + '</div>';
-  h += '<div class="box"><h3>Loyer (40 jours) : ' + money(g.loyer, 'CDF') + '</h3><p class="note">' + (v.abo_fin ? 'Payé jusqu\'au ' + fmtDate(v.abo_fin) + '.' : 'Aucun loyer payé pour l\'instant.') + ' Chaque paiement confirmé ajoute 40 jours.</p>';
+  h += '<div class="box"><h3>Loyer (35 jours) : ' + money(g.loyer, 'CDF') + '</h3><p class="note">' + (v.abo_fin ? 'Payé jusqu\'au ' + fmtDate(v.abo_fin) + '.' : 'Aucun loyer payé pour l\'instant.') + ' Chaque paiement confirmé ajoute 35 jours.</p>';
   if (pend) h += '<div class="banner"><b>Paiement en cours de vérification</b>Envoyé le ' + fmtDate(pend.created_at) + '. L\'administrateur va le confirmer.</div>';
-  else if (v.loyer_mode === 'premiere_vente' && !(v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date())) h += '<div class="banner ok"><b>Rien à payer maintenant</b>Ton loyer sera retenu sur ta prochaine vente. Tu peux aussi le payer tout de suite en choisissant « Tout de suite » ci-dessus.</div>';
+  else if (!(v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date())) h += '<div class="banner ok"><b>Rien à payer maintenant</b>Ton loyer sera retenu sur ta prochaine vente. Tu peux aussi le payer tout de suite en choisissant « Tout de suite » ci-dessus.</div>';
   else if (!ops.length) h += '<div class="banner">Les numéros de paiement du loyer ne sont pas encore disponibles.</div>';
   else h += ops.map(function (k) { return '<div class="paynum"><small>' + OPS[k] + '</small><div class="n">' + esc(g[k]) + '</div>' + (g.mm_nom ? '<small>Nom du compte : ' + esc(g.mm_nom) + '</small>' : '') + '</div>'; }).join('') +
     '<label>Tu as payé avec<select id="l-op">' + ops.map(function (k) { return '<option value="' + k + '">' + OPS[k] + '</option>'; }).join('') + '</select></label>' +
@@ -1243,7 +1242,7 @@ function renderAdmin() {
       '<div class="two">' + (r.product_id ? '<a class="btn btn-ghost btn-sm" href="?p=' + esc(r.product_id) + '" data-nav>Voir le produit</a>' : '<span></span>') + (r.vendor_id ? '<button class="btn ' + (r.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (r.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + r.vendor_id + '">' + (r.suspendu ? 'Débloquer' : 'Bloquer la boutique') + '</button>' : '<span></span>') + '</div>' +
       (r.statut === 'nouveau' ? '<button class="btn btn-ghost btn-sm" type="button" data-act="admRepDone" data-id="' + r.id + '"><span>Marquer comme traité</span></button>' : '') + '</div>';
   }).join('') + '</div>' : '<div class="empty">Aucun signalement. Tout va bien.</div>');
-  else if (S.atab === 'ventes') body = '<p class="note" style="margin-bottom:12px">Ventes des boutiques en mode « première vente » : le client a payé sur tes numéros. Garde le loyer (au plus ' + money(loyerG, 'CDF') + ' pour 40 jours), puis reverse le reste au vendeur.</p>' + (a.lv.length ? '<div class="g12 stag">' + a.lv.map(function (o) {
+  else if (S.atab === 'ventes') body = '<p class="note" style="margin-bottom:12px">Ventes des boutiques dont le loyer est dû (première vente, ou 35 jours terminés) : le client a payé sur tes numéros. Garde le loyer (au plus ' + money(loyerG, 'CDF') + ' pour 35 jours), puis reverse le reste au vendeur.</p>' + (a.lv.length ? '<div class="g12 stag">' + a.lv.map(function (o) {
     var resteLoyer = Math.max(0, loyerG - Number(o.loyer_cycle || 0)), def = o.devise === 'CDF' ? Math.min(resteLoyer, Number(o.montant)) : resteLoyer;
     var head = '<div class="top"><div><b>' + esc(o.boutique) + '</b><small>Client : ' + esc(o.nom) + ' · ' + esc(o.tel) + ' · ' + (OPS[o.op] || '') + '</small><small>' + esc(o.titre) + ' · ' + money(o.montant, o.devise) + '</small></div><span class="tag ' + (o.statut === 'attente' ? 'a">À vérifier' : 'g">À reverser') + '</span></div>';
     if (o.statut === 'attente') return '<div class="ord">' + head + (o.capture_path ? '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>' : '<p class="note">Pas encore de capture.</p>') +
@@ -1272,7 +1271,7 @@ function renderAdmin() {
       '<div class="two"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir</a>' + (v.is_admin ? '<span></span>' : '<button class="btn ' + (v.suspendu ? 'btn-ghost' : 'btn-danger') + ' btn-sm" type="button" data-act="admVendor" data-do="' + (v.suspendu ? 'reactiver' : 'suspendre') + '" data-id="' + v.id + '">' + (v.suspendu ? 'Débloquer' : 'Bloquer la boutique') + '</button>') + '</div>' +
       (v.is_admin ? '' : '<button class="btn btn-ghost btn-sm" type="button" data-act="admReset" data-id="' + v.id + '" data-tel="' + esc(v.tel) + '" data-name="' + esc(v.boutique) + '">Donner un nouveau mot de passe</button>') + '</div>';
   }).join('') + '</div>';
-  else { var g = S.settings || {}; body = '<div class="box"><h3>Loyer et paiement des vendeurs</h3><label>Loyer (40 jours) (FC)<input id="g-loyer" type="number" inputmode="decimal" min="0" step="any" value="' + esc(g.loyer) + '"></label><p class="note">Les vendeurs paient leur loyer sur ces numéros.</p>' +
+  else { var g = S.settings || {}; body = '<div class="box"><h3>Loyer et paiement des vendeurs</h3><label>Loyer (35 jours) (FC)<input id="g-loyer" type="number" inputmode="decimal" min="0" step="any" value="' + esc(g.loyer) + '"></label><p class="note">Les vendeurs paient leur loyer sur ces numéros.</p>' +
     '<label>Nom du compte<input id="g-nom" value="' + esc(g.mm_nom) + '"></label><label>Numéro M-Pesa<input id="g-mpesa" type="tel" value="' + esc(g.mpesa) + '"></label><label>Numéro Airtel Money<input id="g-airtel" type="tel" value="' + esc(g.airtel) + '"></label><label>Numéro Orange Money<input id="g-orange" type="tel" value="' + esc(g.orange) + '"></label>' +
     '<label>Ton WhatsApp<input id="g-wa" type="tel" value="' + esc(g.whatsapp) + '"></label><p class="note">Ces numéros reçoivent aussi les ventes-loyer des boutiques en mode « première vente ». Ton WhatsApp sert pour « Mot de passe oublié » et pour les clients des ventes-loyer.</p><button class="btn btn-primary" type="button" data-act="admSettings"><span>Enregistrer</span></button></div>' +
     '<div class="box" style="margin-top:12px"><h3>Pages d\'aide</h3><a class="btn btn-ghost btn-sm" href="?v=aide" data-nav><span>Voir la page « Comment ça marche »</span></a><button class="btn btn-ghost btn-sm" type="button" data-act="explainer"><span>Voir la vidéo de 15 secondes</span></button></div>'; }

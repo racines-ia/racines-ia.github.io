@@ -61,7 +61,7 @@ Règles du site :
 - Acheter : ouvrir le produit, toucher « Payer », entrer son nom et son numéro WhatsApp, payer par M-Pesa, Airtel Money ou Orange Money au numéro affiché, puis envoyer la capture. Dès que le paiement est confirmé, le client accède à ses fichiers sur la page de sa commande.
 - L'argent des ventes va directement sur les numéros Mobile Money du vendeur. cuervo.co ne garde aucune somme, sauf le loyer des boutiques.
 - Ouvrir une boutique : toucher « Vendre », créer son compte avec son numéro, ajouter ses numéros Mobile Money (confirmés par l'administrateur) et ses produits.
-- Loyer : ${money(Number(home.loyer ?? 15000), "CDF")} pour 40 jours. Le vendeur choisit : le payer tout de suite, ou le payer sur sa première vente (cette vente arrive alors chez cuervo.co, qui garde le loyer et reverse le reste au vendeur).
+- Loyer : ${money(Number(home.loyer ?? 15000), "CDF")} pour 35 jours. Le vendeur choisit : le payer tout de suite, ou le payer sur sa première vente (cette vente arrive alors chez cuervo.co, qui garde le loyer et reverse le reste au vendeur). La boutique n'est jamais suspendue pour le loyer : après les 35 jours, le loyer redevient dû automatiquement et la vente suivante arrive chez cuervo.co, qui garde le loyer et reverse le reste.
 - Pour une question sur une commande précise, conseille d'écrire au vendeur depuis la page du produit.
 Catalogue actuel :
 ${catalogue}

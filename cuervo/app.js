@@ -73,6 +73,15 @@ function countView(id, mine) {
   sb.rpc('mk_vue', { p_id: id, p_fb: fromFb() }).then(function () { }, function () { });
 }
 function nVues(n) { n = Number(n || 0); return n.toLocaleString('fr-FR') + ' vue' + (n > 1 ? 's' : ''); }
+/* Lien de téléchargement direct (Google Drive, Docs, Dropbox) ; null pour un dossier */
+function dlUrl(u) {
+  var m;
+  if (/drive\.google\.com\/drive\/(u\/\d+\/)?folders\//.test(u)) return null;
+  if ((m = /drive\.google\.com\/(?:file\/d\/|open\?id=|uc\?(?:.*&)?id=)([\w-]{10,})/.exec(u))) return 'https://drive.google.com/uc?export=download&id=' + m[1];
+  if ((m = /docs\.google\.com\/(document|spreadsheets|presentation)\/d\/([\w-]{10,})/.exec(u))) return 'https://docs.google.com/' + m[1] + '/d/' + m[2] + '/export?format=' + (m[1] === 'spreadsheets' ? 'xlsx' : 'pdf');
+  if (/dropbox\.com\//.test(u)) return u.replace(/([?&])dl=0/, '$1dl=1') + (/[?&]dl=/.test(u) ? '' : (u.indexOf('?') < 0 ? '?' : '&') + 'dl=1');
+  return u;
+}
 function plink(id) { return location.origin + location.pathname.replace(/index\.html$/, '') + 'p/' + id + '/'; }
 function norm(t) { return String(t || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, ''); }
 function busy(btn, on, label) { if (!btn) return; btn.disabled = on; btn.classList.toggle('busy', on); if (label) btn.lastChild.textContent = label; }
@@ -981,7 +990,13 @@ async function pageOrder(token, alive) {
       var fs = o.files || [];
       body = '<div class="check">' + ico('i-check') + '</div><div class="center"><h1 style="font-size:24px">Paiement confirmé</h1><p class="lead" style="margin-top:8px">Merci ' + esc((o.nom || '').split(' ')[0]) + '. Voici ton achat.</p></div>' +
         '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>' +
-        (fs.length ? '<div class="g8 stag">' + fs.map(function (f) { var u = safeUrl(f.url); if (!u) return ''; return f.kind === 'fichier' ? '<button class="btn btn-primary" type="button" data-act="dl" data-url="' + esc(u) + '" data-name="' + esc(f.nom) + '">' + ico('i-file') + '<span>' + esc(f.nom) + '</span></button>' : '<a class="btn btn-primary" target="_blank" rel="noopener" href="' + esc(u) + '">' + ico('i-file') + '<span>' + esc(f.nom) + '</span></a>'; }).join('') + '</div>'
+        (fs.length ? '<div class="g8 stag">' + fs.map(function (f) { var u = safeUrl(f.url); if (!u) return ''; if (f.kind === 'fichier') return '<button class="btn btn-primary" type="button" data-act="dl" data-url="' + esc(u) + '" data-name="' + esc(f.nom) + '">' + ico('i-file') + '<span>' + esc(f.nom) + '</span></button>';
+          var d = dlUrl(u);
+          return '<div class="dlcard"><div class="dlname">' + ico('i-file') + '<b>' + esc(f.nom || 'Ton fichier') + '</b></div><div class="dlbtns">' +
+            (d ? '<a class="btn btn-primary btn-sm" href="' + esc(d) + '" target="_blank" rel="noopener">Télécharger</a>' : '') +
+            '<a class="btn btn-ghost btn-sm" href="' + esc(u) + '" target="_blank" rel="noopener">Ouvrir</a>' +
+            '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-msg="Lien copié : garde-le précieusement" data-text="' + esc(u) + '">Copier le lien</button></div>' +
+            (d ? '' : '<small>Ce lien est un dossier : ouvre-le, puis télécharge chaque fichier.</small>') + '</div>'; }).join('') + '</div>'
           : '<div class="banner">Le vendeur n\'a pas encore ajouté de fichier à ce produit. Contacte-le pour recevoir ta commande.</div>') +
         '<p class="note center">Garde le lien de cette page : il te redonne accès à tes fichiers.</p>';
     } else if (o.statut === 'refuse') {

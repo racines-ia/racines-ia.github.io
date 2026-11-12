@@ -530,7 +530,7 @@ body[data-lt=clair] .lp-pay,body[data-lt=cuenca] .lp-pay,body[data-lt=clair] .ba
 .lp-price span+span{margin-left:12px}
 .lp-stats{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;font-weight:600;margin-bottom:-6px}.lp-stats .i{width:16px;height:16px}
 
-.dlcard{padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:grid;gap:10px}
-.dlname{display:flex;align-items:center;gap:10px}.dlname .i{color:var(--brand);flex:none}.dlname b{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.dlbtns{display:flex;flex-wrap:wrap;gap:8px}.dlbtns .btn{width:auto;flex:1 1 auto;padding:0 14px}
+.dlcard{min-width:0;overflow:hidden;padding:14px;border-radius:18px;background:var(--surface);border:1px solid var(--line);display:grid;gap:10px}
+.dlname{display:flex;align-items:center;gap:10px}.dlname .i{color:var(--brand);flex:none}.dlname b{min-width:0;white-space:normal;overflow-wrap:anywhere;line-height:1.35}
+.dlbtns{display:grid;grid-template-columns:repeat(auto-fit,minmax(0,1fr));gap:8px}.dlbtns .btn{width:100%;min-width:0;padding:0 10px}
 .dlcard small{color:var(--muted);font-size:12px}

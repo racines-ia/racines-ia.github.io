@@ -995,7 +995,7 @@ async function pageOrder(token, alive) {
           return '<div class="dlcard"><div class="dlname">' + ico('i-file') + '<b>' + esc(f.nom || 'Ton fichier') + '</b></div><div class="dlbtns">' +
             (d ? '<a class="btn btn-primary btn-sm" href="' + esc(d) + '" target="_blank" rel="noopener">Télécharger</a>' : '') +
             '<a class="btn btn-ghost btn-sm" href="' + esc(u) + '" target="_blank" rel="noopener">Ouvrir</a>' +
-            '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-msg="Lien copié : garde-le précieusement" data-text="' + esc(u) + '">Copier le lien</button></div>' +
+            '</div>' +
             (d ? '' : '<small>Ce lien est un dossier : ouvre-le, puis télécharge chaque fichier.</small>') + '</div>'; }).join('') + '</div>'
           : '<div class="banner">Le vendeur n\'a pas encore ajouté de fichier à ce produit. Contacte-le pour recevoir ta commande.</div>') +
         '<p class="note center">Garde le lien de cette page : il te redonne accès à tes fichiers.</p>';

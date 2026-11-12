@@ -204,8 +204,36 @@ async function uploadBig(bucket, path, blob, type, label, tok) {
     up.findPreviousUploads().then(function (prev) { if (prev.length) up.resumeFromPreviousUpload(prev[0]); up.start(); });
   });
 }
+var R2_OFF = false;
+function putR2(url, blob, type, label) {
+  return new Promise(function (res, rej) {
+    var x = XHR = new XMLHttpRequest();
+    x.open('PUT', url);
+    x.setRequestHeader('Content-Type', type);
+    x.upload.onprogress = function (e) { if (e.lengthComputable) progress(label, e.loaded / e.total * 99); };
+    x.onload = function () { x.status >= 200 && x.status < 300 ? res() : rej(new Error('Envoi refusé (' + x.status + ')')); };
+    x.onerror = function () { rej(new Error('r2-net')); };
+    x.onabort = function () { rej(new Error('Envoi annulé.')); };
+    x.send(blob);
+  });
+}
 async function upload(bucket, path, blob, type, label) {
   if (!blob || !blob.size) throw Object.assign(new Error('NotReadable'), { name: 'NotReadableError' });
+  /* Photos et vidéos : d'abord Cloudflare R2, sinon Supabase comme avant */
+  if (bucket === 'mk-media' && !R2_OFF && S.user) {
+    var lab = label || 'Envoi en cours', t = (type || blob.type || '').split(';')[0];
+    try {
+      var g = await sb.functions.invoke('mk-r2-sign', { body: { type: t, size: blob.size } });
+      if (g.error || !g.data || !g.data.upload_url) { if (g.data && g.data.off) R2_OFF = true; throw new Error('r2-sign'); }
+      progress(lab, 0);
+      try { await putR2(g.data.upload_url, blob, t, lab); progress(lab, 100); return g.data.public_url; }
+      finally { XHR = null; setTimeout(function () { progress(null, null); }, 500); }
+    } catch (e) {
+      if (/annulé/i.test(e.message)) throw e;
+      console.warn('R2 indisponible, envoi sur Supabase', e);
+      if (e.message !== 'r2-sign') R2_OFF = true;
+    }
+  }
   var ses = (await sb.auth.getSession()).data.session, tok = ses ? ses.access_token : SB_KEY;
   label = label || 'Envoi en cours';
   progress(label, 0);

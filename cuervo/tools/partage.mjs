@@ -8,10 +8,14 @@ const money = (n, d) => Number(n).toLocaleString('fr-FR') + (d === 'CDF' ? ' FC'
 let products;
 if (process.argv[2]) products = JSON.parse(readFileSync(process.argv[2], 'utf8'));
 else {
-  const r = await fetch(URL_ + '/rest/v1/rpc/mk_home', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: '{}' });
+  // Liste réservée aux pages de partage (il n'y a plus de catalogue public sur le site)
+  const r = await fetch(URL_ + '/rest/v1/rpc/mk_share_list', { method: 'POST', headers: { apikey: KEY, Authorization: 'Bearer ' + KEY, 'Content-Type': 'application/json' }, body: '{}' });
   if (!r.ok) throw new Error('Supabase ' + r.status);
-  products = (await r.json()).products || [];
+  products = await r.json();
+  if (!Array.isArray(products)) throw new Error('Réponse inattendue');
 }
+// Sécurité : ne jamais tout effacer si la liste revient vide par erreur
+if (!products.length) { console.log('Aucun produit reçu : pages existantes conservées.'); process.exit(0); }
 rmSync('cuervo/p', { recursive: true, force: true }); rmSync('cuervo/l', { recursive: true, force: true });
 for (const p of products) {
   if (!/^[0-9a-f-]{36}$/i.test(p.id)) continue;

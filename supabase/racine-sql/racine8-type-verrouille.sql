@@ -1,0 +1,3 @@
+-- 13/11/2026 : le type de CLR avait été basculé en « secondaire » depuis la console (palmarès et périodes faux).
+-- Remis en « primaire ». racine_set_type refuse désormais de changer le type d'une école
+-- qui a déjà des élèves ou des cotes (migration racine_set_type_verrou_si_cotes).

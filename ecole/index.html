@@ -447,6 +447,39 @@ table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;bo
 .rj-l.p li{background:var(--good-soft);color:var(--good)}
 .rj-l.a li{background:var(--bad-soft);color:var(--bad)}
 .rj-l.m li{background:var(--warn-soft);color:var(--warn)}
+/* Certificat de mérite (papier A4 paysage, 1123 × 794) */
+.cert-b{display:inline-block;margin-top:5px;border:0;background:var(--soft);color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;cursor:pointer}
+.cert-prev{width:100%;overflow:hidden;border-radius:12px;box-shadow:var(--shadow-s);background:#fff}
+.cert-zoom{width:1123px;height:794px;transform-origin:0 0}
+.cert{width:1123px;height:794px;box-sizing:border-box;padding:22px;background:#fbf7ec;color:#1b2440;font-family:Georgia,"Times New Roman",serif}
+.cert-in{position:relative;box-sizing:border-box;height:100%;border:6px solid #1f2d5c;outline:2px solid #c9a24a;outline-offset:-14px;padding:34px 60px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fffdf6}
+.cert-top{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%}
+.cert-top img{width:92px;height:92px;object-fit:contain;border-radius:50%}
+.cert-top div{flex:1}
+.cert-top b{display:block;font-size:30px;letter-spacing:.06em;text-transform:uppercase;color:#1f2d5c}
+.cert-top span{display:block;font-size:15px;color:#4a5578;margin-top:3px}
+.cert h1{margin:18px 0 0;font-size:54px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b0862f;line-height:1.05}
+.cert-k{margin:10px 0 0;font-size:19px;font-style:italic;color:#4a5578}
+.cert-nm{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:8px;padding:0 30px 8px;border-bottom:2px solid #c9a24a;min-width:60%}
+.cert-nm img{width:74px;height:74px;border-radius:50%;object-fit:cover;border:3px solid #c9a24a}
+.cert-nm b{font-size:40px;font-weight:700;color:#1f2d5c;line-height:1.1}
+.cert-tx{margin:14px 0 0;font-size:19.5px;line-height:1.5;color:#1b2440}
+.cert-mid{display:flex;align-items:center;gap:26px;margin-top:14px;text-align:left;max-width:900px}
+.cert-pct{flex:none;width:128px;height:128px;border-radius:50%;background:#1f2d5c;color:#fff;border:5px solid #c9a24a;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.cert-pct b{font-size:33px;line-height:1;font-family:Georgia,serif}
+.cert-pct span{font-size:13px;margin-top:5px;color:#e9d9a8}
+.cert-mid p{margin:0;font-size:17.5px;line-height:1.5;color:#2a3352}
+.cert-mid p b{color:#b0862f;font-size:20px}
+.cert-ft{margin-top:auto;width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;font-size:16px;color:#2a3352}
+.cert-ft>div{flex:1}
+.cert-ft>div:first-child{text-align:left}
+.cert-sc{display:flex;justify-content:center;color:#1f2d5c}
+.cert-sc .sceau{position:static;width:104px;height:104px;opacity:.85;transform:rotate(-8deg);display:block}
+.cert-sc .sceau svg{width:100%;height:100%}
+.cert-sg{text-align:center!important;font-style:italic}
+.cert-sg img{display:block;height:54px;max-width:220px;object-fit:contain;margin:2px auto 0}
+.cert-sg i{display:block;height:50px}
+.cert-sg b{display:block;font-style:normal;font-size:17px;color:#1f2d5c;border-top:1px solid #1f2d5c;padding-top:4px;margin:0 30px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -2279,6 +2312,37 @@ function vCorbeille(){
 }
 /* ---------- Situation des palmarès (toutes les classes) ---------- */
 const canPalmSit=()=>isDir()&&(!isSec()||['promoteur','prefet','etudes'].includes(myPoste()));
+/* ---------- Certificat de mérite (lauréat de l'école ou de la classe) ---------- */
+const certPer=k=>k==='an'?'l’année scolaire entière':k[0]==='t'?'le '+TRI[k]:k.startsWith('ex')?'l’examen du '+TRI['t'+k.slice(2)]:'la '+perLong(k);
+function certData(eid,key,scope){const e=S.eleves[eid];if(!e)return null;const cid=e.classeId;const pd=palmData(cid,key);const r=pd.ranked.find(x=>x.e.id===eid);if(!r)return null;
+ const F=e.sexe==='F';const ec=S.config.ecole||{};const cs=chefSig(cid);
+ let nb=pd.ranked.length;if(scope==='ecole')nb=sum(classIds().map(c=>palmData(c,key).ranked.length));
+ return{e,cid,cls:S.classes[cid],r,pd,F,ec,cs,nb,scope,key}}
+function certPaper(eid,key,scope){const d=certData(eid,key,scope);if(!d)return '';const{e,cls,r,pd,F,ec,cs,nb}=d;const E=ECO();
+ const laur=F?'lauréate':'lauréat';const ou=scope==='ecole'?'de l’école':'de sa classe';const td=today();const dd=D(td);
+ return `<div class="cert"><div class="cert-in">
+  <div class="cert-top"><img src="${eLogo()}" alt=""><div><b>${h(E.nom)}</b><span>${h([E.commune||ec.commune,E.ville||ec.ville].filter(Boolean).join(' · '))}${E.devise?' · '+h(E.devise):''}</span><span>Année scolaire ${ANNEE.replace('–',' - ')}</span></div><img src="${eLogo()}" alt=""></div>
+  <h1>Certificat de mérite</h1><p class="cert-k">Ce certificat est décerné à</p>
+  <div class="cert-nm">${e.photo?`<img src="${h(e.photo)}" alt="">`:''}<b>${h(nomComplet(e))}</b></div>
+  <p class="cert-tx">élève de la <b>${h(cls?.nom||'')}</b>, ${laur} ${ou} pour <b>${h(certPer(key))}</b>,<br>avec <b>${fmt(r.tot)} points sur ${fmt(pd.MT)}</b>${scope==='ecole'?`, meilleur résultat parmi les ${nb} élèves classés de l’école.`:`, ${F?'première':'premier'} sur ${nb} élèves classés.`}</p>
+  <div class="cert-mid"><div class="cert-pct"><b>${pctf(r.pct)}</b><span>des points</span></div><p><b>Félicitations !</b> Chers parents, votre enfant est ${F?'la lauréate':'le lauréat'} ${ou} pour ${h(certPer(key))}. La direction et le corps enseignant ${F?'la':'le'} félicitent pour son travail, sa discipline et sa persévérance, et l’encouragent à continuer ainsi.</p></div>
+  <div class="cert-ft"><div>Fait à ${h(E.ville||ec.ville||'Kinshasa')}, le ${dd.getUTCDate()===1?'1er':dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}</div><div class="cert-sc">${sceau()}</div><div class="cert-sg">Le ${h(chefLbl().toLowerCase())}${cs?.img?`<img src="${h(cs.img)}" alt="">`:'<i></i>'}<b>${h(ec.chef||cs?.nom||E.directeur||'')}</b></div></div>
+ </div></div>`}
+function certSheet(eid,key,scope){const d=certData(eid,key,scope);if(!d){toast('Cet élève n’a pas encore de points pour cette période.');return}
+ openSheet('Certificat de mérite',`<div class="stack"><p class="muted small" style="margin:0">${h(nomComplet(d.e))} · ${h(d.cls?.nom||'')} · ${h(keyName(key))} · ${pctf(d.r.pct)}</p>
+  <div class="cert-prev"><div class="cert-zoom">${certPaper(eid,key,scope)}</div></div>
+  <button class="btn grad" data-act="cert-pdf" data-id="${h(eid)}" data-k="${key}" data-s="${scope}">${ic('doc',16)} Envoyer aux parents (PDF · WhatsApp)</button>
+  <p class="muted small" style="margin:0">Le certificat s’ouvre en PDF : choisissez WhatsApp, puis le numéro du parent${d.e.telephone||d.e.tel?' ('+h(d.e.telephone||d.e.tel)+')':''}.</p></div>`);
+ requestAnimationFrame(()=>{const z=document.querySelector('.cert-zoom'),pv=document.querySelector('.cert-prev');if(z&&pv){const k=pv.clientWidth/1123;z.style.transform=`scale(${k})`;pv.style.height=Math.round(794*k)+'px'}})}
+async function certPDF(eid,key,scope){const d=certData(eid,key,scope);if(!d)return;
+ const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+ toast('Préparation du certificat…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+ const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:1123px;background:#fff';host.innerHTML=certPaper(eid,key,scope);document.body.appendChild(host);const node=host.firstElementChild;
+ try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+  const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'landscape'});
+  pdf.addImage(cv.toDataURL('image/jpeg',.94),'JPEG',0,0,297,210);const ou=scope==='ecole'?'de l’école':'de sa classe';
+  try{await dl.save({filename:`Certificat de mérite - ${nomComplet(d.e)}.pdf`,data:pdf.output('blob'),text:`*${ECO().nom} · Certificat de mérite*\n\nFélicitations ! Chers parents, votre enfant ${nomComplet(d.e)} (${d.cls?.nom||''}) est ${d.F?'la lauréate':'le lauréat'} ${ou} pour ${certPer(key)}, avec ${pctf(d.r.pct)}.\n\n— La direction`});toast('Certificat prêt. Choisissez WhatsApp puis le parent.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+ }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
 function vPalmSit(){
   if(!canPalmSit()){S.view='accueil';return vAccueil()}
   const key=pkeys().some(([k])=>k===S.psKey)?S.psKey:(S.psKey='t1');const ids=classIds();
@@ -2294,9 +2358,10 @@ function vPalmSit(){
   return band({back:'accueil',kicker:isSec()?'Préfecture des études':'Direction',title:'Situation des palmarès',sub:`${keyName(key)} · ${ids.length} classe${ids.length>1?'s':''} · ${N} élèves`})+page(`
    <div class="card pad stack">${chips}<p class="muted small" style="margin:0">Le résultat de chaque classe pour la période choisie, calculé à partir des cahiers de cotes. Touchez une classe pour ouvrir son palmarès.</p></div>
    <div class="pstiles">${tile('Élèves classés',`${CL} / ${N}`,N?Math.round(CL/N*100)+' % des élèves ont des points':'—')}${tile('Moyenne de l’école',pctf(MOY),'moyenne des élèves classés')}${tile('Réussite (≥ 50 %)',CL?Math.round(REU/CL*100)+' %':'—',`${REU} réussite${REU>1?'s':''} · ${CL-REU} échec${CL-REU>1?'s':''}`)}${tile('Parents ont signé',`${SP} / ${N}`,'signatures du palmarès')}</div>
-   ${best?`<div class="card pad psbest">${avEl(best.e,'')}<span class="grow"><small class="muted">Meilleur(e) élève de l’école</small><b style="display:block">${h(nomComplet(best.e))}</b><span class="muted small">${h(S.classes[best.e.classeId]?.nom||'')} · ${pctf(best.pct)}</span></span><span class="pill good">1<sup>${best.e.sexe==='F'?'re':'er'}</sup></span></div>`:''}
+   ${best?`<div class="card pad psbest">${avEl(best.e,'')}<span class="grow"><small class="muted">Meilleur(e) élève de l’école</small><b style="display:block">${h(nomComplet(best.e))}</b><span class="muted small">${h(S.classes[best.e.classeId]?.nom||'')} · ${pctf(best.pct)}</span></span><span class="pill good">1<sup>${best.e.sexe==='F'?'re':'er'}</sup></span></div>
+   <button class="btn grad" data-act="cert" data-id="${h(best.e.id)}" data-k="${key}" data-s="ecole" style="align-self:flex-start">${ic('doc',16)} Certificat de mérite du lauréat de l’école</button>`:''}
    <div class="tblwrap"><table class="t pssit"><thead><tr><th class="name">Classe</th><th class="dsk">Élèves</th><th class="dsk">Classés</th><th>Moyenne</th><th>Réussite</th><th class="name dsk">Premier(e)</th><th>Parents</th><th>Bulletins</th></tr></thead><tbody>
-    ${D.map(x=>`<tr><td class="name"><button class="pnm" data-act="psopen" data-id="${h(x.cid)}"><b>${h(x.c.nom)}</b></button><small class="muted mob" style="display:block">${x.cl}/${x.n} classés${x.first?` · 1<sup>${x.first.e.sexe==='F'?'re':'er'}</sup> ${h(nomComplet(x.first.e))}`:''}</small></td><td class="num dsk">${x.n}</td><td class="num dsk">${x.cl}</td><td class="num"><span class="pill ${x.moy==null?'':x.moy>=50?'good':'warn'}">${pctf(x.moy)}</span></td><td class="num">${x.cl?Math.round(x.reu/x.cl*100)+' %':'—'}<small class="muted" style="display:block">${x.reu}/${x.cl}</small></td><td class="name dsk">${x.first?`${h(nomComplet(x.first.e))} <small class="muted">${pctf(x.first.pct)}</small>`:'—'}</td><td class="num">${x.sp}/${x.n}</td><td class="num"><span class="pill ${x.bs===x.bn&&x.bn?'good':x.bs?'warn':''}">${x.bs}/${x.bn}</span></td></tr>`).join('')}
+    ${D.map(x=>`<tr><td class="name"><button class="pnm" data-act="psopen" data-id="${h(x.cid)}"><b>${h(x.c.nom)}</b></button><small class="muted mob" style="display:block">${x.cl}/${x.n} classés${x.first?` · 1<sup>${x.first.e.sexe==='F'?'re':'er'}</sup> ${h(nomComplet(x.first.e))}`:''}</small>${x.first?`<button class="cert-b" data-act="cert" data-id="${h(x.first.e.id)}" data-k="${key}" data-s="classe">Certificat de mérite</button>`:''}</td><td class="num dsk">${x.n}</td><td class="num dsk">${x.cl}</td><td class="num"><span class="pill ${x.moy==null?'':x.moy>=50?'good':'warn'}">${pctf(x.moy)}</span></td><td class="num">${x.cl?Math.round(x.reu/x.cl*100)+' %':'—'}<small class="muted" style="display:block">${x.reu}/${x.cl}</small></td><td class="name dsk">${x.first?`${h(nomComplet(x.first.e))} <small class="muted">${pctf(x.first.pct)}</small>`:'—'}</td><td class="num">${x.sp}/${x.n}</td><td class="num"><span class="pill ${x.bs===x.bn&&x.bn?'good':x.bs?'warn':''}">${x.bs}/${x.bn}</span></td></tr>`).join('')}
     <tr class="tot"><td class="name">École</td><td class="num dsk">${N}</td><td class="num dsk">${CL}</td><td class="num">${pctf(MOY)}</td><td class="num">${CL?Math.round(REU/CL*100)+' %':'—'}</td><td class="dsk"></td><td class="num">${SP}/${N}</td><td></td></tr></tbody></table></div>
    <p class="muted small" style="margin:0">« Bulletins signés » compte la signature du titulaire pour chaque période et celle du ${h(chefLbl().toLowerCase())} pour le ${triMot()}.</p>`);
 }
@@ -3279,6 +3344,8 @@ const A={
   popen:b=>{S.cid=b.dataset.id;S.ctab=b.dataset.v;S.sel='';S.view='classe';render();scrollTo(0,0)},
   amoisa:b=>{S.aMoisA=b.dataset.v;render()},
   ajour:b=>ajourSheet(S.cid,b.dataset.v),
+  cert:b=>certSheet(b.dataset.id,b.dataset.k,b.dataset.s),
+  'cert-pdf':b=>certPDF(b.dataset.id,b.dataset.k,b.dataset.s),
   jmenu:b=>{const d=b.dataset.v;if(!canEditAppel(S.cid,d)){if(spDay(S.cid,d))toast(spLbl(spDay(S.cid,d)));else toast('L’appel se fait seulement le jour même.');return}spSheet(S.cid,d)},
   spmenu:b=>spSheet('',b.dataset.v),
   'sp-off':async b=>{const cid=b.dataset.cid,d=b.dataset.d;closeSheet();if(cid){if(spEcole(d)&&!S.appel[aid(cid,d)]?.sp){toast('Cette journée est barrée pour toute l’école par la direction.');return}await setSpClasse(cid,d,null)}else await setSpEcole(d,null);toast('Jour normal rétabli');render()},

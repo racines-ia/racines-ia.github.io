@@ -1111,7 +1111,7 @@ async function loadMe() {
     S.vendor = S.shops.filter(function (x) { return x.id === want; })[0] || S.shops.filter(function (x) { return x.id === S.user.id; })[0] || S.shops[0] || null;
   }
 }
-async function myShop(id) { return (S.shops || []).some(function (x) { return x.id === id; }); }
+function myShop(id) { return (S.shops || []).some(function (x) { return x.id === id; }); }
 async function loadSettings() { var r = await sb.from('mk_settings').select('*').eq('id', 1).maybeSingle(); S.settings = r.data || { loyer: 15000 }; }
 async function loadDash() {
   var uid = S.vendor.id, rs = await Promise.all([

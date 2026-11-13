@@ -494,6 +494,14 @@ table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;bo
 .cert-sg i{display:block;height:50px}
 .cert-sg b{display:block;font-size:16px;font-weight:800;border-top:1.5px solid #22252e;padding-top:7px}
 .cert-sg span{display:block;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#5b5f6b;margin-top:4px}
+/* Paiements de plusieurs élèves */
+.pm-l{display:flex;flex-direction:column;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.pm-r{display:flex;align-items:center;gap:10px;padding:7px 10px 7px 12px;border-top:1px solid var(--line)}
+.pm-r:first-child{border-top:0}
+.pm-n{flex:1;min-width:0;font-weight:600;font-size:14px;line-height:1.2;overflow-wrap:anywhere;display:flex;gap:8px;align-items:baseline}
+.pm-n i{font-style:normal;color:var(--muted);font-size:12px;min-width:18px}
+.pm-r .inp{width:116px;flex:none;height:42px;text-align:right;font-weight:700;font-size:16px;padding:0 12px}
+.pm-tot{position:sticky;bottom:0;background:var(--soft);border-radius:14px;padding:10px 14px;font-weight:700;text-align:center}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -2927,10 +2935,25 @@ function fraisSheet(cid){const c=S.classes[cid];if(!c)return;const f=fraisOf(cid
   <div class="field"><label><input type="checkbox" name="toutes" style="width:18px;height:18px;vertical-align:middle;accent-color:var(--accent)"> Appliquer ces frais à toutes les classes</label></div>
   <button class="btn grad" type="submit">Enregistrer les frais</button></form>`);
 }
+const paySeg=multi=>`<div class="seg full" role="group" aria-label="Façon d’enregistrer" style="margin-bottom:12px"><button type="button" data-act="pc-multi" data-v="0" aria-pressed="${!multi}">Un élève</button><button type="button" data-act="pc-multi" data-v="1" aria-pressed="${!!multi}">Plusieurs élèves</button></div>`;
+function payMultiSheet(cid){const ids=classIds();cid=cid||S.fCls||ids[0];
+ const rows=c=>elevesOf(c).map((e,i)=>`<label class="pm-r"><span class="pm-n"><i class="num">${i+1}</i>${h(nomComplet(e))}</span><input class="inp num" name="m_${h(e.id)}" inputmode="decimal" placeholder="0" autocomplete="off" aria-label="Montant payé par ${h(nomComplet(e))}"></label>`).join('')||'<p class="muted small">Aucun élève dans cette classe.</p>';
+ openSheet('Enregistrer des paiements',`${paySeg(true)}<form id="f-paym" class="stack">
+  <div class="grid2"><div class="field"><label for="pm-c">Classe</label><select class="inp" id="pm-c" name="classe">${ids.map(c=>`<option value="${h(c)}" ${c===cid?'selected':''}>${h(S.classes[c].nom)}</option>`).join('')}</select></div><div class="field"><label for="pm-d">Date</label><input class="inp" type="date" id="pm-d" name="date" value="${today()}" required></div></div>
+  <div class="field"><label>Mode de paiement</label><div class="seg" role="group" aria-label="Mode">${MODES.map(([k,l])=>`<button type="button" data-act="pc-mode" data-v="${k}" aria-pressed="${k==='especes'}">${l}</button>`).join('')}</div><input type="hidden" name="mode" value="especes"></div>
+  <p class="muted small" style="margin:0">Écrivez le montant (${h(DEV())}) seulement devant les élèves qui ont payé. Laissez vide pour les autres.</p>
+  <div class="pm-l" id="pm-l">${rows(cid)}</div>
+  <div class="pm-tot num" id="pm-tot">0 élève · 0 ${h(DEV())}</div>
+  <button class="btn grad" type="submit">Enregistrer les paiements</button>
+  <p class="muted small" style="margin:0">Chaque paiement va dans la fiche de l’élève, avec son reçu.</p></form>`,sh=>{
+   const tot=()=>{let n=0,t=0;sh.querySelectorAll('#pm-l input').forEach(i=>{const v=numM(i.value);if(v>0){n++;t+=v}});sh.querySelector('#pm-tot').textContent=`${n} élève${n>1?'s':''} · ${fmtM(t)}`};
+   sh.querySelector('#pm-l').addEventListener('input',tot);
+   sh.querySelector('#pm-c').addEventListener('change',ev=>{S.fCls=ev.target.value;sh.querySelector('#pm-l').innerHTML=rows(ev.target.value);tot()})})}
 function paySheet(eid,pid){const p=pid?S.paiem[pid]:null;const ids=classIds();const e0=eid?S.eleves[eid]:null;const cid=e0?.classeId||S.fCls||ids[0];
  const opts=c=>elevesOf(c).map(e=>`<option value="${h(e.id)}" ${e.id===eid?'selected':''}>${h(nomComplet(e))}</option>`).join('');
  const s=eid?situation(eid):null;
- openSheet(pid?'Modifier le paiement':'Enregistrer un paiement',`<form id="f-pay" class="stack" data-id="${h(pid||'')}">
+ if(!eid&&!pid&&S.payMulti)return payMultiSheet(cid);
+ openSheet(pid?'Modifier le paiement':'Enregistrer un paiement',`${!eid&&!pid?paySeg(false):''}<form id="f-pay" class="stack" data-id="${h(pid||'')}">
   ${eid?`<input type="hidden" name="eleveId" value="${h(eid)}"><div class="idhead">${avEl(e0,'lg')}<div><b>${h(nomComplet(e0))}</b><div class="muted small num">${h(S.classes[cid]?.nom||'')} · reste ${fmtM(s.reste)}</div></div></div>`
    :`<div class="grid2"><div class="field"><label for="pc-c">Classe</label><select class="inp" id="pc-c">${ids.map(c=>`<option value="${h(c)}" ${c===cid?'selected':''}>${h(S.classes[c].nom)}</option>`).join('')}</select></div><div class="field"><label for="pc-e">Élève</label><select class="inp" id="pc-e" name="eleveId" required>${opts(cid)}</select></div></div>`}
   <div class="grid2"><div class="field"><label for="pc-m">Montant payé (${h(DEV())})</label><input class="inp num" id="pc-m" name="montant" inputmode="decimal" required value="${h(p?.montant??'')}" placeholder="0" style="font-size:22px;font-weight:700"></div><div class="field"><label for="pc-d">Date</label><input class="inp" type="date" id="pc-d" name="date" value="${h(p?.date||today())}" required></div></div>
@@ -3323,6 +3346,7 @@ const A={
   ai:b=>aiRewrite(b.dataset.f,b.dataset.v),
   'pc-el':b=>eleveFinSheet(b.dataset.id),
   'pc-pay':b=>paySheet(b.dataset.id||''),
+  'pc-multi':b=>{S.payMulti=b.dataset.v==='1';paySheet('')},
   'pc-edit':b=>{const p=S.paiem[b.dataset.id];if(p)paySheet(p.eleveId,b.dataset.id)},
   'pc-del':async b=>{if(!arm(b))return;const p=S.paiem[b.dataset.id];const page=!!b.closest('.cj');await del('paiements',b.dataset.id);toast('Paiement supprimé. Il reste 60 jours dans la corbeille.');if(page){render();return}if(p)eleveFinSheet(p.eleveId);else closeSheet()},
   'pc-frais':b=>fraisSheet(b.dataset.id),
@@ -3437,6 +3461,12 @@ document.addEventListener('submit',async ev=>{
   if(f.id==='f-frais'){const cid=f.dataset.id;const n=+fd.n;const tr=[];for(let i=0;i<n;i++){const m=numM(fd['mt_'+i]);if(m>0)tr.push({nom:(fd['nom_'+i]||'').trim()||`Tranche ${i+1}`,montant:m,echeance:fd['ech_'+i]||''})}
     if(!tr.length){toast('Indiquez au moins un montant.');return}const doc={tranches:tr,montant:sum(tr.map(t=>t.montant)),at:new Date().toISOString()};
     const cs=fd.toutes?classIds():[cid];for(const c of cs)await put('frais','c_'+c,doc);closeSheet();toast(cs.length>1?'Frais appliqués à toutes les classes':'Frais enregistrés');return}
+  if(f.id==='f-paym'){const L=[...f.querySelectorAll('#pm-l input')].map(i=>[i.name.slice(2),numM(i.value)]).filter(x=>x[1]>0&&S.eleves[x[0]]);if(!L.length){toast('Écrivez au moins un montant.');return}
+    const btn=f.querySelector('button[type=submit]');if(btn.dataset.busy)return;btn.dataset.busy='1';btn.textContent='Enregistrement…';
+    const by=santeBy();const y=today().slice(0,4);let n=Object.values(S.paiem).filter(p=>(p.recu||'').startsWith(y+'-')).length;const now=Date.now();let ok=0,tot=0;
+    for(const [i,[eid,m]] of L.entries()){const e=S.eleves[eid];const id='p-'+(now+i).toString(36)+Math.random().toString(36).slice(2,6);n++;
+      try{await put('paiements',id,{eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:'',ref:'',recu:y+'-'+String(n).padStart(4,'0'),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:meId(),at:new Date(now+i*1000).toISOString()});ok++;tot+=m}catch(err){}}
+    closeSheet();toast(ok===L.length?`${ok} paiement${ok>1?'s':''} enregistré${ok>1?'s':''} · ${fmtM(tot)}`:`${ok} paiement(s) enregistré(s) sur ${L.length}. Vérifiez la liste du jour.`);render();return}
   if(f.id==='f-pay'){const eid=fd.eleveId;const e=S.eleves[eid];const m=numM(fd.montant);if(!e){toast('Choisissez l’élève.');return}if(!(m>0)){toast('Indiquez le montant payé.');return}
     const id=f.dataset.id||'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.paiem[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
     await put('paiements',id,{...old,eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:(fd.payeur||'').trim(),ref:(fd.ref||'').trim(),recu:old.recu||nextRecu(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()});

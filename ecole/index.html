@@ -2287,7 +2287,7 @@ function palmData(cid,key){const cls=S.classes[cid];const es=elevesOf(cid);const
   const rows=es.map(e=>{const g={fr:null,ma:null,cg:null};for(const c of cls.cours||[]){const v=V(e.id,c,key);if(v!=null){const k=gm[c.id];g[k]=(g[k]||0)+v}}const any=GRPf().some(([k])=>g[k]!=null);const tot=any?(g.fr||0)+(g.ma||0)+(g.cg||0):null;return{e,g,tot,pct:tot==null?null:tot/MT*100}});
   const ranked=rows.filter(r=>r.tot!=null).sort((a,b)=>b.tot-a.tot||coll.compare(nomComplet(a.e),nomComplet(b.e)));ranked.forEach((r,i)=>{r.p=i+1});
   return{mx,MT,ranked,list:[...ranked,...rows.filter(r=>r.tot==null)],n:es.length}}
-const blkLast=(l,f)=>isDir()?l:[...l.filter(x=>!hid(f(x))),...l.filter(x=>hid(f(x)))];
+const blkLast=(l,f)=>isDir()?l:[...l.filter(x=>!hid(f(x))),...l.filter(x=>hid(f(x))).sort((a,b)=>coll.compare(nomComplet(S.eleves[f(a)]||{}),nomComplet(S.eleves[f(b)]||{})))];
 function palmTable(cid,key,paper){const {mx,MT,list:list0}=palmData(cid,key);const list=blkLast(list0,r=>r.e.id);
   const cell=(v,m)=>`<td class="num"><b>${v==null?'–':fmt(v)}</b><small>${v==null?'':fmt(v/m*100)+' %'}</small></td>`;
   return `${paper?`<div class="pfs-h"><b>${h(ECO().nom)}</b><span>Palmarès · ${h(S.classes[cid].nom)} · ${h(keyName(key))} · Année scolaire ${ANNEE}</span></div>`:''}<table class="t palm"><thead><tr><th>Place</th><th class="name">Élève</th>${GRPf().map(([k,l])=>`<th>${l}<small>/${fmt(mx[k])}</small></th>`).join('')}<th>Total<small>/${fmt(MT)}</small></th><th>%</th><th>Parents</th></tr></thead><tbody>

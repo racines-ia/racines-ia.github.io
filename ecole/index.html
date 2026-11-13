@@ -504,6 +504,26 @@ table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;bo
 .pm-tot{position:sticky;bottom:0;background:var(--soft);border-radius:14px;padding:10px 14px;font-weight:700;text-align:center}
 table.cjt tr.nw td{background:var(--soft)}
 .nwb{color:var(--accent)}
+/* Élèves activés / désactivés */
+.li.elrow{display:flex;align-items:center;gap:10px}
+.elmain{flex:1;min-width:0;display:flex;align-items:center;gap:12px;border:0;background:none;padding:0;font:inherit;color:inherit;text-align:left;cursor:pointer}
+.li.elrow.off .av,.li.elrow.off .ttl{opacity:.55}
+.blkt{color:var(--bad)}
+.bsw{flex:none;width:52px;height:30px;border-radius:99px;border:0;background:var(--bad);position:relative;cursor:pointer;transition:background .2s}
+.bsw i{position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:transform .2s}
+.bsw.on{background:var(--good)}
+.bsw.on i{transform:translateX(22px)}
+.blkbar b{display:block}
+.blkbar small{display:block;margin-top:2px}
+.blkpaper{background:#fff;color:#1b2440;border-radius:14px;padding:44px 22px;text-align:center;display:flex;flex-direction:column;gap:8px;align-items:center}
+.blkpaper b{font-size:18px}
+.blkpaper span{font-weight:800;color:#b3261e;font-size:16px}
+.blkpaper small{max-width:340px;line-height:1.4;color:#4a5578}
+tr.blkrow td.blkc{text-align:center;font-weight:700;font-size:12.5px;color:var(--bad);white-space:normal}
+tr.blkrow td{opacity:.9}
+tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--bad);font-weight:700;font-size:11.5px}
+.closebar.blkn{background:var(--bad-soft)}
+.closebar.blkn .cb-ic{background:var(--bad);color:#fff}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1329,6 +1349,7 @@ function sceau(){return `<span class="sceau" aria-label="Sceau de l’école"><s
 const mxCol=(c,m)=>m==='p'?c.max:MX(c,m);
 function boxes(v,n){const s=String(v||'').replace(/\s+/g,'');return `<span class="bx">${Array.from({length:n},(_,i)=>`<i>${h(s[i]||'')}</i>`).join('')}</span>`}
 function bulletinHtml(id,hl){
+  if(hid(id)){const e=S.eleves[id];return `<div class="blkpaper"><b>${h(nomComplet(e))}</b><span>${BLKTXT}</span><small>Le bulletin, le total, le pourcentage et la place de cet élève ne sont pas disponibles. Adressez le parent à la direction.</small></div>`}
   const e=S.eleves[id];const cls=S.classes[e.classeId];const g=grilleOf(cls);const ec=S.config.ecole||{};
   const vie=S.notes[nid(id,'vie')]||{};const deg=cls.degre;
   const B=BM(),BC=B.cols;const rg=hl?B.range[hl.t]:null;const inR=ci=>rg&&ci>=rg[0]&&ci<=rg[1];
@@ -1566,7 +1587,7 @@ function tabCotes(){
    ${es.length?bulPane(true):''}
   </div>`;
 }
-function ficheTot(){const el=document.getElementById('fe-tot');if(!el)return;const cls=S.classes[S.cid],k=el.dataset.k,eid=el.dataset.e;let tot=0,mx=0,n=0;for(const c of cls.cours||[]){const v=V(eid,c,k);mx+=MX(c,k);if(v!=null){tot+=v;n++}}el.textContent=n?`${fmt(tot)} / ${fmt(mx)}`:`– / ${fmt(mx)}`}
+function ficheTot(){const el=document.getElementById('fe-tot');if(!el)return;if(hid(el.dataset.e)){el.textContent='Bloqué';return}const cls=S.classes[S.cid],k=el.dataset.k,eid=el.dataset.e;let tot=0,mx=0,n=0;for(const c of cls.cours||[]){const v=V(eid,c,k);mx+=MX(c,k);if(v!=null){tot+=v;n++}}el.textContent=n?`${fmt(tot)} / ${fmt(mx)}`:`– / ${fmt(mx)}`}
 function ficheHtml(cls,es){
   const t=S.tri;
   if(!PER[t])return `<div class="empty"><h3>Choisissez un ${triMot()}</h3><p class="muted small">La fiche par élève sert à encoder les points d’une période ou d’un examen.</p></div>`;
@@ -1584,7 +1605,7 @@ function ficheHtml(cls,es){
    <div class="fnav"><button class="x" data-act="fnav" data-v="-1" ${i<=0?'disabled':''} aria-label="Élève précédent">${ic('left',18)}</button><select class="inp" data-act="fsel" aria-label="Élève">${es.map((x,j)=>`<option value="${h(x.id)}" ${x.id===e.id?'selected':''}>${j+1}. ${h(nomComplet(x))}</option>`).join('')}</select><button class="x" data-act="fnav" data-v="1" ${i>=es.length-1?'disabled':''} aria-label="Élève suivant">${ic('chev',18)}</button></div>
    <div class="fiche"><div class="fh"><div><small>${kl(k)} · élève ${i+1} sur ${es.length}</small><b>${h(e.nom)} ${h(e.postnom||'')}</b><span>${h(e.prenom||'')}</span></div>${avEl(e,'lg')}</div>
     <table class="ftab"><thead><tr><th class="nm">Branches</th><th>Cotes</th></tr></thead><tbody>${rows}</tbody>
-    <tfoot><tr><td class="nm">Total ${kl(k).toLowerCase()}</td><td class="ct"><b class="num" id="fe-tot" data-k="${k}" data-e="${h(e.id)}">${n?fmt(tot):'–'} / ${fmt(mx)}</b></td></tr></tfoot></table></div>
+    <tfoot><tr><td class="nm">Total ${kl(k).toLowerCase()}</td><td class="ct"><b class="num" id="fe-tot" data-k="${k}" data-e="${h(e.id)}">${hid(e.id)?'Bloqué':`${n?fmt(tot):'–'} / ${fmt(mx)}`}</b></td></tr></tfoot></table></div>
    <div class="btns" style="justify-content:space-between"><button class="btn sm" data-act="fnav" data-v="-1" ${i<=0?'disabled':''}>${ic('left',16)} Précédent</button><button class="btn sm grad" data-act="fnav" data-v="1" ${i>=es.length-1?'disabled':''}>Élève suivant ${ic('chev',16)}</button></div>
    <div class="ehint"><span>Tapez la cote de chaque branche. Elle se reporte tout de suite dans le bulletin.</span><span class="saved" id="saved"></span></div>`;
 }
@@ -1675,7 +1696,7 @@ function tabBul(){
   const pl=places(cid,key);const es=es0.map(e=>({...e,r:resume(e.id,cls,key),p:pl.r[e.id]})).sort((a,b)=>(a.p??1e9)-(b.p??1e9)||coll.compare(nomComplet(a),nomComplet(b)));
   return `<div class="bul-layout"><aside class="card rank"><div class="sec-h"><b>Classement</b><span class="muted small num">Moy. ${pctf(moyClasse(cid,key))}</span></div>
    <div class="seg" role="group" aria-label="Période du classement">${[...TRS(),'an'].map(t=>`<button data-act="btri" data-v="${t}" aria-pressed="${S.bTri===t}">${tShort(t)}</button>`).join('')}</div>
-   <div class="list">${es.map(e=>`<button class="rrow" data-act="selel" data-id="${h(e.id)}" aria-current="${e.id===S.sel}"><span class="rk num">${e.p||'–'}</span>${avEl(e,'sm')}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small num">${fmt(e.r.tot)} / ${fmt(e.r.max)}</span></span><span class="pill ${e.r.pct==null?'':e.r.pct>=50?'good':'warn'} num">${pctf(e.r.pct)}</span></button>`).join('')}</div></aside>
+   <div class="list">${blkLast(es,e=>e.id).map(e=>`<button class="rrow" data-act="selel" data-id="${h(e.id)}" aria-current="${e.id===S.sel}"><span class="rk num">${hid(e.id)?'–':e.p||'–'}</span>${avEl(e,'sm')}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small num">${hid(e.id)?'Bloqué par la direction':`${fmt(e.r.tot)} / ${fmt(e.r.max)}`}</span></span>${hid(e.id)?'<span class="pill bad">Bloqué</span>':`<span class="pill ${e.r.pct==null?'':e.r.pct>=50?'good':'warn'} num">${pctf(e.r.pct)}</span>`}</button>`).join('')}</div></aside>
    ${bulPane(false)}</div>${bulSignCard(cid)}`;
 }
 function bulSignCard(cid){
@@ -1700,10 +1721,17 @@ function bulSign(k,r){const cid=S.cid;const me=signer(r);
 }
 
 /* ---- Élèves de la classe ---- */
-function eleveRows(list,showCls){return list.map((e,n)=>{const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';return `<button class="li" data-act="eleve" data-id="${h(e.id)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${showCls?h(S.classes[e.classeId]?.nom||'')+' · ':''}${e.sexe==='F'?'Fille':'Garçon'}${dn?' · né(e) le '+dn:''}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span></span><span class="chev">${ic('chev',18)}</span></button>`}).join('')}
+/* ---------- Élèves désactivés par la direction : l'enseignant ne peut plus voir ni communiquer leurs résultats ---------- */
+const blk=eid=>!!(S.config.bloques||{})[eid];
+const hid=eid=>blk(eid)&&!isDir();
+const BLKTXT='Résultats bloqués par la direction';
+async function setBlk(ids,on){const B={...(S.config.bloques||{})};for(const id of ids){if(on)B[id]=today();else delete B[id]}S.config={...S.config,bloques:B};await put('config','bloques',B)}
+const blkSw=e=>isDir()?`<button class="bsw${blk(e.id)?'':' on'}" data-act="blk" data-id="${h(e.id)}" role="switch" aria-checked="${!blk(e.id)}" aria-label="${blk(e.id)?'Élève désactivé : toucher pour activer':'Élève actif : toucher pour désactiver'} ${h(nomComplet(e))}"><i></i></button>`:'';
+function eleveRows(list,showCls){return list.map((e,n)=>{const dn=e.dateNaissance?e.dateNaissance.split('-').reverse().join('/'):'';return `<div class="li elrow${blk(e.id)?' off':''}"><button class="elmain" data-act="eleve" data-id="${h(e.id)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${blk(e.id)?`<b class="blkt">${isDir()?'Désactivé':'Désactivé par la direction'}</b> · `:''}${showCls?h(S.classes[e.classeId]?.nom||'')+' · ':''}${e.sexe==='F'?'Fille':'Garçon'}${dn?' · né(e) le '+dn:''}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span></span></button>${blkSw(e)||`<span class="chev">${ic('chev',18)}</span>`}</div>`}).join('')}
 function tabEleves(){
   const es=elevesOf(S.cid);
   return `<div class="sec-h"><h2 class="h2">${es.length} élève${es.length>1?'s':''}</h2><span class="btns">${es.length?`<button class="btn sm" data-act="cartescls" data-id="${h(S.cid)}">${ic('card',16)} Cartes d’élèves</button>`:''}<button class="btn grad sm" data-act="new-eleve">${ic('plus',18)} Inscrire un élève</button></span></div>
+   ${es.length&&isDir()?(()=>{const nb=es.filter(e=>blk(e.id)).length;const ret=es.filter(e=>{try{return situation(e.id).st==='retard'&&!blk(e.id)}catch(x){return false}}).length;return `<div class="card pad stack blkbar"><div><b>Résultats visibles par l’enseignant</b><small class="muted num">${nb?`${nb} élève${nb>1?'s':''} désactivé${nb>1?'s':''} sur ${es.length}`:'Tous les élèves sont actifs'} · l’interrupteur à droite de chaque nom active ou désactive l’élève.</small></div><div class="btns"><button class="btn sm" data-act="blk-all" data-v="1">Tout désactiver</button><button class="btn sm" data-act="blk-all" data-v="0">Tout activer</button>${ret?`<button class="btn sm" data-act="blk-ret">Désactiver les ${ret} en retard de frais</button>`:''}</div></div>`})():''}
    ${es.length?`<div class="card list">${eleveRows(es)}</div>`:`<div class="card empty"><h3>Aucun élève inscrit</h3><p class="muted small">Ajoutez le premier élève avec son identité complète.</p></div>`}`;
 }
 
@@ -1889,8 +1917,10 @@ function ficheEleve(id){
   const e=S.eleves[id];if(!e)return closeSheet();
   const kv=(l,v)=>`<dt>${l}</dt><dd>${v?h(v):'<span class="muted">—</span>'}</dd>`;
   const dn=e.dateNaissance?new Date(e.dateNaissance+'T12:00').toLocaleDateString('fr-FR',{day:'numeric',month:'long',year:'numeric'}):'';
-  const r=resume(id,S.classes[e.classeId]||{},'an');
+  const r=hid(id)?{pct:null}:resume(id,S.classes[e.classeId]||{},'an');
   openSheet('Fiche de l’élève',`<div class="stack">
+   ${blk(id)?`<div class="closebar blkn"><span class="cb-ic">!</span><span class="grow"><b>${isDir()?'Élève désactivé':'Élève désactivé par la direction'}</b><small>${isDir()?'L’enseignant ne voit plus son bulletin, son total ni sa place, et ne peut pas faire signer le parent.':'Son bulletin, son total et sa place sont bloqués. Adressez le parent à la direction.'}</small></span></div>`:''}
+   ${isDir()?`<button class="btn sm ${blk(id)?'grad':'danger'}" data-act="blk" data-id="${h(id)}" data-sheet="1" style="align-self:flex-start">${blk(id)?'Activer cet élève':'Désactiver cet élève (bloquer ses résultats)'}</button>`:''}
    <div class="idhead">${e.photo?`<img class="fiche-ph" src="${h(e.photo)}" alt="Photo de ${h(nomComplet(e))}">`:`<span class="fiche-ini">${h(initials(e))}</span>`}<div><h3 style="font-size:21px">${h(nomComplet(e))}</h3><div class="muted small">${h(S.classes[e.classeId]?.nom||'')} · ${e.sexe==='F'?'Fille':'Garçon'}${r.pct!=null?' · '+pctf(r.pct)+' sur l’année':''}</div></div></div>
    <div class="btns"><button class="btn grad sm" data-act="voir-bul" data-id="${h(id)}">${ic('doc',16)} Voir son bulletin</button><button class="btn grad sm" data-act="rapport" data-id="${h(id)}">${ic('cal',16)} Rapport de l’élève</button><button class="btn grad sm" data-act="carte" data-id="${h(id)}">${ic('card',16)} Carte d’élève</button><button class="btn sm" data-act="edit-eleve" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn sm" data-act="sante-eleve" data-id="${h(id)}">${ic('med',16)} Élève malade</button>`:''}</div>
    ${isDir()?(()=>{const L=santeList().filter(x=>x.eleveId===id);return L.length?`<div class="card list"><div class="pad eyebrow" style="padding-bottom:0">Sorties pour raison de santé · ${L.length}</div>${L.map(x=>`<button class="li" data-act="sante-open" data-id="${h(x.id)}"><span class="ib">${ic('med',18)}</span><span class="grow"><span class="ttl" style="display:block">${h(dfr(x.date))} · ${h(x.heure||'')}</span><span class="muted small">${h(santeMotif(x))}</span></span><span class="chev">${ic('chev',18)}</span></button>`).join('')}</div>`:''})():''}
@@ -2257,21 +2287,22 @@ function palmData(cid,key){const cls=S.classes[cid];const es=elevesOf(cid);const
   const rows=es.map(e=>{const g={fr:null,ma:null,cg:null};for(const c of cls.cours||[]){const v=V(e.id,c,key);if(v!=null){const k=gm[c.id];g[k]=(g[k]||0)+v}}const any=GRPf().some(([k])=>g[k]!=null);const tot=any?(g.fr||0)+(g.ma||0)+(g.cg||0):null;return{e,g,tot,pct:tot==null?null:tot/MT*100}});
   const ranked=rows.filter(r=>r.tot!=null).sort((a,b)=>b.tot-a.tot||coll.compare(nomComplet(a.e),nomComplet(b.e)));ranked.forEach((r,i)=>{r.p=i+1});
   return{mx,MT,ranked,list:[...ranked,...rows.filter(r=>r.tot==null)],n:es.length}}
-function palmTable(cid,key,paper){const {mx,MT,list}=palmData(cid,key);
+const blkLast=(l,f)=>isDir()?l:[...l.filter(x=>!hid(f(x))),...l.filter(x=>hid(f(x)))];
+function palmTable(cid,key,paper){const {mx,MT,list:list0}=palmData(cid,key);const list=blkLast(list0,r=>r.e.id);
   const cell=(v,m)=>`<td class="num"><b>${v==null?'–':fmt(v)}</b><small>${v==null?'':fmt(v/m*100)+' %'}</small></td>`;
   return `${paper?`<div class="pfs-h"><b>${h(ECO().nom)}</b><span>Palmarès · ${h(S.classes[cid].nom)} · ${h(keyName(key))} · Année scolaire ${ANNEE}</span></div>`:''}<table class="t palm"><thead><tr><th>Place</th><th class="name">Élève</th>${GRPf().map(([k,l])=>`<th>${l}<small>/${fmt(mx[k])}</small></th>`).join('')}<th>Total<small>/${fmt(MT)}</small></th><th>%</th><th>Parents</th></tr></thead><tbody>
-   ${list.map(r=>{const s=sigOf(r.e.id,key);return `<tr class="${r.p&&r.p<=3?'top':''}"><td class="rkc num">${r.p?`<span>${r.p}<sup>${r.p===1?'er':'e'}</sup></span>`:'–'}</td><td class="name">${paper?`<span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span>`:`<button class="pnm" data-act="eleve" data-id="${h(r.e.id)}">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></button>`}</td>${GRPf().map(([k])=>cell(r.g[k],mx[k]||1)).join('')}<td class="num tt"><b>${r.tot==null?'–':fmt(r.tot)}</b></td><td class="num"><span class="pill ${r.pct==null?'':r.pct>=50?'good':'warn'}">${pctf(r.pct)}</span></td><td>${s?`<span class="pill good">✓ Signé</span>`:`<span class="pill">Non signé</span>`}</td></tr>`}).join('')}
+   ${list.map(r=>{if(hid(r.e.id))return `<tr class="blkrow"><td class="rkc num">–</td><td class="name"><span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span></td><td colspan="${GRPf().length+3}" class="blkc">${BLKTXT}</td></tr>`;const s=sigOf(r.e.id,key);return `<tr class="${r.p&&r.p<=3?'top':''}${blk(r.e.id)?' isblk':''}"><td class="rkc num">${r.p?`<span>${r.p}<sup>${r.p===1?'er':'e'}</sup></span>`:'–'}</td><td class="name">${paper?`<span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span>`:`<button class="pnm" data-act="eleve" data-id="${h(r.e.id)}">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></button>`}</td>${GRPf().map(([k])=>cell(r.g[k],mx[k]||1)).join('')}<td class="num tt"><b>${r.tot==null?'–':fmt(r.tot)}</b></td><td class="num"><span class="pill ${r.pct==null?'':r.pct>=50?'good':'warn'}">${pctf(r.pct)}</span></td><td>${s?`<span class="pill good">✓ Signé</span>`:`<span class="pill">Non signé</span>`}</td></tr>`}).join('')}
   </tbody></table>`}
 function detRow(cid,key,eid){const cls=S.classes[cid];let tot=0,mx=0,any=false;for(const c of cls.cours||[]){mx+=MX(c,key);const v=V(eid,c,key);if(v!=null){tot+=v;any=true}}return{tot:any?tot:null,mx,pct:any&&mx?tot/mx*100:null}}
 function detTot(eid){const tr=document.querySelector(`.dtab tr[data-e="${CSS.escape(eid)}"]`);if(!tr)return;const r=detRow(S.cid,S.pKey||'t1',eid);tr.querySelector('.dt-t').textContent=r.tot==null?'–':fmt(r.tot);const pc=tr.querySelector('.dt-p');pc.textContent=pctf(r.pct);pc.className='dt-p num '+(r.pct==null?'':r.pct>=50?'ok':'ko')}
 function refreshDet(){const cls=S.classes[S.cid];if(!cls)return;const key=S.pKey||'t1';document.querySelectorAll('.dtab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,key);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});document.querySelectorAll('.dtab tr[data-e]').forEach(tr=>detTot(tr.dataset.e))}
 function palmDetail(cid,key,chips){
-  const cls=S.classes[cid],cours=cls.cours||[];const {list}=palmData(cid,key);const edit=key[0]==='p'||key.startsWith('ex');const MT=sum(cours.map(c=>MX(c,key)));
+  const cls=S.classes[cid],cours=cls.cours||[];const list=blkLast(palmData(cid,key).list,r=>r.e.id);const edit=key[0]==='p'||key.startsWith('ex');const MT=sum(cours.map(c=>MX(c,key)));
   if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3></div>`;
   const fs=!!S.detFS;
   return `<div class="dfs${fs?' on':''}">${fs?`<div class="dfs-h"><div><b>${h(cls.nom)}</b><small>Points par branche · ${h(keyName(key))}</small></div><button class="btn sm grad" data-act="detfs">Fermer</button></div>${chips||''}`:''}<p class="muted small dfs-hide" style="margin:0">${edit?'Les élèves sont classés du premier au dernier. Pour corriger une erreur, touchez la cote, tapez la bonne valeur : elle s’enregistre et le bulletin se met à jour.':'Totaux en lecture seule. Pour corriger une cote, choisissez une <b>période</b> ou un <b>examen</b> ci-dessus.'} Faites glisser le tableau vers la gauche pour voir toutes les branches.</p>
   <div class="tblwrap dwrap" id="dwrap"><table class="dtab"><thead><tr><th class="pl">Pl.</th><th class="nm">Élève</th>${cours.map(c=>`<th class="br"><span>${h(c.nom)}</span><small class="num">/${fmt(MX(c,key))}</small></th>`).join('')}<th class="tt">Total<small class="num">/${fmt(MT)}</small></th><th class="tt">%</th></tr></thead><tbody>
-  ${list.map(r=>{const e=r.e;return `<tr data-e="${h(e.id)}"><td class="pl num">${r.p||'–'}</td><td class="nm">${h(e.nom)} ${h(e.postnom||'')} <span>${h(e.prenom||'')}</span></td>${cours.map(c=>{const v=V(e.id,c,key);return edit?`<td><input class="gi" data-e="${h(e.id)}" data-k="${key}" data-c="${h(c.id)}" data-fix="1" inputmode="decimal" autocomplete="off" aria-label="${h(c.nom)}, ${h(nomComplet(e))}, maximum ${fmt(MX(c,key))}" value="${v==null?'':fmt(v)}"></td>`:`<td class="ro num">${v==null?'·':fmt(v)}</td>`}).join('')}<td class="dt-t num">${r.tot==null?'–':fmt(r.tot)}</td><td class="dt-p num ${r.pct==null?'':r.pct>=50?'ok':'ko'}">${pctf(r.pct)}</td></tr>`}).join('')}
+  ${list.map(r=>{const e=r.e;if(hid(e.id))return `<tr class="blkrow"><td class="pl num">–</td><td class="nm">${h(e.nom)} ${h(e.postnom||'')} <span>${h(e.prenom||'')}</span></td><td colspan="${cours.length+2}" class="blkc">${BLKTXT}</td></tr>`;return `<tr data-e="${h(e.id)}"><td class="pl num">${r.p||'–'}</td><td class="nm">${h(e.nom)} ${h(e.postnom||'')} <span>${h(e.prenom||'')}</span></td>${cours.map(c=>{const v=V(e.id,c,key);return edit?`<td><input class="gi" data-e="${h(e.id)}" data-k="${key}" data-c="${h(c.id)}" data-fix="1" inputmode="decimal" autocomplete="off" aria-label="${h(c.nom)}, ${h(nomComplet(e))}, maximum ${fmt(MX(c,key))}" value="${v==null?'':fmt(v)}"></td>`:`<td class="ro num">${v==null?'·':fmt(v)}</td>`}).join('')}<td class="dt-t num">${r.tot==null?'–':fmt(r.tot)}</td><td class="dt-p num ${r.pct==null?'':r.pct>=50?'ok':'ko'}">${pctf(r.pct)}</td></tr>`}).join('')}
   </tbody></table></div><div class="ehint"><span class="dfs-hide">${edit?'Le classement se remet en ordre quand vous changez de période ou rouvrez la page.':''}</span><span class="saved" id="saved"></span></div></div>`;
 }
 function tabPalm(){
@@ -2409,11 +2440,11 @@ function tabSig(){
    <div class="meter"><i style="width:${es.length?Math.round(n/es.length*100):0}%"></i></div></div>
    <div class="card list">${es.map(e=>{const s=sigOf(e.id,key);const par=e.pere||e.mere||e.tuteur||'';
     return `<div class="li sigrow">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${s?`Signé par ${h(s.nom)} (${h(s.lien)}) · ${new Date(s.at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} à ${hm(s.at)}`:par?'Parent : '+h(par):'Parent non renseigné'}</span></span>
-     ${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(s.nom)}"><span class="pill good">Signé</span>`:`<span class="pill warn">Pas signé</span><button class="btn grad sm" data-act="sign" data-id="${h(e.id)}">Faire signer</button>`}<button class="btn sm" data-act="rapport" data-id="${h(e.id)}">Rapport</button>
+     ${hid(e.id)?`<span class="pill bad">Bloqué par la direction</span>`:`${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(s.nom)}"><span class="pill good">Signé</span>`:`<span class="pill warn">Pas signé</span><button class="btn grad sm" data-act="sign" data-id="${h(e.id)}">Faire signer</button>`}<button class="btn sm" data-act="rapport" data-id="${h(e.id)}">Rapport</button>`}
      ${s&&isDir()?`<button class="x" data-act="unsign" data-id="${h(e.id)}" aria-label="Annuler la signature">×</button>`:''}</div>`}).join('')}</div>`;
 }
 function signSheet(eid){
-  const e=S.eleves[eid];if(!e)return;const key=S.pKey||'t1';
+  const e=S.eleves[eid];if(!e)return;if(hid(eid)){toast(BLKTXT+'.');return}const key=S.pKey||'t1';
   const opts=[['Père',e.pere],['Mère',e.mere],['Tuteur',e.tuteur]];const first=opts.find(o=>o[1])||['Père',''];
   openSheet('Signature du parent',`<form id="f-sig" class="stack" data-id="${h(eid)}">
    <p class="muted small" style="margin:0">Élève : <b>${h(nomComplet(e))}</b> · ${keyName(key)}. Le parent signe avec le doigt dans le cadre ci-dessous.</p>
@@ -2610,7 +2641,7 @@ function rapportPaper(eid,k){
   </div>`;
 }
 function rapportSheet(eid,k){
-  const e=S.eleves[eid];if(!e)return;k=k||S.pKey||'t1';S.pKey=k;S.rEl=eid;
+  const e=S.eleves[eid];if(!e)return;if(hid(eid)){toast(BLKTXT+'.');return}k=k||S.pKey||'t1';S.pKey=k;S.rEl=eid;
   const rap={...(S.rapports[rid(eid,k)]||{})};if(!rap.conduite&&k[0]==='p'){const v=S.notes[nid(eid,'vie')]?.cond?.[k];if(v)rap.conduite=v}const sg=sigOf(eid,k);
   openSheet('Rapport de l’élève',`<div class="stack">
    <div class="chips" role="group" aria-label="Période">${pkeys().map(([x,l])=>`<button class="chipb${x[0]==='t'||x==='an'?' strong':''}" data-act="rkey" data-v="${x}" aria-pressed="${x===k}">${l}</button>`).join('')}</div>
@@ -3325,6 +3356,9 @@ const A={
   btri:b=>{S.bTri=b.dataset.v;render()},
   fcls:b=>{S.fCls=b.dataset.v;render()},
   eleve:b=>ficheEleve(b.dataset.id),
+  blk:async b=>{if(!isDir())return;const id=b.dataset.id,on=!blk(id);await setBlk([id],on);toast(on?'Élève désactivé : ses résultats sont bloqués chez l’enseignant.':'Élève activé : ses résultats sont de nouveau visibles.');if(b.dataset.sheet)ficheEleve(id);render()},
+  'blk-all':async b=>{if(!isDir()||!arm(b))return;const ids=elevesOf(S.cid).map(e=>e.id),on=b.dataset.v==='1';await setBlk(ids,on);toast(on?`${ids.length} élèves désactivés.`:`${ids.length} élèves activés.`);render()},
+  'blk-ret':async b=>{if(!isDir()||!arm(b))return;const ids=elevesOf(S.cid).filter(e=>{try{return situation(e.id).st==='retard'}catch(x){return false}}).map(e=>e.id);await setBlk(ids,true);toast(`${ids.length} élève${ids.length>1?'s':''} en retard désactivé${ids.length>1?'s':''}.`);render()},
   'new-eleve':()=>formEleve(null),
   'edit-eleve':b=>formEleve(b.dataset.id),
   'elv-nophoto':()=>{elvPhoto='';$('#elv-ph').innerHTML=avEl({nom:$('#e-nom').value||'?'},'xl')},

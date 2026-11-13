@@ -10,28 +10,43 @@
   const EC = window.ECOLE;
   /* ---------- Couleurs de l'école (thème choisi par la direction) ---------- */
   const THEMES = [['violet', 'Violet', 262, 1], ['nuit', 'Bleu nuit', 226, 1], ['ocean', 'Océan', 198, 1], ['emeraude', 'Émeraude', 158, .9], ['foret', 'Forêt', 126, .75],
-    ['ambre', 'Ambre', 30, 1], ['rubis', 'Rubis', 356, 1], ['grenat', 'Grenat', 338, .9], ['prune', 'Prune', 300, .85], ['ardoise', 'Ardoise', 215, .22]];
+    ['ambre', 'Ambre', 30, 1], ['rubis', 'Rubis', 356, 1], ['grenat', 'Grenat', 338, .9], ['prune', 'Prune', 300, .85], ['ardoise', 'Ardoise', 215, .22],
+    // dégradés à deux couleurs : la teinte change du sombre vers le clair (h2)
+    ['aurore', 'Aurore', 262, 1, { g: 2, h2: 335 }], ['lagon', 'Lagon', 222, 1, { g: 2, h2: 168 }], ['coucher', 'Coucher de soleil', 345, 1, { g: 2, h2: 392 }],
+    ['savane', 'Savane', 150, .85, { g: 2, h2: 52 }], ['crepuscule', 'Crépuscule', 226, 1, { g: 2, h2: 300 }], ['corail', 'Corail', 330, .95, { g: 2, h2: 380 }],
+    ['menthe', 'Menthe', 200, .9, { g: 2, h2: 140 }], ['braise', 'Braise', 0, 1, { g: 2, h2: 48 }],
+    // couleurs unies : pas de dégradé sur les bandeaux et les boutons
+    ['bleu', 'Bleu', 216, 1, { g: 3, solid: 1 }], ['vert', 'Vert', 146, .85, { g: 3, solid: 1 }], ['rouge', 'Rouge', 2, .95, { g: 3, solid: 1 }], ['orange', 'Orange', 24, 1, { g: 3, solid: 1 }],
+    ['turquoise', 'Turquoise', 182, .9, { g: 3, solid: 1 }], ['mauve', 'Mauve', 280, .8, { g: 3, solid: 1 }], ['marron', 'Marron', 22, .55, { g: 3, solid: 1 }], ['gris', 'Gris', 215, .1, { g: 3, solid: 1 }],
+    // thèmes de l'école
+    ['tableau', 'Tableau noir', 152, .5, { g: 4 }], ['cahier', 'Cahier d’écolier', 214, 1, { g: 4, h2: 352 }], ['uniforme', 'Uniforme bleu et blanc', 222, 1, { g: 4, h2: 198 }],
+    ['crayon', 'Crayon jaune', 24, 1, { g: 4, h2: 50 }], ['stylorouge', 'Stylo rouge', 356, 1, { g: 4, solid: 1 }], ['encre', 'Encre bleue', 228, 1, { g: 4, solid: 1 }],
+    ['craie', 'Craie', 200, .32, { g: 4 }], ['cartable', 'Cartable en cuir', 20, .6, { g: 4, h2: 38 }], ['congo', 'Couleurs du Congo', 204, 1, { g: 4, h2: 428 }]];
+  const TGROUPS = { 1: 'Dégradés', 2: 'Dégradés à deux couleurs', 3: 'Couleurs unies', 4: 'Thèmes de l’école' };
   const BASE_GRAD = 'linear-gradient(135deg,#1d0f3d,#533989 55%,#8363c6)';
   const hx = n => n.toString(16).padStart(2, '0');
   function rgb2hsl(r, g, b) { r /= 255; g /= 255; b /= 255; const mx = Math.max(r, g, b), mn = Math.min(r, g, b); let h = 0, s = 0; const l = (mx + mn) / 2;
     if (mx !== mn) { const d = mx - mn; s = l > .5 ? d / (2 - mx - mn) : d / (mx + mn); h = mx === r ? (g - b) / d + (g < b ? 6 : 0) : mx === g ? (b - r) / d + 2 : (r - g) / d + 4; h *= 60; } return [h, s, l]; }
   function hsl2rgb(h, s, l) { h /= 360; const f = (p, q, t) => { if (t < 0) t += 1; if (t > 1) t -= 1; return t < 1 / 6 ? p + (q - p) * 6 * t : t < 1 / 2 ? q : t < 2 / 3 ? p + (q - p) * (2 / 3 - t) * 6 : p; };
     if (!s) return [l * 255, l * 255, l * 255].map(Math.round); const q = l < .5 ? l * (1 + s) : l + s - l * s, p = 2 * l - q; return [f(p, q, h + 1 / 3), f(p, q, h), f(p, q, h - 1 / 3)].map(v => Math.round(v * 255)); }
-  function shift(r, g, b, H, SF) { const [h, s, l] = rgb2hsl(r, g, b); if (h < 232 || h > 302 || s < .12) return null; return hsl2rgb(H, Math.min(1, s * SF), l); }
-  function recolor(txt, H, SF) {
-    return txt.replace(/#([0-9a-fA-F]{6})\b/g, (m, x) => { const c = shift(parseInt(x.slice(0, 2), 16), parseInt(x.slice(2, 4), 16), parseInt(x.slice(4, 6), 16), H, SF); return c ? '#' + c.map(hx).join('') : m; })
-      .replace(/rgba\((\d+),\s*(\d+),\s*(\d+)/g, (m, r, g, b) => { const c = shift(+r, +g, +b, H, SF); return c ? `rgba(${c.join(',')}` : m; });
+  function shift(r, g, b, H, SF, O) { const [h, s, l] = rgb2hsl(r, g, b); if (h < 232 || h > 302 || s < .12) return null; let hh = H; if (O && O.h2 != null) { const t = Math.max(0, Math.min(1, (l - .14) / .56)); hh = ((H + (O.h2 - H) * t) % 360 + 360) % 360; } return hsl2rgb(hh, Math.min(1, s * SF), l); }
+  function recolor(txt, H, SF, O) {
+    let out = txt.replace(/#([0-9a-fA-F]{6})\b/g, (m, x) => { const c = shift(parseInt(x.slice(0, 2), 16), parseInt(x.slice(2, 4), 16), parseInt(x.slice(4, 6), 16), H, SF, O); return c ? '#' + c.map(hx).join('') : m; })
+      .replace(/rgba\((\d+),\s*(\d+),\s*(\d+)/g, (m, r, g, b) => { const c = shift(+r, +g, +b, H, SF, O); return c ? `rgba(${c.join(',')}` : m; });
+    if (O && O.solid) { const mid = '#' + shift(0x53, 0x39, 0x89, H, SF, O).map(hx).join(''), dk = '#' + shift(0x2c, 0x16, 0x60, H, SF, O).map(hx).join('');
+      out = out.replace(/--grad:linear-gradient\([^;}]*\)/g, '--grad:linear-gradient(135deg,' + mid + ',' + mid + ')').replace(/--grad-soft:linear-gradient\([^;}]*\)/g, '--grad-soft:linear-gradient(135deg,' + dk + ',' + dk + ')'); }
+    return out;
   }
   const themeOf = k => THEMES.find(t => t[0] === k) || THEMES[0];
-  const gradOf = k => { const t = themeOf(k); return t[0] === 'violet' ? BASE_GRAD : recolor(BASE_GRAD, t[2], t[3]); };
+  const gradOf = k => { const t = themeOf(k); if (t[0] === 'violet') return BASE_GRAD; if (t[4] && t[4].solid) { const c = '#' + shift(0x53, 0x39, 0x89, t[2], t[3], t[4]).map(hx).join(''); return 'linear-gradient(135deg,' + c + ',' + c + ')'; } return recolor(BASE_GRAD, t[2], t[3], t[4]); };
   window.applyTheme = function (k) {
     if (k !== undefined) window.__theme = k;
     const t = themeOf(window.__theme);
     document.querySelectorAll('style').forEach(st => {
       if (st.dataset.orig === undefined) st.dataset.orig = st.textContent;
-      st.textContent = t[0] === 'violet' ? st.dataset.orig : recolor(st.dataset.orig, t[2], t[3]);
+      st.textContent = t[0] === 'violet' ? st.dataset.orig : recolor(st.dataset.orig, t[2], t[3], t[4]);
     });
-    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t[0] === 'violet' ? '#1d0f3d' : recolor('#1d0f3d', t[2], t[3]);
+    const m = document.querySelector('meta[name=theme-color]'); if (m) m.content = t[0] === 'violet' ? '#1d0f3d' : recolor('#1d0f3d', t[2], t[3], t[4]);
   };
   window.__theme = (EC && EC.theme) || 'violet';
   document.addEventListener('DOMContentLoaded', () => window.applyTheme());
@@ -41,7 +56,7 @@
     const ov = document.createElement('div'); ov.id = 'tpick';
     ov.innerHTML = `<div class="tp-box"><h2>${first ? 'Choisissez les couleurs de votre école' : 'Couleurs de l’application'}</h2>
       <p>Ces couleurs s’appliquent à toute l’application de l’école, pour la direction et pour tous les enseignants.</p>
-      <div class="tp-grid">${THEMES.map(t => `<button type="button" class="tp-sw" data-k="${t[0]}" aria-pressed="${t[0] === cur}"><span class="tp-g" style="background:${gradOf(t[0])}"></span><b>${t[1]}</b></button>`).join('')}</div>
+      <div class="tp-scroll">${[1, 2, 3, 4].map(g => `<h3>${TGROUPS[g]}</h3><div class="tp-grid">${THEMES.filter(t => ((t[4] && t[4].g) || 1) === g).map(t => `<button type="button" class="tp-sw" data-k="${t[0]}" aria-pressed="${t[0] === cur}"><span class="tp-g" style="background:${gradOf(t[0])}"></span><b>${t[1]}</b></button>`).join('')}</div>`).join('')}</div>
       <div class="tp-msg" id="tp-msg"></div>
       <button type="button" class="tp-ok">Valider ces couleurs</button><button type="button" class="tp-no">${first ? 'Plus tard' : 'Annuler'}</button></div>`;
     document.body.appendChild(ov);
@@ -460,14 +475,16 @@
   #auth .apk[hidden]{display:none}
   #auth .note{font-size:12.5px;color:rgba(255,255,255,.6);text-align:center}
   #tpick{position:fixed;inset:0;z-index:2147483001;background:rgba(5,3,12,.72);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;font-family:Outfit,system-ui,sans-serif;color:#fff}
-  #tpick .tp-box{width:100%;max-width:520px;max-height:92vh;overflow:auto;background:#140d26;border-radius:30px 30px 0 0;padding:24px max(18px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:tpup .35s cubic-bezier(.2,1,.3,1)}
+  #tpick .tp-scroll{flex:1;min-height:0;overflow:auto;display:flex;flex-direction:column;gap:10px;margin:0 -4px;padding:0 4px 4px}
+  #tpick h3{margin:8px 0 0;font:700 12.5px Outfit,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+  #tpick .tp-box{width:100%;max-width:520px;max-height:92vh;overflow:hidden;background:#140d26;border-radius:30px 30px 0 0;padding:24px max(18px,env(safe-area-inset-left,0px)) calc(22px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:14px;animation:tpup .35s cubic-bezier(.2,1,.3,1)}
   @keyframes tpup{from{transform:translateY(40px);opacity:0}}
   #tpick h2{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:26px;margin:0;text-transform:uppercase;line-height:1.05}
   #tpick p{margin:0;color:rgba(255,255,255,.72);font-size:14px}
   #tpick .tp-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
   #tpick .tp-sw{display:flex;flex-direction:column;gap:8px;align-items:flex-start;border:2px solid rgba(255,255,255,.1);background:rgba(255,255,255,.04);border-radius:20px;padding:8px 8px 10px;cursor:pointer;color:#fff;font:600 14px Outfit,sans-serif}
   #tpick .tp-sw[aria-pressed="true"]{border-color:#fff;background:rgba(255,255,255,.1)}
-  #tpick .tp-g{display:block;width:100%;height:64px;border-radius:14px;position:relative;overflow:hidden}
+  #tpick .tp-g{display:block;width:100%;height:52px;border-radius:14px;position:relative;overflow:hidden}
   #tpick .tp-g::after{content:"";position:absolute;width:90px;height:90px;border-radius:50%;right:-30px;bottom:-50px;border:14px solid rgba(255,255,255,.14)}
   #tpick .tp-sw b{padding-left:4px}
   #tpick .tp-ok{border:0;border-radius:16px;padding:15px;background:#fff;color:#111;font:700 16px Outfit,sans-serif;cursor:pointer}

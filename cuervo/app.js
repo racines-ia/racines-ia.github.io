@@ -31,10 +31,28 @@ theme();
     localStorage.setItem('cv_splash', String(now));
   } catch (e) {}
   if (seen) { sp.remove(); return; }
-  var t, done = function () { clearTimeout(t); sp.classList.add('out'); setTimeout(function () { sp.remove(); }, 650); };
+  var home = !location.search || /^\?(v=)?$/.test(location.search);
+  var t, done = function () { clearTimeout(t); if (home) welcome(); sp.classList.add('out'); setTimeout(function () { sp.remove(); }, 650); };
   t = setTimeout(done, 10000);
   sp.addEventListener('click', done);
 })();
+
+/* ---------- Bienvenue (après l'animation) ---------- */
+function welcome() {
+  if (document.getElementById('welcome')) return;
+  var w = document.createElement('div'); w.id = 'welcome'; w.className = 'welcome';
+  var pt = function (n, t, d) { return '<div class="wpt"><span>' + n + '</span><div><b>' + t + '</b><p>' + d + '</p></div></div>'; };
+  w.innerHTML = '<div class="win"><div class="wlogo">cuervo<em>.co</em></div>' +
+    '<h1>Vends tes produits en ligne, depuis ton téléphone.</h1>' +
+    '<p class="lead">cuervo.co est la place de marché des créateurs du Congo : formations, e-books, modèles, logiciels, services…</p>' +
+    '<div class="wpts">' + pt('1', 'Crée ta boutique en 2 minutes', 'Ton nom, ton numéro, ton Gmail : c\'est tout.') +
+    pt('2', 'Partage ton lien partout', 'WhatsApp, Facebook, TikTok, Instagram : une page de vente est créée pour chaque produit.') +
+    pt('3', 'Reçois l\'argent par Mobile Money', 'M-Pesa, Airtel Money, Orange Money, directement sur ton numéro.') + '</div>' +
+    '<div class="wbtns"><button class="btn btn-primary" type="button" data-act="wGo" data-id="register"><span>Créer ma boutique</span></button>' +
+    '<button class="btn btn-ghost" type="button" data-act="wGo" data-id="login"><span>Ouvrir ma boutique</span></button>' +
+    '<button class="linkbtn" type="button" data-act="wGo" data-id="">Je veux juste voir les produits</button></div></div>';
+  document.body.appendChild(w); document.body.classList.add('noscroll');
+}
 
 /* ---------- Outils ---------- */
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; }); }
@@ -361,6 +379,7 @@ async function route() {
     if (q.get('p')) return await pageProduct(q.get('p'), alive);
     if (q.get('b')) return await pageShop(q.get('b'), alive);
     if (q.get('c')) return await pageOrder(q.get('c'), alive);
+    if (q.get('reset')) return pageReset(q.get('reset'));
     if (v === 'compte') return await pageAccount(alive);
     if (v === 'admin') return await pageAdmin(alive);
     if (v === 'achats') return await pagePurchases(alive);
@@ -727,6 +746,11 @@ var A = {
 
   /* ---------- Compte ---------- */
   authMode: function (el) { S.ctx.auth = el.dataset.id; renderAuth(); },
+  wGo: function (el) {
+    var w = $('welcome'), id = el.dataset.id; document.body.classList.remove('noscroll');
+    if (w) { w.classList.add('out'); setTimeout(function () { w.remove(); }, 400); }
+    if (id) { S.ctx.auth = id; nav('?v=compte'); }
+  },
   login: async function (el) {
     var tel = waNum($('a-tel').value), pw = $('a-pw').value, err = $('a-err');
     if (tel.length < 11 || pw.length < 6) { err.textContent = 'Entre ton numéro et ton mot de passe (6 caractères minimum).'; err.classList.remove('hide'); return; }
@@ -739,7 +763,7 @@ var A = {
     var g = function (k) { return ($(k) ? $(k).value : '').trim(); }, err = $('a-err');
     var tel = waNum(g('a-tel')), pw = $('a-pw') ? $('a-pw').value : '';
     if (!g('a-prenom') || !g('a-nom') || g('a-boutique').length < 2) { err.textContent = 'Remplis ton prénom, ton nom et le nom de ta boutique.'; err.classList.remove('hide'); return; }
-    if (g('a-email') && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(g('a-email'))) { err.textContent = 'Ton adresse e-mail n\'est pas valide.'; err.classList.remove('hide'); return; }
+    if (!/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(g('a-email'))) { err.textContent = g('a-email') ? 'Ton adresse Gmail n\'est pas valide.' : 'Entre ton adresse Gmail : elle sert à recevoir tes ventes et à récupérer ton compte.'; err.classList.remove('hide'); return; }
     busy(el, true);
     try {
       if (!S.user) {
@@ -758,10 +782,35 @@ var A = {
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
   },
   forgot: function () {
-    var wa = waNum((S.settings || {}).whatsapp);
+    var wa = waNum((S.settings || {}).whatsapp), tel = $('a-tel') ? $('a-tel').value : '';
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Mot de passe oublié</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
-      '<p class="lead">L\'administrateur de cuervo.co peut te donner un nouveau mot de passe. Écris-lui avec le numéro de ton compte.</p>' +
-      (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, j\'ai oublié le mot de passe de ma boutique cuervo.co. Mon numéro de compte : ' + ($('a-tel') ? $('a-tel').value : '')) + '">' + ico('i-chat') + '<span>Écrire à l\'administrateur</span></a>' : '<div class="banner">Contacte l\'administrateur de cuervo.co.</div>') + '</div>');
+      '<p class="lead">Entre le numéro de ton compte. On t\'envoie un lien sur ton Gmail pour choisir un nouveau mot de passe.</p>' +
+      '<label>Numéro de téléphone<input id="f-tel" type="tel" inputmode="tel" placeholder="Ex. 0812 345 678" value="' + esc(tel) + '"></label>' +
+      '<div class="msg-err hide" id="f-err"></div><div class="banner ok hide" id="f-ok"></div>' +
+      '<button class="btn btn-primary" type="button" data-act="forgotSend"><span>Recevoir le lien sur mon Gmail</span></button>' +
+      (wa ? '<a class="linkbtn" style="text-align:center" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, j\'ai oublié le mot de passe de ma boutique cuervo.co. Mon numéro de compte : ' + tel) + '">Pas de Gmail ? Écrire à l\'administrateur</a>' : '') + '</div>');
+  },
+  forgotSend: async function (el) {
+    var err = $('f-err'), ok = $('f-ok'), tel = waNum($('f-tel').value); err.classList.add('hide'); ok.classList.add('hide');
+    if (tel.length < 11) { err.textContent = 'Entre le numéro de ton compte.'; err.classList.remove('hide'); return; }
+    busy(el, true);
+    var r = await sb.functions.invoke('mk-reset', { body: { action: 'ask', tel: tel } }), d = r.data;
+    if (!d && r.error && r.error.context && r.error.context.json) { try { d = await r.error.context.json(); } catch (e) {} }
+    busy(el, false); d = d || {};
+    if (d.envoye) { ok.innerHTML = '<b>Lien envoyé</b>Regarde ton Gmail ' + esc(d.email) + ' (et le dossier Spam). Le lien marche 30 minutes.'; ok.classList.remove('hide'); return; }
+    err.textContent = d.sans_email ? 'Ce compte n\'a pas de Gmail enregistré. Écris à l\'administrateur.' : (d.error || 'Erreur, réessaie.'); err.classList.remove('hide');
+  },
+  resetSet: async function (el) {
+    var err = $('r-err'), a = $('r-pw').value, b = $('r-pw2').value; err.classList.add('hide');
+    var fail = function (t) { err.textContent = t; err.classList.remove('hide'); };
+    if (a.length < 6) return fail('Le mot de passe doit avoir au moins 6 caractères.');
+    if (a !== b) return fail('Les deux mots de passe ne sont pas pareils.');
+    busy(el, true);
+    var r = await sb.functions.invoke('mk-reset', { body: { action: 'set', token: el.dataset.id, password: a } }), d = r.data;
+    if (!d && r.error && r.error.context && r.error.context.json) { try { d = await r.error.context.json(); } catch (e) {} }
+    busy(el, false); d = d || {};
+    if (!d.ok) return fail(d.error || 'Erreur, réessaie.');
+    toast('Mot de passe changé'); S.ctx.auth = 'login'; nav('?v=compte');
   },
   changePw: async function (el) {
     var pw = $('s-pw').value;
@@ -1067,15 +1116,22 @@ function loyerChoice(cur, name) {
     '<label class="opt"><input type="radio" name="' + name + '" value="immediat"' + (cur === 'immediat' ? ' checked' : '') + '><span><b>Tout de suite</b><small>Tu paies ' + loyer + ' maintenant (onglet Loyer) : tes ventes vont directement chez toi pendant 35 jours.</small></span></label>' +
     '<a class="linkbtn" href="?v=aide" data-nav style="text-align:center">Comment ça marche ?</a></div>';
 }
+function pageReset(tok) {
+  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>Nouveau mot de passe</h1><p class="lead" style="margin-top:8px">Choisis un nouveau mot de passe pour ta boutique, puis note-le bien.</p></div>' +
+    '<div class="box" style="margin-top:16px"><label>Nouveau mot de passe<input id="r-pw" type="password" autocomplete="new-password" placeholder="6 caractères minimum"></label>' +
+    '<label>Encore une fois<input id="r-pw2" type="password" autocomplete="new-password"></label><div class="msg-err hide" id="r-err"></div>' +
+    '<button class="btn btn-primary" type="button" data-act="resetSet" data-id="' + esc(tok) + '"><span>Changer mon mot de passe</span></button></div>');
+  setBar(null);
+}
 function renderAuth() {
   var reg = S.ctx.auth !== 'login', need = !S.user;
-  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Connexion') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 35 jours, tout de suite ou sur ta première vente.' : 'Entre dans ton espace vendeur.') + '</p></div>' +
+  page('<div style="padding-top:8px"><div class="kicker">Espace vendeur</div><h1>' + (reg ? 'Crée ta boutique' : 'Ouvre ta boutique') + '</h1><p class="lead" style="margin-top:8px">' + (reg ? 'Loyer : ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 35 jours, tout de suite ou sur ta première vente.' : 'Entre le numéro et le mot de passe de ton compte.') + '</p></div>' +
     (need ? '<div class="pills" style="margin-top:24px"><button class="pill' + (reg ? ' on' : '') + '" type="button" data-act="authMode" data-id="register">Créer un compte</button><button class="pill' + (reg ? '' : ' on') + '" type="button" data-act="authMode" data-id="login">J\'ai déjà un compte</button></div>' : '') +
     '<div class="box" style="margin-top:16px">' +
-    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label><label>Ton e-mail <small style="font-weight:500;opacity:.7">(pour recevoir chaque notification de vente)</small><input id="a-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com"></label>' + loyerChoice('premiere_vente', 'a-mode') : '') +
+    (reg ? '<label>Prénom<input id="a-prenom" autocomplete="given-name"></label><div class="two"><label>Nom<input id="a-nom" autocomplete="family-name"></label><label>Postnom<input id="a-postnom"></label></div><label>Nom de ta boutique<input id="a-boutique" placeholder="Ex. Grâce Créations"></label><label>Ton Gmail <small style="font-weight:500;opacity:.7">(obligatoire)</small><input id="a-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com"></label><p class="note" style="margin-top:-6px">Il sert à <b>recevoir un message à chaque vente</b> et à <b>récupérer ton compte</b> si tu oublies ton mot de passe.</p>' + loyerChoice('premiere_vente', 'a-mode') : '') +
     (need || !reg ? '<label>Numéro de téléphone<input id="a-tel" type="tel" inputmode="tel" autocomplete="tel" placeholder="Ex. 0812 345 678"></label><label>Mot de passe<input id="a-pw" type="password" autocomplete="' + (reg ? 'new-password' : 'current-password') + '" placeholder="6 caractères minimum"></label>' : '<input id="a-tel" type="hidden" value="">') +
     '<div class="msg-err hide" id="a-err"></div>' +
-    '<button class="btn btn-primary" type="button" data-act="' + (reg ? 'register' : 'login') + '"><span>' + (reg ? 'Créer ma boutique' : 'Me connecter') + '</span></button>' +
+    '<button class="btn btn-primary" type="button" data-act="' + (reg ? 'register' : 'login') + '"><span>' + (reg ? 'Créer ma boutique' : 'Ouvrir ma boutique') + '</span></button>' +
     (reg ? '<p class="note center">Ton numéro sert d\'identifiant. Note bien ton mot de passe.</p>' : '<button class="linkbtn" type="button" data-act="forgot">Mot de passe oublié ?</button>') + '</div>');
   setBar(null);
 }
@@ -1147,6 +1203,7 @@ function renderDash(keepScroll) {
   var body = { commandes: dashOrders, produits: dashProducts, boutique: dashShop, loyer: dashRent }[S.tab]();
   page('<div class="rowx" style="padding-top:8px">' + avatar(v) + '<div class="grow"><h1 style="font-size:24px">' + esc(v.boutique) + '</h1><p class="note">' + esc(v.prenom + ' ' + v.nom) + '</p></div></div>' +
     '<div class="banner ' + st[0] + '"><b>' + st[1] + '</b>' + esc(st[2]) + '</div>' +
+    (v.email ? '' : '<div class="banner" style="margin-top:12px"><b>Ajoute ton Gmail</b>Il sert à recevoir un message à chaque vente et à récupérer ton compte si tu oublies ton mot de passe.<button class="btn btn-primary btn-sm" style="margin-top:10px" type="button" data-act="tab" data-id="boutique"><span>Ajouter mon Gmail</span></button></div>') +
     salesCard() + pushCard() +
     '<div class="two" style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir ma boutique</a><button class="btn btn-ghost btn-sm" type="button" data-act="newProduct">' + ico('i-plus') + '<span>Produit</span></button></div>' +
     (v.is_admin ? '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="?v=admin" data-nav>Espace administrateur ' + ico('i-arrow') + '</a>' : '') +
@@ -1198,7 +1255,7 @@ function dashShop() {
     '<div style="width:120px">' + upBox('avatar', v.avatar_url, 'Photo de profil', 'sq') + '</div></div>' +
     '<div class="box"><h3>Ma boutique</h3><label>Nom de la boutique<input id="s-boutique" value="' + esc(v.boutique) + '"></label><label>Présentation<textarea id="s-bio" placeholder="Ce que tu vends, en quelques mots">' + esc(v.bio) + '</textarea></label>' +
     '<label>Numéro WhatsApp pour les questions des clients<input id="s-wa" type="tel" value="' + esc(v.whatsapp) + '"></label><label>Numéro de téléphone affiché<input id="s-tel" type="tel" value="' + esc(v.tel) + '"></label>' +
-    '<label>E-mail pour être prévenu des paiements<input id="s-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com" value="' + esc(v.email || '') + '"></label><p class="note">À chaque capture de paiement, tu reçois un e-mail pour aller confirmer. Il n\'est jamais affiché aux clients. Pense à regarder aussi dans les spams.</p></div>' +
+    '<label>Ton Gmail (ventes + récupération du compte)<input id="s-email" type="email" inputmode="email" autocomplete="email" placeholder="ton.adresse@gmail.com" value="' + esc(v.email || '') + '"></label><p class="note">À chaque capture de paiement, tu reçois un e-mail pour aller confirmer. Il n\'est jamais affiché aux clients. Pense à regarder aussi dans les spams.</p></div>' +
     '<div class="box"><h3>Mes réseaux sociaux</h3><p class="note">Colle le lien de tes pages. Ils s\'affichent sur ta boutique et tes produits. Ton WhatsApp ci-dessus s\'affiche aussi.</p>' +
     RS.map(function (x) { return '<label>' + x[1] + '<input id="s-rs-' + x[0] + '" type="url" inputmode="url" placeholder="https://' + (x[0] === 'tiktok' ? 'www.tiktok.com/@ton_compte' : 'www.' + x[0] + '.com/ta_page') + '" value="' + esc((v.reseaux || {})[x[0]] || '') + '"></label>'; }).join('') + '</div>' +
     '<div class="box"><h3>Mon identité</h3><label>Prénom<input id="s-prenom" value="' + esc(v.prenom) + '"></label><div class="two"><label>Nom<input id="s-nom" value="' + esc(v.nom) + '"></label><label>Postnom<input id="s-postnom" value="' + esc(v.postnom) + '"></label></div></div>' +

@@ -570,6 +570,10 @@ tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--ba
 .dvp-meta span{flex:1;min-width:120px;background:#f1f2f7;border-radius:10px;padding:7px 10px}
 .dvp-meta small{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5a6078}
 .dvp-meta b{display:block;font-size:15px}
+.dvp-meta .wide{flex-basis:100%}
+.dvp-br{display:flex;justify-content:space-between;align-items:baseline;margin:14px 0 2px;padding:6px 10px;border-radius:8px;background:#1b2440;color:#fff}
+.dvp-br b{font-size:14px;letter-spacing:.04em;text-transform:uppercase}.dvp-br span{font-size:12px;opacity:.85}
+.dvp-q>.dvp-br:first-child{margin-top:0}
 .dvp-cons{margin-top:12px;border-left:4px solid #151a2e;padding:4px 0 4px 12px}
 .dvp-cons b{font-size:13px;text-transform:uppercase;letter-spacing:.05em}
 .dvp-cons p{margin:3px 0 0;font-size:13.5px;line-height:1.45;color:#2b3047}
@@ -1524,7 +1528,7 @@ function screen(){
     if(!S.inscr[meId()]){const L=libres();return band({kicker:'Espace enseignant',title:L.length?'Bienvenue':'Créez votre profil'})+page((L.length?`<section class="card pad stack"><div><b>Votre profil a peut-être déjà été préparé par la direction</b><p class="muted small" style="margin:4px 0 0">Touchez votre nom pour l’utiliser.</p></div><div class="list">${L.map(p=>`<button class="li" data-act="claim" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(p.matiere||'')}</span></span><span class="badge-g">C’est moi</span></button>`).join('')}</div></section><h2 class="h2">Sinon, créez votre profil</h2>`:'')+inscription())}
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
-  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','regjour','disc','devoir'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
+  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
   return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll})[S.view]();
 }
@@ -1908,8 +1912,8 @@ function tabAppel(){
   const cid=S.cid,regs=regsOf(cid);
   if(!regs.find(r=>r.id===S.aReg))S.aReg=regs[0]?.id||'';
   const reg=regs.find(r=>r.id===S.aReg);
-  const head=`<div class="sec-h"><h2 class="h2">Registre d’appel</h2><span class="btns"><button class="btn sm" data-act="rjopen" data-v="">${ic('book',16)} Feuilleter par jour</button><button class="btn sm" data-act="new-reg">${ic('plus',16)} Nouveau registre</button></span></div>`;
-  if(!reg)return head+`<div class="card empty"><span class="ib g">${ic('check',22)}</span><h3>Aucun registre pour cette classe</h3><p class="muted small">Un registre couvre 30 jours de classe, du lundi au vendredi. Choisissez le lundi où il commence.</p><button class="btn grad" data-act="new-reg">Ouvrir un registre</button></div>`;
+  const head=`<div class="sec-h"><h2 class="h2">Registre d’appel</h2>${isDir()?`<span class="btns"><button class="btn sm" data-act="rjopen" data-v="">${ic('book',16)} Feuilleter par jour</button><button class="btn sm" data-act="new-reg">${ic('plus',16)} Nouveau registre</button></span>`:''}</div>`;
+  if(!reg)return head+`<div class="card empty"><span class="ib g">${ic('check',22)}</span><h3>Aucun registre pour cette classe</h3>${isDir()?`<p class="muted small">Un registre couvre 30 jours de classe, du lundi au vendredi. Choisissez le lundi où il commence.</p><button class="btn grad" data-act="new-reg">Ouvrir un registre</button>`:`<p class="muted small">Le registre s’ouvre tout seul les jours de classe (du lundi au vendredi).</p>`}</div>`;
   const jours=joursOuvres(reg.debut);const es=elevesOf(cid);
   if(S.aVue==='arch')return head+`<div class="card pad"><div class="seg" role="group" aria-label="Affichage"><button data-act="avue" data-v="reg" aria-pressed="false">Registre</button><button data-act="avue" data-v="stats" aria-pressed="false">Statistiques</button><button data-act="avue" data-v="arch" aria-pressed="true">Archives par date</button></div></div>`+archAppel(cid,es);
   return head+`<div class="card pad grid2"><div class="field"><label for="a-reg">Registre</label><select class="inp" id="a-reg" data-act="areg">${regs.map(r=>{const j=joursOuvres(r.debut);return `<option value="${h(r.id)}" ${r.id===reg.id?'selected':''}>Du ${dfr(j[0])} au ${dfr(j[29])}</option>`}).join('')}</select></div>
@@ -2142,16 +2146,19 @@ const semLbl=l=>{const a=D(l),b=D(addJ(l,4));return a.getUTCMonth()===b.getUTCMo
 const dvOf=(cid,sem)=>Object.entries(S.devoirs||{}).filter(([,d])=>d&&d.classeId===cid&&d.semaine===sem).map(([id,d])=>({id,...d})).sort((a,b)=>(a.at||'').localeCompare(b.at||''));
 const dvTot=d=>sum((d.q||[]).map(q=>+q.pts||0));
 const DV_CONS='Lis attentivement chaque question avant de répondre. Pour les questions à choix multiples, coche la bonne réponse. Pour les autres questions, réponds proprement dans l’espace prévu. Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.';
-const dvQ=t=>t==='qcm'?{t:'qcm',q:'',ch:['','','',''],bon:-1,pts:1}:{t:'txt',q:'',lig:3,pts:2};
-function dvBranches(cid){const c=S.classes[cid];const set=new Set();for(const r of grilleOf(c||{}))if(r.t==='br'||(r.t==='c'))set.add(r.nom);return [...set]}
+const dvQ=(t,br='')=>t==='qcm'?{t:'qcm',br,q:'',ch:['','','',''],bon:-1,pts:1}:{t:'txt',br,q:'',lig:3,pts:2};
+/* un devoir = le résumé de la semaine : chaque question porte sa branche, les questions sont groupées par branche */
+const dvBrs=d=>{const o=[];for(const q of d.q||[]){const b=(q.br||d.branche||'').trim();if(b&&!o.includes(b))o.push(b)}return o};
+const dvGroups=d=>{const g=[];for(const q of d.q||[]){const b=(q.br||d.branche||'').trim()||'Autres questions';let x=g.find(y=>y.br===b);if(!x)g.push(x={br:b,q:[]});x.q.push(q)}return g};
+function dvBranches(cid){const c=S.classes[cid];const set=new Set();for(const r of grilleOf(c||{}))if(['br','c','cb'].includes(r.t)&&r.nom)set.add(r.nom);return [...set]}
 function dvSemNav(sem,act){const td=lundi(today());return `<div class="cj-nav"><button class="x" data-act="${act}" data-v="${addJ(sem,-7)}" aria-label="Semaine précédente">${ic('left',18)}</button><b>Semaine ${h(semLbl(sem))}</b><button class="x" data-act="${act}" data-v="${addJ(sem,7)}" ${sem>td?'disabled':''} aria-label="Semaine suivante">${ic('chev',18)}</button></div>`}
 function tabDev(){
   const cid=S.cid,sem=dvSem();const L=dvOf(cid,sem);const es=elevesOf(cid);
   return `<div class="card pad stack">${dvSemNav(sem,'dv-sem')}
    <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer un devoir</button>${isDir()&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
-   <p class="muted small" style="margin:0">${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe imprimés. ':'La direction imprime les copies : chaque élève reçoit la sienne avec son nom et sa photo. '}Un devoir par semaine, ou un par branche.</p></div>
-   ${L.length?`<div class="card list">${L.map(d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic('pen2',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.branche||'Devoir')}${d.titre?' · '+h(d.titre):''}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`).join('')}</div>`
-   :`<div class="card empty"><h3>Aucun devoir cette semaine</h3><p class="muted small">Composez le devoir hebdomadaire : questions à choix multiples ou questions à réponse écrite.</p></div>`}`;
+   <p class="muted small" style="margin:0">${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe imprimés. ':'La direction imprime les copies : chaque élève reçoit la sienne avec son nom et sa photo. '}Un devoir par semaine qui résume les leçons de plusieurs branches.</p></div>
+   ${L.length?`<div class="card list">${L.map(d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic('pen2',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.titre||'Résumé de la semaine')}</span><span class="muted small" style="display:block">${h(dvBrs(d).join(' · ')||'—')}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`).join('')}</div>`
+   :`<div class="card empty"><h3>Aucun devoir cette semaine</h3><p class="muted small">Composez le devoir de la semaine : posez des questions dans plusieurs branches (choix multiples ou réponse écrite).</p></div>`}`;
 }
 function dvPaper(d,e){const E=ECO();const cls=S.classes[d.classeId];const tot=dvTot(d);let n=0;
  const qh=q=>{n++;const pts=`<span class="dv-pts">(${fmt(+q.pts||0)} pt${(+q.pts||0)>1?'s':''})</span>`;
@@ -2160,9 +2167,9 @@ function dvPaper(d,e){const E=ECO();const cls=S.classes[d.classeId];const tot=dv
  return `<div class="dvp"><div class="dvp-top"><img src="${eLogo()}" alt=""><div class="dvp-sc"><b>${h(E.nom)}</b><span>Année scolaire ${ANNEE.replace('–',' - ')}</span></div>
    <div class="dv-st">${e?`${e.photo?`<img src="${h(e.photo)}" alt="">`:`<i>${h(initials(e))}</i>`}<div><small>Élève</small><b>${h(nomComplet(e))}</b><span>${h(cls?.nom||'')}</span></div>`:''}</div></div>
   <div class="dvp-h"><h1>Devoir hebdomadaire</h1><span>Semaine ${h(semLbl(d.semaine))}</span></div>
-  <div class="dvp-meta"><span><small>Branche</small><b>${h(d.branche||'—')}</b></span>${d.titre?`<span><small>Titre</small><b>${h(d.titre)}</b></span>`:''}<span><small>Classe</small><b>${h(cls?.nom||'')}</b></span><span><small>Total</small><b>/ ${fmt(tot)}</b></span></div>
+  <div class="dvp-meta"><span class="wide"><small>${dvBrs(d).length>1?'Branches':'Branche'}</small><b>${h(dvBrs(d).join(' · ')||'—')}</b></span><span><small>Titre</small><b>${h(d.titre||'Résumé de la semaine')}</b></span><span><small>Classe</small><b>${h(cls?.nom||'')}</b></span><span><small>Total</small><b>/ ${fmt(tot)}</b></span></div>
   ${d.consignes?`<div class="dvp-cons"><b>Consignes</b><p>${h(d.consignes).replace(/\n/g,'<br>')}</p></div>`:''}
-  <div class="dvp-q">${(d.q||[]).map(qh).join('')}</div>
+  <div class="dvp-q">${dvGroups(d).map(g=>`<div class="dvp-br"><b>${h(g.br)}</b><span>${fmt(sum(g.q.map(q=>+q.pts||0)))} pt${sum(g.q.map(q=>+q.pts||0))>1?'s':''}</span></div>${g.q.map(qh).join('')}`).join('')}</div>
   <div class="dvp-ft"><div><small>Cote obtenue</small><b>………… / ${fmt(tot)}</b></div><div><small>Signature de l’enseignant</small><i></i></div><div><small>Signature du parent</small><i></i></div></div></div>`}
 function dvPrev(id){const d=S.devoirs[id];if(!d)return;const e=elevesOf(d.classeId)[0];
  openSheet('Aperçu du devoir',`<div class="stack"><p class="muted small" style="margin:0">Exemple de copie${e?' pour '+h(nomComplet(e)):''}. Chaque élève aura la sienne.</p><div class="cert-prev dv-prev"><div class="cert-zoom dv-zoom">${dvPaper({id,...d},e)}</div></div>
@@ -2170,15 +2177,17 @@ function dvPrev(id){const d=S.devoirs[id];if(!d)return;const e=elevesOf(d.classe
  requestAnimationFrame(()=>{const z=document.querySelector('.dv-zoom'),pv=document.querySelector('.dv-prev');if(z&&pv){const k=pv.clientWidth/794;z.style.transform=`scale(${k})`;pv.style.height=Math.round(z.firstElementChild.offsetHeight*k)+'px'}})}
 function vDevoir(){const d=S.dv;if(!d){S.view='classe';return screen()}const cls=S.classes[d.classeId];const br=dvBranches(d.classeId);
  const qx=(q,i)=>`<div class="card pad stack dvq-e" data-i="${i}"><div class="sec-h"><b>Question ${i+1} · ${q.t==='qcm'?'choix multiples':'réponse écrite'}</b><span class="btns"><button type="button" class="x" data-act="dv-up" data-i="${i}" ${i?'':'disabled'} aria-label="Monter">↑</button><button type="button" class="x" data-act="dv-delq" data-i="${i}" aria-label="Supprimer la question">×</button></span></div>
+   <div class="field"><label>Branche</label><input class="inp" list="dv-brl" data-dq="${i}" data-df="br" value="${h(q.br||'')}" placeholder="Ex. Mathématiques"></div>
    <textarea class="inp" rows="2" data-dq="${i}" data-df="q" placeholder="Écrivez la question…">${h(q.q||'')}</textarea>
    ${q.t==='qcm'?`<div class="stack dvch-e">${(q.ch||[]).map((c,j)=>`<div class="dvch-r"><button type="button" class="dv-ok${q.bon===j?' on':''}" data-act="dv-bon" data-i="${i}" data-j="${j}" aria-label="Bonne réponse">${q.bon===j?'✓':'abcdefgh'[j]}</button><input class="inp" data-dq="${i}" data-df="ch" data-dc="${j}" value="${h(c)}" placeholder="Réponse ${'abcdefgh'[j]}">${(q.ch||[]).length>2?`<button type="button" class="x" data-act="dv-delch" data-i="${i}" data-j="${j}" aria-label="Retirer">×</button>`:''}</div>`).join('')}${(q.ch||[]).length<6?`<button type="button" class="btn sm" data-act="dv-addch" data-i="${i}" style="align-self:flex-start">+ Ajouter une réponse</button>`:''}<small class="muted">Touchez la lettre pour marquer la bonne réponse (elle n’est pas imprimée).</small></div>`
     :`<div class="field"><label>Lignes pour répondre</label><div class="seg">${[2,3,4,6,8].map(n=>`<button type="button" data-act="dv-lig" data-i="${i}" data-v="${n}" aria-pressed="${(+q.lig||3)===n}">${n}</button>`).join('')}</div></div>`}
    <div class="field" style="max-width:150px"><label>Points</label><input class="inp num" inputmode="decimal" data-dq="${i}" data-df="pts" value="${h(q.pts??'')}"></div></div>`;
  return band({back:'classe',home:true,kicker:'Devoir hebdomadaire',title:cls?.nom||'',sub:'Semaine '+semLbl(d.semaine)})+page(`<div class="stack dv-ed">
-  <div class="card pad stack"><div class="grid2"><div class="field"><label for="dv-br">Branche</label><input class="inp" id="dv-br" list="dv-brl" data-df="branche" value="${h(d.branche||'')}" placeholder="Ex. Mathématiques"><datalist id="dv-brl">${br.map(b=>`<option value="${h(b)}">`).join('')}</datalist></div>
-   <div class="field"><label for="dv-ti">Titre (facultatif)</label><input class="inp" id="dv-ti" data-df="titre" value="${h(d.titre||'')}" placeholder="Ex. Les fractions"></div></div>
+  <div class="card pad stack"><datalist id="dv-brl">${br.map(b=>`<option value="${h(b)}">`).join('')}</datalist>
+   <p class="muted small" style="margin:0">Le devoir résume la semaine : posez des questions dans <b>plusieurs branches</b>. Chaque question indique sa branche ; sur la copie, elles sont regroupées par branche.</p>
+   <div class="field"><label for="dv-ti">Titre</label><input class="inp" id="dv-ti" data-df="titre" value="${h(d.titre||'')}" placeholder="Résumé de la semaine"></div>
    <div class="field"><label for="dv-co">Consignes</label><textarea class="inp" id="dv-co" rows="3" data-df="consignes">${h(d.consignes||'')}</textarea></div>
-   ${!(d.q||[]).length?`<button type="button" class="btn grad sm" data-act="dv-modele" style="align-self:flex-start">Commencer avec le modèle de l’école</button><small class="muted">Le modèle prépare 3 questions à choix multiples et 2 questions à réponse écrite. Vous écrivez ensuite le texte.</small>`:''}</div>
+   ${!(d.q||[]).length?`<button type="button" class="btn grad sm" data-act="dv-modele" style="align-self:flex-start">Commencer avec le modèle de l’école</button><small class="muted">Le modèle prépare, pour les branches principales de la classe, une question à choix multiples et une question à réponse écrite. Vous écrivez ensuite le texte et pouvez changer les branches.</small>`:''}</div>
   ${(d.q||[]).map(qx).join('')}
   <div class="card pad stack"><div class="btns"><button type="button" class="btn sm" data-act="dv-addq" data-v="qcm">+ Question à choix multiples</button><button type="button" class="btn sm" data-act="dv-addq" data-v="txt">+ Question à réponse écrite</button></div>
    <div class="pm-tot num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · total ${fmt(dvTot(d))} points</div>
@@ -3583,26 +3592,27 @@ const A={
   'dv-sem':b=>{S.dvSem=b.dataset.v;render()},
   'dva-sem':b=>{S.dvSem=b.dataset.v;render()},
   'dva-open':b=>{S.cid=b.dataset.id;S.view='classe';S.ctab='dev';render();scrollTo(0,0)},
-  'dv-new':()=>{S.dv={id:'',classeId:S.cid,semaine:dvSem(),branche:'',titre:'',consignes:DV_CONS,q:[]};S.view='devoir';render();scrollTo(0,0)},
-  'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.q=S.dv.q||[];S.view='devoir';render();scrollTo(0,0)},
+  'dv-new':()=>{S.dv={id:'',classeId:S.cid,semaine:dvSem(),titre:'Résumé de la semaine',consignes:DV_CONS,q:[]};S.view='devoir';render();scrollTo(0,0)},
+  'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.q=S.dv.q||[];S.dv.q.forEach(q=>{if(!q.br)q.br=d.branche||''});S.view='devoir';render();scrollTo(0,0)},
   'dv-prev':b=>dvPrev(b.dataset.id),
-  'dv-modele':()=>{S.dv.q=[dvQ('qcm'),dvQ('qcm'),dvQ('qcm'),dvQ('txt'),dvQ('txt')];if(!S.dv.consignes)S.dv.consignes=DV_CONS;render()},
-  'dv-addq':b=>{S.dv.q.push(dvQ(b.dataset.v));render();setTimeout(()=>{const l=[...document.querySelectorAll('.dvq-e')].pop();l?.scrollIntoView({block:'center'});l?.querySelector('textarea')?.focus()},60)},
+  'dv-modele':()=>{const A=dvBranches(S.dv.classeId);const B=[];for(const re of [/^fran/i,/^math/i,/scien|zoolog/i,/civique|histoire|géograph/i])(x=>x&&!B.includes(x)&&B.push(x))(A.find(n=>re.test(n)));for(const n of A)if(B.length<4&&!B.includes(n))B.push(n);S.dv.q=B.length?B.flatMap(b=>[dvQ('qcm',b),dvQ('txt',b)]):[dvQ('qcm'),dvQ('qcm'),dvQ('txt'),dvQ('txt')];if(!S.dv.consignes)S.dv.consignes=DV_CONS;render()},
+  'dv-addq':b=>{const L=S.dv.q;S.dv.q.push(dvQ(b.dataset.v,L.length?L[L.length-1].br||'':''));render();setTimeout(()=>{const l=[...document.querySelectorAll('.dvq-e')].pop();l?.scrollIntoView({block:'center'});l?.querySelector('textarea')?.focus()},60)},
   'dv-delq':b=>{S.dv.q.splice(+b.dataset.i,1);render()},
   'dv-up':b=>{const i=+b.dataset.i;if(i>0){const q=S.dv.q;[q[i-1],q[i]]=[q[i],q[i-1]];render()}},
   'dv-addch':b=>{const q=S.dv.q[+b.dataset.i];if(q&&q.ch.length<6){q.ch.push('');render()}},
   'dv-delch':b=>{const q=S.dv.q[+b.dataset.i],j=+b.dataset.j;if(q&&q.ch.length>2){q.ch.splice(j,1);if(q.bon===j)q.bon=-1;else if(q.bon>j)q.bon--;render()}},
   'dv-bon':b=>{const q=S.dv.q[+b.dataset.i];if(q){q.bon=q.bon===+b.dataset.j?-1:+b.dataset.j;render()}},
   'dv-lig':b=>{const q=S.dv.q[+b.dataset.i];if(q){q.lig=+b.dataset.v;render()}},
-  'dv-save':async()=>{const d=S.dv;if(!d)return;if(!(d.branche||'').trim()){toast('Écrivez la branche du devoir.');document.getElementById('dv-br')?.focus();return}
-    const q=(d.q||[]).filter(x=>(x.q||'').trim());if(!q.length){toast('Écrivez au moins une question.');return}
+  'dv-save':async()=>{const d=S.dv;if(!d)return;let q=(d.q||[]).filter(x=>(x.q||'').trim());if(!q.length){toast('Écrivez au moins une question.');return}
+    const nb=(d.q||[]).findIndex(x=>(x.q||'').trim()&&!(x.br||'').trim());if(nb>=0){toast(`Écrivez la branche de la question ${nb+1}.`);document.querySelector(`[data-dq="${nb}"][data-df="br"]`)?.focus();return}
+    q=dvGroups({q}).flatMap(g=>g.q);
     if(q.some(x=>x.t==='qcm'&&x.ch.filter(c=>(c||'').trim()).length<2)){toast('Chaque question à choix multiples doit avoir au moins 2 réponses.');return}
     const id=d.id||'dv-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.devoirs[id]||{};
-    const doc={classeId:d.classeId,semaine:d.semaine,branche:d.branche.trim(),titre:(d.titre||'').trim(),consignes:(d.consignes||'').trim(),q:q.map(x=>x.t==='qcm'?{t:'qcm',q:x.q.trim(),ch:x.ch.map(c=>(c||'').trim()).filter(Boolean),bon:x.bon,pts:+x.pts||0}:{t:'txt',q:x.q.trim(),lig:+x.lig||3,pts:+x.pts||0}),by:old.by||meId(),nom:old.nom||S.inscr[meId()]?.nom||'',at:old.at||new Date().toISOString(),maj:new Date().toISOString()};
+    const doc={classeId:d.classeId,semaine:d.semaine,branche:dvBrs({q}).join(', '),titre:(d.titre||'').trim()||'Résumé de la semaine',consignes:(d.consignes||'').trim(),q:q.map(x=>x.t==='qcm'?{t:'qcm',br:x.br.trim(),q:x.q.trim(),ch:x.ch.map(c=>(c||'').trim()).filter(Boolean),bon:x.bon,pts:+x.pts||0}:{t:'txt',br:x.br.trim(),q:x.q.trim(),lig:+x.lig||3,pts:+x.pts||0}),by:old.by||meId(),nom:old.nom||S.inscr[meId()]?.nom||'',at:old.at||new Date().toISOString(),maj:new Date().toISOString()};
     await put('devoirs',id,doc);S.dv=null;S.view='classe';S.ctab='dev';S.dvSem=doc.semaine;render();scrollTo(0,0);toast('Devoir enregistré.');setTimeout(()=>dvPrev(id),250)},
   'dv-del':async b=>{if(!arm(b))return;const id=S.dv?.id;if(id)await del('devoirs',id);S.dv=null;S.view='classe';S.ctab='dev';render();toast('Devoir supprimé.')},
   'dv-pdf':b=>{if(!isDir())return;const sem=dvSem();const v=b.dataset.v;let groups=[],name='';
-    if(v==='one'){const d=S.devoirs[b.dataset.id];if(!d)return;groups=[{cls:S.classes[d.classeId],eleves:elevesOf(d.classeId),devs:[{id:b.dataset.id,...d}]}];name=`Devoir ${d.branche||''} - ${S.classes[d.classeId]?.nom||''}`}
+    if(v==='one'){const d=S.devoirs[b.dataset.id];if(!d)return;groups=[{cls:S.classes[d.classeId],eleves:elevesOf(d.classeId),devs:[{id:b.dataset.id,...d}]}];name=`Devoir hebdomadaire - ${S.classes[d.classeId]?.nom||''}`}
     else if(v==='cls'){const c=b.dataset.id||S.cid;groups=[{cls:S.classes[c],eleves:elevesOf(c),devs:dvOf(c,sem)}];name=`Devoirs - ${S.classes[c]?.nom||''} - semaine du ${dfr(sem).replace(/\//g,'-')}`}
     else{groups=classIds().map(c=>({cls:S.classes[c],eleves:elevesOf(c),devs:dvOf(c,sem)})).filter(g=>g.devs.length);name=`Devoirs - ${ECO().nom} - semaine du ${dfr(sem).replace(/\//g,'-')}`}
     dvPDF(groups,name+'.pdf',`*${ECO().nom} · Devoirs hebdomadaires*\nSemaine ${semLbl(sem)}`)},
@@ -3656,7 +3666,7 @@ const A={
   ecole:()=>formEcole(),
   avue:b=>{S.aVue=b.dataset.v;render()},
   amois:b=>{S.aMois=b.dataset.v;render()},
-  'new-reg':()=>formRegistre(),
+  'new-reg':()=>{if(isDir())formRegistre()},
   pa:b=>{if(!canEditAppel(S.cid,b.dataset.d)){toast(b.dataset.d===today()?'L’appel du jour est clôturé.':'L’appel se fait seulement le jour même.');return}marquer(S.cid,b.dataset.d,[b.dataset.e])},
   'close-appel':async()=>{const r=appelResume(S.cid,today());if(r.reste){toast('Marquez tous les élèves avant de clôturer.');return}await closeAppel(S.cid,today(),false);toast('Appel clôturé. La direction est informée.')},
   'close-cotes':async()=>{if(!cotesDuJour(S.cid,today()).length){toast('Aucune cote saisie aujourd’hui.');return}await closeCotes(S.cid,today(),false);render();toast('Cotes du jour clôturées et envoyées à la direction.')},
@@ -3719,7 +3729,7 @@ const A={
   spmenu:b=>spSheet('',b.dataset.v),
   'sp-off':async b=>{const cid=b.dataset.cid,d=b.dataset.d;closeSheet();if(cid){if(spEcole(d)&&!S.appel[aid(cid,d)]?.sp){toast('Cette journée est barrée pour toute l’école par la direction.');return}await setSpClasse(cid,d,null)}else await setSpEcole(d,null);toast('Jour normal rétabli');render()},
   rjday:b=>{S.rjDate=b.dataset.v;render();scrollTo(0,0)},
-  rjopen:b=>{S.rjDate=b.dataset.v||today();S.view='regjour';render();scrollTo(0,0)},
+  rjopen:b=>{if(!isDir())return;S.rjDate=b.dataset.v||today();S.view='regjour';render();scrollTo(0,0)},
   pmois:b=>{S.pMois=b.dataset.v;render()},
   ppresent:b=>presSheet(b.dataset.id),
   punsign:async b=>{if(!arm(b))return;await del('presence',pid2(S.pDate||today(),b.dataset.id));toast('Présence annulée')},

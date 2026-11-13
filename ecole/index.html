@@ -451,35 +451,49 @@ table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;bo
 .cert-b{display:inline-block;margin-top:5px;border:0;background:var(--soft);color:var(--ink);font:inherit;font-size:11.5px;font-weight:700;padding:4px 10px;border-radius:99px;cursor:pointer}
 .cert-prev{width:100%;overflow:hidden;border-radius:12px;box-shadow:var(--shadow-s);background:#fff}
 .cert-zoom{width:1123px;height:794px;transform-origin:0 0}
-.cert{width:1123px;height:794px;box-sizing:border-box;padding:22px;background:#fbf7ec;color:#1b2440;font-family:Georgia,"Times New Roman",serif}
-.cert-in{position:relative;box-sizing:border-box;height:100%;border:6px solid #1f2d5c;outline:2px solid #c9a24a;outline-offset:-14px;padding:34px 60px 28px;display:flex;flex-direction:column;align-items:center;text-align:center;background:#fffdf6}
-.cert-top{display:flex;align-items:center;justify-content:space-between;gap:24px;width:100%}
-.cert-top img{width:92px;height:92px;object-fit:contain;border-radius:50%}
-.cert-top div{flex:1}
-.cert-top b{display:block;font-size:30px;letter-spacing:.06em;text-transform:uppercase;color:#1f2d5c}
-.cert-top span{display:block;font-size:15px;color:#4a5578;margin-top:3px}
-.cert h1{margin:18px 0 0;font-size:54px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:#b0862f;line-height:1.05}
-.cert-k{margin:10px 0 0;font-size:19px;font-style:italic;color:#4a5578}
-.cert-nm{display:flex;align-items:center;justify-content:center;gap:18px;margin-top:8px;padding:0 30px 8px;border-bottom:2px solid #c9a24a;min-width:60%}
-.cert-nm img{width:74px;height:74px;border-radius:50%;object-fit:cover;border:3px solid #c9a24a}
-.cert-nm b{font-size:40px;font-weight:700;color:#1f2d5c;line-height:1.1}
-.cert-tx{margin:14px 0 0;font-size:19.5px;line-height:1.5;color:#1b2440}
-.cert-mid{display:flex;align-items:center;gap:26px;margin-top:14px;text-align:left;max-width:900px}
-.cert-pct{flex:none;width:128px;height:128px;border-radius:50%;background:#1f2d5c;color:#fff;border:5px solid #c9a24a;display:flex;flex-direction:column;align-items:center;justify-content:center}
-.cert-pct b{font-size:33px;line-height:1;font-family:Georgia,serif}
-.cert-pct span{font-size:13px;margin-top:5px;color:#e9d9a8}
-.cert-mid p{margin:0;font-size:17.5px;line-height:1.5;color:#2a3352}
-.cert-mid p b{color:#b0862f;font-size:20px}
-.cert-ft{margin-top:auto;width:100%;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;font-size:16px;color:#2a3352}
-.cert-ft>div{flex:1}
-.cert-ft>div:first-child{text-align:left}
-.cert-sc{display:flex;justify-content:center;color:#1f2d5c}
-.cert-sc .sceau{position:static;width:104px;height:104px;opacity:.85;transform:rotate(-8deg);display:block}
+.cert{position:relative;overflow:hidden;width:1123px;height:794px;box-sizing:border-box;background:#fff;color:#22252e;font-family:'Outfit',system-ui,sans-serif}
+.cert .cs{position:absolute;display:block;border-radius:64px}
+.cert .s1{right:-130px;top:-250px;width:520px;height:520px;transform:rotate(45deg);background:linear-gradient(135deg,var(--cc),var(--cb));opacity:.55}
+.cert .s2{right:60px;top:-330px;width:520px;height:520px;transform:rotate(45deg);background:linear-gradient(135deg,var(--cb),var(--ca));opacity:.28}
+.cert .s3{right:-260px;top:-150px;width:480px;height:480px;transform:rotate(45deg);background:linear-gradient(135deg,var(--cb),var(--ca));opacity:.85}
+.cert .s4{left:-300px;bottom:-330px;width:480px;height:480px;transform:rotate(45deg);background:linear-gradient(135deg,var(--ca),var(--cb));opacity:.92}
+.cert .s5{left:-390px;bottom:-200px;width:460px;height:460px;transform:rotate(45deg);background:linear-gradient(135deg,var(--cb),var(--cc));opacity:.5}
+.cert .s6{left:0;top:0;width:330px;height:794px;border-radius:0;background:linear-gradient(90deg,var(--cc),rgba(255,255,255,0));opacity:.22}
+.cert-in{position:relative;box-sizing:border-box;height:100%;padding:58px 110px 54px 128px;display:flex;flex-direction:column;text-align:left}
+.cert-top{display:flex;align-items:center;gap:16px}
+.cert-top img{width:74px;height:74px;object-fit:contain;border-radius:50%;background:#fff}
+.cert-top b{display:block;font-size:23px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;color:var(--ca)}
+.cert-top span{display:block;font-size:14px;color:#5b5f6b;margin-top:2px}
+.cert-row{display:flex;align-items:flex-start;justify-content:space-between;gap:30px;margin-top:34px}
+.cert-l{min-width:0}
+.cert h1{margin:0;font-family:'Outfit',system-ui,sans-serif;font-size:86px;font-weight:800;letter-spacing:-.01em;text-transform:none;line-height:.95;color:var(--cb)}
+.cert-sub{margin:10px 0 0;font-size:22px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#22252e}
+.cert-k{margin:4px 0 0;font-size:15px;letter-spacing:.08em;text-transform:uppercase;color:#5b5f6b}
+.cert-nm{display:flex;align-items:center;gap:16px;margin-top:26px}
+.cert-nm img{width:70px;height:70px;border-radius:50%;object-fit:cover;border:3px solid var(--cb)}
+.cert-nm b{font-size:42px;font-weight:800;line-height:1.08;color:var(--cb)}
+.cert-med{position:relative;flex:none;width:190px;height:240px;margin:6px 150px 0 0}
+.cert-pct{position:relative;z-index:2;width:190px;height:190px;border-radius:50%;box-sizing:border-box;background:#fff;border:10px solid var(--cb);box-shadow:0 0 0 6px #fff,0 0 0 9px var(--cc);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 14px}
+.cert-pct small{font-size:12.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--ca);line-height:1.15}
+.cert-pct b{font-size:40px;font-weight:800;line-height:1.1;color:var(--cb);margin:4px 0 2px}
+.cert-pct span{font-size:12.5px;font-weight:700;color:#5b5f6b}
+.cert-med .rb{position:absolute;z-index:1;top:150px;width:46px;height:92px;background:linear-gradient(180deg,var(--cb),var(--cc))}
+.cert-med .r1{left:44px;transform:rotate(18deg)}
+.cert-med .r2{right:44px;transform:rotate(-18deg)}
+.cert-tx{margin:30px 0 0;font-size:18.5px;line-height:1.35;color:#22252e;max-width:800px}
+.cert-p{margin:8px 0 0;font-size:16px;line-height:1.5;color:#4a4e59;max-width:800px}
+.cert-p b{color:var(--cb)}
+.cert-ft{margin-top:auto;display:flex;align-items:flex-end;justify-content:space-between;gap:20px;padding-left:150px}
+.cert-dt b{display:block;font-size:16px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;padding-bottom:7px;border-bottom:1.5px solid #22252e;min-width:210px}
+.cert-dt span{display:block;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#5b5f6b;margin-top:6px}
+.cert-sc{color:var(--ca)}
+.cert-sc .sceau{position:static;width:96px;height:96px;opacity:.8;transform:rotate(-8deg);display:block;color:var(--ca);margin:0}
 .cert-sc .sceau svg{width:100%;height:100%}
-.cert-sg{text-align:center!important;font-style:italic}
-.cert-sg img{display:block;height:54px;max-width:220px;object-fit:contain;margin:2px auto 0}
+.cert-sg{text-align:center;min-width:240px}
+.cert-sg img{display:block;height:56px;max-width:220px;object-fit:contain;margin:0 auto}
 .cert-sg i{display:block;height:50px}
-.cert-sg b{display:block;font-style:normal;font-size:17px;color:#1f2d5c;border-top:1px solid #1f2d5c;padding-top:4px;margin:0 30px}
+.cert-sg b{display:block;font-size:16px;font-weight:800;border-top:1.5px solid #22252e;padding-top:7px}
+.cert-sg span{display:block;font-size:12.5px;letter-spacing:.08em;text-transform:uppercase;color:#5b5f6b;margin-top:4px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -2320,14 +2334,20 @@ function certData(eid,key,scope){const e=S.eleves[eid];if(!e)return null;const c
  return{e,cid,cls:S.classes[cid],r,pd,F,ec,cs,nb,scope,key}}
 function certPaper(eid,key,scope){const d=certData(eid,key,scope);if(!d)return '';const{e,cls,r,pd,F,ec,cs,nb}=d;const E=ECO();
  const laur=F?'lauréate':'lauréat';const ou=scope==='ecole'?'de l’école':'de sa classe';const td=today();const dd=D(td);
- return `<div class="cert"><div class="cert-in">
-  <div class="cert-top"><img src="${eLogo()}" alt=""><div><b>${h(E.nom)}</b><span>${h([E.commune||ec.commune,E.ville||ec.ville].filter(Boolean).join(' · '))}${E.devise?' · '+h(E.devise):''}</span><span>Année scolaire ${ANNEE.replace('–',' - ')}</span></div><img src="${eLogo()}" alt=""></div>
-  <h1>Certificat de mérite</h1><p class="cert-k">Ce certificat est décerné à</p>
-  <div class="cert-nm">${e.photo?`<img src="${h(e.photo)}" alt="">`:''}<b>${h(nomComplet(e))}</b></div>
-  <p class="cert-tx">élève de la <b>${h(cls?.nom||'')}</b>, ${laur} ${ou} pour <b>${h(certPer(key))}</b>,<br>avec <b>${fmt(r.tot)} points sur ${fmt(pd.MT)}</b>${scope==='ecole'?`, meilleur résultat parmi les ${nb} élèves classés de l’école.`:`, ${F?'première':'premier'} sur ${nb} élèves classés.`}</p>
-  <div class="cert-mid"><div class="cert-pct"><b>${pctf(r.pct)}</b><span>des points</span></div><p><b>Félicitations !</b> Chers parents, votre enfant est ${F?'la lauréate':'le lauréat'} ${ou} pour ${h(certPer(key))}. La direction et le corps enseignant ${F?'la':'le'} félicitent pour son travail, sa discipline et sa persévérance, et l’encouragent à continuer ainsi.</p></div>
-  <div class="cert-ft"><div>Fait à ${h(E.ville||ec.ville||'Kinshasa')}, le ${dd.getUTCDate()===1?'1er':dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}</div><div class="cert-sc">${sceau()}</div><div class="cert-sg">Le ${h(chefLbl().toLowerCase())}${cs?.img?`<img src="${h(cs.img)}" alt="">`:'<i></i>'}<b>${h(ec.chef||cs?.nom||E.directeur||'')}</b></div></div>
- </div></div>`}
+ const cols=isCLR()?['#5f1b05','#c2481a','#f29355']:((E.couleur||'').match(/#[0-9a-f]{6}/gi)||['#0f1a3d','#394c89','#637ac6']);const [ca,cb,cc]=[cols[0],cols[1]||cols[0],cols[2]||cols[1]||cols[0]];
+ return `<div class="cert" style="--ca:${ca};--cb:${cb};--cc:${cc}">
+  <i class="cs s1"></i><i class="cs s2"></i><i class="cs s3"></i><i class="cs s4"></i><i class="cs s5"></i><i class="cs s6"></i>
+  <div class="cert-in">
+   <div class="cert-top"><img src="${eLogo()}" alt=""><div><b>${h(E.nom)}</b><span>${h([E.commune||ec.commune,E.ville||ec.ville].filter(Boolean).join(' · '))} · Année scolaire ${ANNEE.replace('–',' - ')}</span></div></div>
+   <div class="cert-row"><div class="cert-l">
+     <h1>Certificat</h1><p class="cert-sub">de mérite</p><p class="cert-k">Ce certificat est décerné à</p>
+     <div class="cert-nm">${e.photo?`<img src="${h(e.photo)}" alt="">`:''}<b>${h(nomComplet(e))}</b></div>
+    </div>
+    <div class="cert-med"><div class="cert-pct"><small>${scope==='ecole'?'Lauréat'+(F?'e':'')+' de l’école':(F?'1re':'1er')+' de la classe'}</small><b>${pctf(r.pct)}</b><span>${h(keyName(key))}</span></div><i class="rb r1"></i><i class="rb r2"></i></div></div>
+   <p class="cert-tx"><b>Élève de la ${h(cls?.nom||'')}, ${laur} ${ou} pour ${h(certPer(key))}.</b></p>
+   <p class="cert-p">Avec ${fmt(r.tot)} points sur ${fmt(pd.MT)}, soit ${pctf(r.pct)}, ${scope==='ecole'?`${F?'elle':'il'} obtient le meilleur résultat parmi les ${nb} élèves classés de l’école`:`${F?'elle':'il'} est ${F?'première':'premier'} sur ${nb} élèves classés`}. <b>Félicitations !</b> Chers parents, votre enfant est ${F?'la lauréate':'le lauréat'} ${ou} pour ${h(certPer(key))}. La direction et le corps enseignant ${F?'la':'le'} félicitent pour son travail, sa discipline et sa persévérance, et l’encouragent à continuer ainsi.</p>
+   <div class="cert-ft"><div class="cert-dt"><b>${dd.getUTCDate()===1?'1er':dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}</b><span>Fait à ${h(E.ville||ec.ville||'Kinshasa')}</span></div><div class="cert-sc">${sceau()}</div><div class="cert-sg">${cs?.img?`<img src="${h(cs.img)}" alt="">`:'<i></i>'}<b>${h(ec.chef||cs?.nom||E.directeur||'')}</b><span>Le ${h(chefLbl().toLowerCase())}</span></div></div>
+  </div></div>`}
 function certSheet(eid,key,scope){const d=certData(eid,key,scope);if(!d){toast('Cet élève n’a pas encore de points pour cette période.');return}
  openSheet('Certificat de mérite',`<div class="stack"><p class="muted small" style="margin:0">${h(nomComplet(d.e))} · ${h(d.cls?.nom||'')} · ${h(keyName(key))} · ${pctf(d.r.pct)}</p>
   <div class="cert-prev"><div class="cert-zoom">${certPaper(eid,key,scope)}</div></div>

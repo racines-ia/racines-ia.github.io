@@ -44,28 +44,25 @@ Deno.serve(async (req) => {
     .filter((m: { parts: { text: string }[] }) => m.parts[0].text);
   if (!msgs.length || msgs[msgs.length - 1].role !== "user") return json({ error: "Pose ta question." }, 400);
 
-  // Catalogue public en direct
+  // Loyer en direct (plus de catalogue de produits)
   const url = Deno.env.get("SUPABASE_URL")!, anon = Deno.env.get("SUPABASE_ANON_KEY")!;
   const hr = await fetch(url + "/rest/v1/rpc/mk_home", { method: "POST", headers: { apikey: anon, Authorization: "Bearer " + anon, "Content-Type": "application/json" }, body: "{}" });
   const home = hr.ok ? await hr.json() : { products: [], loyer: 15000 };
-  const ps = (home.products ?? []) as Record<string, unknown>[];
-  const ids = new Set(ps.map((p) => String(p.id)));
-  const catalogue = ps.slice(0, 80).map((p) =>
-    `- id=${p.id} | ${p.titre} | ${money(Number(p.prix_actuel), String(p.devise))}${p.promo ? ` (promo, prix normal ${money(Number(p.prix), String(p.devise))}${p.promo_places != null ? `, ${p.promo_places} places` : ""})` : ""} | catégorie : ${p.categorie || "non précisée"} | boutique : ${p.boutique} | ${p.ventes} vente(s)`).join("\n") || "(aucun produit en ligne pour le moment)";
+  const ids = new Set<string>(); // plus de catalogue global : chaque boutique partage ses propres liens
 
   const system = `Tu es « Cuervo IA », l'assistant de cuervo.co, une place de marché de produits digitaux en République démocratique du Congo (formations, fichiers, modèles, applications, designs…).
 Réponds en français simple et chaleureux, en 2 à 5 phrases courtes. Tutoie le visiteur.
-Tu aides à : trouver le bon produit selon le besoin et le budget, comparer les prix, repérer les promos et les produits les moins chers, comprendre comment acheter, comment ouvrir une boutique et comment fonctionne le loyer.
-Tu ne parles QUE des produits du catalogue ci-dessous : n'invente jamais un produit, un prix, une note, un avis ni une qualité. Pour juger la qualité, tu peux seulement t'appuyer sur le nombre de ventes et les promos. Si rien ne correspond, dis-le honnêtement.
+Tu aides à comprendre comment acheter, comment ouvrir et gérer une boutique, comment vendre et partager ses produits, et comment fonctionne le loyer.
+cuervo.co n'a PAS de catalogue public : chaque vendeur partage le lien de sa boutique ou de ses produits (WhatsApp, Facebook, TikTok…). Tu ne connais aucun produit : ne cite, ne recommande et n'invente jamais de produit, de prix ou de boutique. Si on te demande un produit, explique qu'il faut ouvrir le lien envoyé par le vendeur, ou lui demander son lien.
 Règles du site :
 - Acheter : ouvrir le produit, toucher « Payer », entrer son nom et son numéro WhatsApp, payer par M-Pesa, Airtel Money ou Orange Money au numéro affiché, puis envoyer la capture. Dès que le paiement est confirmé, le client accède à ses fichiers sur la page de sa commande.
 - L'argent des ventes va directement sur les numéros Mobile Money du vendeur. cuervo.co ne garde aucune somme, sauf le loyer des boutiques.
-- Ouvrir une boutique : toucher « Vendre », créer son compte avec son numéro, ajouter ses numéros Mobile Money (confirmés par l'administrateur) et ses produits.
+- Ouvrir une boutique : toucher « Créer ma boutique », entrer son nom, son numéro, son Gmail et un mot de passe, puis ajouter ses numéros Mobile Money (confirmés par l'administrateur) et ses produits (jusqu'à 10 photos et 4 vidéos par produit). Une page de vente (landing page) est créée pour chaque produit.
+- Un même compte peut avoir plusieurs boutiques (« Mes boutiques » → « Nouvelle boutique »), chacune avec son nom, ses produits et son propre loyer.
+- Mot de passe oublié : « Ouvrir ma boutique » → « Mot de passe oublié ? » : un lien arrive sur le Gmail de la boutique.
 - Loyer : ${money(Number(home.loyer ?? 15000), "CDF")} pour 35 jours. Le vendeur choisit : le payer tout de suite, ou le payer sur sa première vente (cette vente arrive alors chez cuervo.co, qui garde le loyer et reverse le reste au vendeur). La boutique n'est jamais suspendue pour le loyer : après les 35 jours, le loyer redevient dû automatiquement et la vente suivante arrive chez cuervo.co, qui garde le loyer et reverse le reste.
 - Pour une question sur une commande précise, conseille d'écrire au vendeur depuis la page du produit.
-Catalogue actuel :
-${catalogue}
-Réponds uniquement en JSON : {"reponse":"ton texte","produits":["id", ...]} avec au plus 3 identifiants de produits du catalogue que tu recommandes (liste vide si aucun).`;
+Réponds uniquement en JSON : {"reponse":"ton texte","produits":[]}.`;
 
   let text = "";
   for (const m of MODELS) {

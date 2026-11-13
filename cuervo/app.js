@@ -44,13 +44,13 @@ function welcome() {
   var pt = function (n, t, d) { return '<div class="wpt"><span>' + n + '</span><div><b>' + t + '</b><p>' + d + '</p></div></div>'; };
   w.innerHTML = '<div class="win"><div class="wlogo">cuervo<em>.co</em></div>' +
     '<h1>Vends tes produits en ligne, depuis ton téléphone.</h1>' +
-    '<p class="lead">cuervo.co est la place de marché des créateurs du Congo : formations, e-books, modèles, logiciels, services…</p>' +
+    '<p class="lead">Crée ta boutique en ligne pour vendre tes formations, e-books, modèles, logiciels, services… Tes clients ne voient que ta boutique.</p>' +
     '<div class="wpts">' + pt('1', 'Crée ta boutique en 2 minutes', 'Ton nom, ton numéro, ton Gmail : c\'est tout.') +
     pt('2', 'Partage ton lien partout', 'WhatsApp, Facebook, TikTok, Instagram : une page de vente est créée pour chaque produit.') +
     pt('3', 'Reçois l\'argent par Mobile Money', 'M-Pesa, Airtel Money, Orange Money, directement sur ton numéro.') + '</div>' +
     '<div class="wbtns"><button class="btn btn-primary" type="button" data-act="wGo" data-id="register"><span>Créer ma boutique</span></button>' +
     '<button class="btn btn-ghost" type="button" data-act="wGo" data-id="login"><span>Ouvrir ma boutique</span></button>' +
-    '<button class="linkbtn" type="button" data-act="wGo" data-id="">Je veux juste voir les produits</button></div></div>';
+    '<button class="linkbtn" type="button" data-act="wGo" data-id="achats">J\'ai déjà acheté : voir mes achats</button></div></div>';
   document.body.appendChild(w); document.body.classList.add('noscroll');
 }
 
@@ -407,39 +407,25 @@ var ILLU = {
   files: '<svg viewBox="0 0 120 90" fill="none"><path d="M34 8h34l18 18v56H34z" fill="#2A1C12" stroke="#E8430F" stroke-width="3" stroke-linejoin="round"/><path d="M68 8v18h18" stroke="#E8430F" stroke-width="3" stroke-linejoin="round"/><rect x="44" y="40" width="32" height="4" rx="2" fill="#A3B3A7"/><rect x="44" y="50" width="24" height="4" rx="2" fill="#A3B3A7"/><circle cx="88" cy="66" r="16" fill="#FF7A1A"/><path d="M88 58v14M82 66l6 6 6-6" stroke="#FFFFFF" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 function feature(k, t, d) { return '<div class="feat"><div class="fill">' + ILLU[k] + '</div><div><h3>' + t + '</h3><p>' + d + '</p></div></div>'; }
-function homeCats() {
-  var h = S.ctx.home, used = CATS.filter(function (c) { return h.ps.some(function (p) { return p.categorie === c; }); });
-  if (!used.length) return '';
-  return '<div class="pills" style="margin-top:12px">' + [''].concat(used).map(function (c) { return '<button class="pill' + (h.cat === c ? ' on' : '') + '" type="button" data-act="cat" data-id="' + esc(c) + '">' + (c || 'Tout') + '</button>'; }).join('') + '</div>';
-}
-function homeGrid() {
-  var h = S.ctx.home, q = norm(h.q).trim();
-  var list = h.ps.filter(function (p) { return (!h.cat || p.categorie === h.cat) && (!q || norm(p.titre + ' ' + (p.boutique || '') + ' ' + (p.categorie || '')).indexOf(q) >= 0); });
-  return list.length ? '<div class="grid" style="margin-top:16px">' + list.map(card).join('') + '</div>' : '<div class="empty" style="margin-top:16px">Aucun produit ne correspond à ta recherche.</div>';
-}
-document.addEventListener('input', function (e) { if (e.target.id === 'h-q' && S.ctx.home) { S.ctx.home.q = e.target.value; $('homeGrid').innerHTML = homeGrid(); } });
 async function pageHome(alive) {
   skeleton();
   var r = await sb.rpc('mk_home'); if (!alive()) return;
   if (r.error) throw r.error;
-  var d = r.data || { products: [], loyer: 15000 }, ps = d.products || [];
-  S.ctx.home = { ps: ps, q: '', cat: '' };
-  var top = ps.filter(function (p) { return p.ventes > 0; }).sort(function (a, b) { return b.ventes - a.ventes; }).slice(0, 4);
-  var pr = ps.filter(function (p) { return p.promo; }).sort(function (a, b) { return (1 - b.prix_actuel / b.prix) - (1 - a.prix_actuel / a.prix); })[0];
-  page((pr ? '<a class="promo-hero" href="?p=' + esc(pr.id) + '" data-nav><div><h2>−' + Math.round((1 - pr.prix_actuel / pr.prix) * 100) + ' % sur ' + esc(pr.titre.length > 34 ? pr.titre.slice(0, 32) + '…' : pr.titre) + '</h2><p>Offre limitée · ' + money(pr.prix_actuel, pr.devise) + ' au lieu de ' + money(pr.prix, pr.devise) + '</p><span class="go">' + ico('i-bag', 'width:16px;height:16px') + 'J\'en profite</span></div><div class="pi">' + (safeUrl(pr.image_url) ? '<img src="' + esc(safeUrl(pr.image_url)) + '" alt="">' : '') + '</div></a><div style="height:28px"></div>' : '') + '<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
-    '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp et Facebook. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
-    '<div class="g8" style="margin-top:20px"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><button class="btn btn-ghost" type="button" data-act="toProducts"><span>Voir les produits</span></button></div></div>' +
+  var d = r.data || { loyer: 15000 };
+  /* Pas de catalogue public : chaque vendeur partage le lien de sa boutique et de ses produits */
+  page('<div class="hero2"><div class="kicker">Boutiques en ligne</div><h1>Vends facilement en ligne, encaisse par <span class="gt">Mobile Money</span>.</h1>' +
+    '<p class="lead" style="margin-top:12px">Ouvre ta boutique, publie tes produits et partage leur lien sur WhatsApp, Facebook et TikTok. Tes clients paient, tu confirmes, ils reçoivent leur achat.</p>' +
+    '<div class="g8" style="margin-top:20px">' + (S.vendor ? '<a class="btn btn-primary" href="?v=compte" data-nav><span>Ma boutique</span></a>' :
+      '<button class="btn btn-primary" type="button" data-act="wGo" data-id="register"><span>Créer ma boutique</span></button><button class="btn btn-ghost" type="button" data-act="wGo" data-id="login"><span>Ouvrir ma boutique</span></button>') + '</div></div>' +
     '<div class="sec"><div class="kicker">Comment ça marche</div><h2 style="margin-bottom:16px">Tout ce qu\'il faut pour vendre</h2><div class="g12 stag">' +
     '<a class="keyline" href="?v=aide" data-nav>cuervo.co ne garde aucune somme : tout va sur les numéros Mobile Money du vendeur, sauf le loyer. Voir comment ça marche →</a>' +
     feature('shop', 'Ta boutique en quelques minutes', 'Ton nom, ta photo, tes numéros Mobile Money : ta boutique est prête.') +
-    feature('share', 'Un lien par produit', 'Partage-le sur WhatsApp ou Facebook : le client arrive directement sur ton produit.') +
+    feature('share', 'Ton lien, tes clients', 'Tes clients ne voient que ta boutique et tes produits. Partage ton lien : ils arrivent directement chez toi.') +
     feature('pay', 'Paiement par Mobile Money', 'M-Pesa, Airtel Money ou Orange Money. Le client envoie sa capture, tu confirmes.') +
     feature('files', 'Livraison immédiate', 'Tu colles ton lien de téléchargement : le client y accède dès que tu confirmes son paiement.') +
     '</div></div>' +
-    (top.length ? '<div class="sec"><div class="kicker">Les plus vendus</div><h2 style="margin-bottom:16px">Produits phares</h2><div class="grid stag">' + top.map(card).join('') + '</div></div>' : '') +
-    '<div class="sec" id="produits"><div class="kicker">Catalogue</div><h2 style="margin-bottom:12px">Tous les produits</h2>' +
-    (ps.length ? '<label class="search">' + ico('i-search') + '<input id="h-q" type="search" placeholder="Chercher un produit ou une boutique" autocomplete="off"></label><div id="homeCats">' + homeCats() + '</div><div id="homeGrid">' + homeGrid() + '</div>'
-      : '<div class="empty">Aucun produit en ligne pour l\'instant. Sois le premier à ouvrir ta boutique.</div>') + '</div>' + sellCta(d.loyer));
+    '<div class="sec"><div class="kicker">Clients</div><h2 style="margin-bottom:8px">Tu as déjà acheté ?</h2><p class="lead" style="margin-bottom:16px">Retrouve tes commandes et tes fichiers. Pour acheter, ouvre le lien envoyé par le vendeur.</p><a class="btn btn-ghost" href="?v=achats" data-nav><span>Voir mes achats</span></a></div>' +
+    sellCta(d.loyer));
 }
 
 /* ---------- Cuervo IA ---------- */
@@ -470,8 +456,8 @@ async function iaAsk(text) {
 }
 async function pageIA() {
   setBar(null);
-  page('<div class="ia-head">' + MASCOT + '<h1>Cuervo IA</h1><p class="lead">Ton guide sur cuervo.co : je t\'aide à trouver le bon produit, à comparer les prix et à comprendre comment acheter ou vendre.</p>' +
-    (IA.msgs.length ? '' : '<div class="ia-sugg">' + ['Quels sont les produits les moins chers ?', 'Je veux apprendre à créer une application', 'Quelles sont les promos du moment ?', 'Comment acheter un produit ?', 'Comment ouvrir ma boutique ?'].map(function (q) { return '<button type="button" data-act="iaSugg">' + q + '</button>'; }).join('') + '</div>') +
+  page('<div class="ia-head">' + MASCOT + '<h1>Cuervo IA</h1><p class="lead">Ton guide sur cuervo.co : je t\'aide à comprendre comment acheter, créer ta boutique et vendre tes produits.</p>' +
+    (IA.msgs.length ? '' : '<div class="ia-sugg">' + ['Comment ouvrir ma boutique ?', 'Comment acheter un produit ?', 'Combien coûte le loyer ?', 'Comment partager mes produits ?', 'Puis-je avoir plusieurs boutiques ?'].map(function (q) { return '<button type="button" data-act="iaSugg">' + q + '</button>'; }).join('') + '</div>') +
     '</div><div class="chat" id="chat"></div>' +
     '<form class="ia-bar" id="iaForm"><div class="in"><input id="ia-q" maxlength="600" autocomplete="off" placeholder="Pose ta question à Cuervo IA…"><button type="submit" aria-label="Envoyer">' + ico('i-arrow') + '</button></div></form>');
   iaRender(); iaProducts().catch(function () {});
@@ -709,8 +695,6 @@ var A = {
   explainer: function () { showExplainer(); },
   theme: function () { theme(document.documentElement.dataset.theme === 'light' ? 'dark' : 'light'); },
   navProducts: async function () { if (new URLSearchParams(location.search).toString()) { history.pushState({}, '', location.pathname); await route(); } var el = $('produits'); if (el) el.scrollIntoView(); var i = $('h-q'); if (i) i.focus(); },
-  cat: function (el) { var h = S.ctx.home; if (!h) return; h.cat = el.dataset.id; $('homeCats').innerHTML = homeCats(); $('homeGrid').innerHTML = homeGrid(); },
-  toProducts: function () { var el = $('produits'); if (el) el.scrollIntoView(); },
   copy: function (el) { try { navigator.clipboard.writeText(el.dataset.text).then(function () { toast(el.dataset.msg || 'Lien copié'); }, function () { toast('Copie impossible sur cet appareil'); }); } catch (e) { toast('Copie impossible sur cet appareil'); } },
   pay: function () {
     var p = S.ctx.product, s = S.ctx.shop; if (!p) return;
@@ -771,7 +755,7 @@ var A = {
   wGo: function (el) {
     var w = $('welcome'), id = el.dataset.id; document.body.classList.remove('noscroll');
     if (w) { w.classList.add('out'); setTimeout(function () { w.remove(); }, 400); }
-    if (id) { S.ctx.auth = id; nav('?v=compte'); }
+    if (id === 'achats') nav('?v=achats'); else if (id) { S.ctx.auth = id; nav('?v=compte'); }
   },
   login: async function (el) {
     var tel = waNum($('a-tel').value), pw = $('a-pw').value, err = $('a-err');

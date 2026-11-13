@@ -593,7 +593,7 @@ async function pageProduct(id, alive) {
   var exs = (p.exemples || []).filter(function (e) { return safeUrl(e && e.url); });
   var vids = (p.videos || []).map(videoHtml).filter(Boolean);
   var canPay = (s.ops || []).length > 0 && !d.apercu;
-  var mine = S.vendor && S.vendor.id === p.vendor_id;
+  var mine = myShop(p.vendor_id);
   var sold = '<b>' + (p.ventes || 0) + '</b> vente' + (p.ventes > 1 ? 's' : '') + ' <span class="vues">' + ico('i-eye') + nVues(p.vues) + '</span>';
   countView(p.id, mine);
   document.title = p.titre + ' — ' + s.boutique;
@@ -616,7 +616,7 @@ async function pageProduct(id, alive) {
     '<div class="sec g12"><h2>Partager ce produit</h2>' + shareRow(plink(p.id), p.titre, safeUrl(p.image_url)) + '</div>' +
     (mine ? '' : '<div class="sec"><button class="btn btn-ghost btn-sm rep-btn" type="button" data-act="report" data-id="' + esc(p.id) + '">' + ico('i-flag') + '<span>Signaler ce produit</span></button></div>') +
     (d.autres.length ? '<div class="sec"><h2 style="margin-bottom:16px">Dans la même boutique</h2><div class="grid stag">' + d.autres.map(card).join('') + '</div></div>' : '') +
-    (S.vendor && S.vendor.is_admin ? '<div class="sec"><button class="btn btn-danger btn-sm" type="button" data-act="blockProduct" data-id="' + esc(p.id) + '" data-on="' + (d.bloque ? '0' : '1') + '">' + (d.bloque ? 'Débloquer ce produit' : 'Bloquer ce produit (admin)') + '</button></div>' : ''));
+    (S.admin ? '<div class="sec"><button class="btn btn-danger btn-sm" type="button" data-act="blockProduct" data-id="' + esc(p.id) + '" data-on="' + (d.bloque ? '0' : '1') + '">' + (d.bloque ? 'Débloquer ce produit' : 'Bloquer ce produit (admin)') + '</button></div>' : ''));
   setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
 }
 
@@ -641,7 +641,7 @@ async function pageLanding(id, alive) {
   var d = r.data, p = d.product, s = d.shop; S.ctx = { product: p, shop: s };
   var st = LSTY.some(function (x) { return x[0] === p.landing_style; }) ? p.landing_style : 'orange';
   document.body.setAttribute('data-lt', st);
-  countView(p.id, S.vendor && S.vendor.id === p.vendor_id);
+  countView(p.id, myShop(p.vendor_id));
   document.title = p.titre + ' — ' + s.boutique;
   var canPay = (s.ops || []).length > 0 && !d.apercu, end = p.promo_fin ? new Date(p.promo_fin).getTime() : null;
   var remise = p.promo ? Math.round((1 - p.prix_actuel / p.prix) * 100) : 0;
@@ -746,6 +746,28 @@ var A = {
 
   /* ---------- Compte ---------- */
   authMode: function (el) { S.ctx.auth = el.dataset.id; renderAuth(); },
+  shopSw: async function (el) {
+    var id = el.dataset.id; if (!S.vendor || id === S.vendor.id) return;
+    try { localStorage.setItem('cv_shop', id); } catch (e) {}
+    S.vendor = S.shops.filter(function (x) { return x.id === id; })[0] || S.vendor; S.tab = 'commandes';
+    header(); skeleton(); await loadDash(); renderDash(); window.scrollTo({ top: 0, behavior: 'instant' }); toast('Boutique : ' + S.vendor.boutique);
+  },
+  shopNew: function () {
+    sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Nouvelle boutique</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
+      '<p class="lead">Avec le même compte, tu peux avoir autant de boutiques que tu veux, chacune avec son nom, ses produits, ses photos et son lien.</p>' +
+      '<label>Nom de la nouvelle boutique<input id="n-boutique" placeholder="Ex. Grâce Mode"></label>' +
+      '<p class="note">Tes informations (nom, numéros, Gmail, Mobile Money) sont reprises. Tu pourras les changer dans l\'onglet Boutique. Chaque boutique a son propre loyer de ' + money((S.settings || {}).loyer || 15000, 'CDF') + ' pour 35 jours, payé tout de suite ou sur sa première vente.</p>' +
+      '<div class="msg-err hide" id="n-err"></div><button class="btn btn-primary" type="button" data-act="shopAdd"><span>Créer cette boutique</span></button></div>');
+  },
+  shopAdd: async function (el) {
+    var n = $('n-boutique').value.trim(), err = $('n-err');
+    if (n.length < 2) { err.textContent = 'Donne un nom à ta boutique.'; err.classList.remove('hide'); return; }
+    busy(el, true); var r = await sb.rpc('mk_shop_add', { p_boutique: n }); busy(el, false);
+    if (r.error) { err.textContent = errMsg(r.error); err.classList.remove('hide'); return; }
+    try { localStorage.setItem('cv_shop', r.data.id); } catch (e) {}
+    closeSheet(); await loadMe(); header(); S.tab = 'boutique'; await loadDash(); renderDash(); window.scrollTo({ top: 0, behavior: 'instant' });
+    toast('Boutique « ' + n + ' » créée');
+  },
   wGo: function (el) {
     var w = $('welcome'), id = el.dataset.id; document.body.classList.remove('noscroll');
     if (w) { w.classList.add('out'); setTimeout(function () { w.remove(); }, 400); }
@@ -831,7 +853,7 @@ var A = {
       '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + pw + '">Copier</button>' +
       (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, voici ton nouveau mot de passe cuervo.co : ' + pw + '\nConnecte-toi avec ton numéro, puis change-le dans Ma boutique → Boutique.') + '"><span>Envoyer au vendeur sur WhatsApp</span></a>' : '') + '</div>');
   },
-  logout: async function () { await sb.auth.signOut(); S.user = null; S.vendor = null; header(); nav('./'); },
+  logout: async function () { await sb.auth.signOut(); S.user = null; S.vendor = null; S.shops = []; S.admin = false; try { localStorage.removeItem('cv_shop'); } catch (e) {} header(); nav('./'); },
   tab: function (el) { S.tab = el.dataset.id; armed = ''; renderDash(); },
   atab: function (el) { S.atab = el.dataset.id; renderAdmin(); },
 
@@ -907,7 +929,7 @@ var A = {
     var u = safeUrl($('e-furl').value), n = $('e-fnom').value.trim();
     if (!u) return toast('Colle un lien complet qui commence par https://');
     busy(el, true);
-    try { if (!E.id) await edSave(); var r = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: n || 'Lien de téléchargement', url: u, kind: 'lien' }); if (r.error) throw r.error; edRead(); await edLoadFiles(); edRender(); toast('Lien ajouté'); }
+    try { if (!E.id) await edSave(); var r = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.vendor.id, nom: n || 'Lien de téléchargement', url: u, kind: 'lien' }); if (r.error) throw r.error; edRead(); await edLoadFiles(); edRender(); toast('Lien ajouté'); }
     catch (e) { toast(errMsg(e)); }
     busy(el, false);
   },
@@ -941,14 +963,14 @@ var A = {
     var em = ($('s-email') ? g('s-email') : (S.vendor.email || '')).toLowerCase();
     if (em && !/^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)) return toast('Adresse e-mail invalide');
     var r = await sb.from('mk_vendors').update({ email: em || null, reseaux: rs, boutique: g('s-boutique'), bio: g('s-bio'), tel: g('s-tel'), whatsapp: g('s-wa'), prenom: g('s-prenom'), nom: g('s-nom'), postnom: g('s-postnom'),
-      mm_nom: g('s-mmnom'), mpesa: g('s-mpesa'), airtel: g('s-airtel'), orange: g('s-orange') }).eq('id', S.user.id);
+      mm_nom: g('s-mmnom'), mpesa: g('s-mpesa'), airtel: g('s-airtel'), orange: g('s-orange') }).eq('id', S.vendor.id);
     busy(el, false);
     if (r.error) return toast(errMsg(r.error));
     await loadMe(); renderDash(true); toast('Boutique enregistrée');
   },
   saveMode: async function (el) {
     var md = document.querySelector('input[name=l-mode]:checked'); if (!md) return;
-    busy(el, true); var r = await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.user.id); busy(el, false);
+    busy(el, true); var r = await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.vendor.id); busy(el, false);
     if (r.error) return toast(errMsg(r.error));
     await loadMe(); renderDash(true); toast('Choix enregistré');
   },
@@ -959,7 +981,7 @@ var A = {
     try {
       var path = null;
       if (f) { var b = await toJpeg(f, 1400, 1400, false); path = 's/' + S.user.id + '/' + rnd() + '.jpg'; await upload('mk-captures', path, b, 'image/jpeg', 'Envoi de la capture'); }
-      var r = await sb.rpc('mk_sub_create', { p_op: $('l-op').value, p_ref: ref, p_path: path }); if (r.error) throw r.error;
+      var r = await sb.rpc('mk_sub_create', { p_op: $('l-op').value, p_ref: ref, p_path: path, p_vendor: S.vendor.id }); if (r.error) throw r.error;
       await loadDash(); renderDash(); toast('Paiement envoyé à l\'administrateur');
     } catch (e) { busy(el, false); toast(errMsg(e)); }
   },
@@ -1097,11 +1119,18 @@ async function pagePurchases(alive) {
 /* ---------- Compte vendeur ---------- */
 async function loadMe() {
   var u = (await sb.auth.getSession()).data.session; S.user = u ? u.user : null; S.vendor = null;
-  if (S.user) { var r = await sb.from('mk_vendors').select('*').eq('id', S.user.id).maybeSingle(); S.vendor = r.data || null; }
+  S.shops = []; S.admin = false;
+  if (S.user) {
+    var r = await sb.from('mk_vendors').select('*').eq('owner_id', S.user.id).order('created_at', { ascending: true });
+    S.shops = r.data || []; S.admin = S.shops.some(function (x) { return x.is_admin; });
+    var want = ''; try { want = localStorage.getItem('cv_shop') || ''; } catch (e) {}
+    S.vendor = S.shops.filter(function (x) { return x.id === want; })[0] || S.shops.filter(function (x) { return x.id === S.user.id; })[0] || S.shops[0] || null;
+  }
 }
+async function myShop(id) { return (S.shops || []).some(function (x) { return x.id === id; }); }
 async function loadSettings() { var r = await sb.from('mk_settings').select('*').eq('id', 1).maybeSingle(); S.settings = r.data || { loyer: 15000 }; }
 async function loadDash() {
-  var uid = S.user.id, rs = await Promise.all([
+  var uid = S.vendor.id, rs = await Promise.all([
     sb.from('mk_orders').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(1000),
     sb.from('mk_products').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }),
     sb.from('mk_subs').select('*').eq('vendor_id', uid).order('created_at', { ascending: false }).limit(12),
@@ -1196,17 +1225,23 @@ async function pushCheck() {
   try { var reg = await navigator.serviceWorker.getRegistration('./'); var sub = reg && await reg.pushManager.getSubscription(); S.pushOn = !!sub; if (sub) savePush(sub); } catch (e) { S.pushOn = false; }
 }
 function savePush(sub) { var j = sub.toJSON(); return sb.rpc('mk_push_save', { p_endpoint: j.endpoint, p_p256dh: j.keys.p256dh, p_auth: j.keys.auth }); }
+function shopSwitch() {
+  var l = S.shops || [];
+  return '<div class="shopsw"><div class="shopsw-h"><b>Mes boutiques' + (l.length > 1 ? ' (' + l.length + ')' : '') + '</b><button class="linkbtn" type="button" data-act="shopNew">' + ico('i-plus') + ' Nouvelle boutique</button></div>' +
+    (l.length > 1 ? '<div class="shopsw-l">' + l.map(function (x) { return '<button type="button" class="shopsw-i' + (x.id === S.vendor.id ? ' on' : '') + '" data-act="shopSw" data-id="' + esc(x.id) + '">' + avatar(x) + '<span>' + esc(x.boutique) + '</span></button>'; }).join('') + '</div>' : '') + '</div>';
+}
 function renderDash(keepScroll) {
   var v = S.vendor, st = shopStatus(v), y = window.scrollY;
   var pend = S.orders.filter(function (o) { return o.statut === 'attente'; }).length;
   var tabs = [['commandes', 'Commandes' + (pend ? ' · ' + pend : '')], ['produits', 'Produits'], ['boutique', 'Boutique'], ['loyer', 'Loyer']];
   var body = { commandes: dashOrders, produits: dashProducts, boutique: dashShop, loyer: dashRent }[S.tab]();
   page('<div class="rowx" style="padding-top:8px">' + avatar(v) + '<div class="grow"><h1 style="font-size:24px">' + esc(v.boutique) + '</h1><p class="note">' + esc(v.prenom + ' ' + v.nom) + '</p></div></div>' +
+    shopSwitch() +
     '<div class="banner ' + st[0] + '"><b>' + st[1] + '</b>' + esc(st[2]) + '</div>' +
     (v.email ? '' : '<div class="banner" style="margin-top:12px"><b>Ajoute ton Gmail</b>Il sert à recevoir un message à chaque vente et à récupérer ton compte si tu oublies ton mot de passe.<button class="btn btn-primary btn-sm" style="margin-top:10px" type="button" data-act="tab" data-id="boutique"><span>Ajouter mon Gmail</span></button></div>') +
     salesCard() + pushCard() +
     '<div class="two" style="margin-top:12px"><a class="btn btn-ghost btn-sm" href="?b=' + esc(v.slug) + '" data-nav>Voir ma boutique</a><button class="btn btn-ghost btn-sm" type="button" data-act="newProduct">' + ico('i-plus') + '<span>Produit</span></button></div>' +
-    (v.is_admin ? '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="?v=admin" data-nav>Espace administrateur ' + ico('i-arrow') + '</a>' : '') +
+    (S.admin ? '<a class="btn btn-ghost btn-sm" style="margin-top:8px" href="?v=admin" data-nav>Espace administrateur ' + ico('i-arrow') + '</a>' : '') +
     '<div class="pills" style="margin-top:24px">' + tabs.map(function (t) { return '<button class="pill' + (t[0] === S.tab ? ' on' : '') + '" type="button" data-act="tab" data-id="' + t[0] + '">' + t[1] + '</button>'; }).join('') + '</div>' +
     '<div style="margin-top:16px">' + body + '</div>' +
     '<button class="btn btn-ghost btn-sm" style="margin-top:40px" type="button" data-act="logout">Me déconnecter</button>');
@@ -1352,7 +1387,7 @@ async function edSave() {
   var row = { landing_style: p.landing_style || 'orange', titre: p.titre, description: p.description, points: p.points, prix: p.prix, devise: p.devise, promo_prix: p.promo_prix, promo_fin: p.promo_fin, promo_places: p.promo_places, image_url: p.image_url || '', cover_url: p.cover_url || '', exemples: p.exemples, videos: p.videos, actif: p.actif, categorie: p.categorie || '', temoignages: p.temoignages || [] };
   var r;
   if (E.id) r = await sb.from('mk_products').update(row).eq('id', E.id).select().single();
-  else { row.vendor_id = S.user.id; r = await sb.from('mk_products').insert(row).select().single(); }
+  else { row.vendor_id = S.vendor.id; r = await sb.from('mk_products').insert(row).select().single(); }
   if (r.error) throw r.error;
   E.id = r.data.id; E.p = JSON.parse(JSON.stringify(r.data));
 }
@@ -1363,7 +1398,7 @@ document.addEventListener('change', async function (e) {
     if (k === 'cover' || k === 'avatar') {
       
       var url = k === 'cover' ? await upImage(f, 1600, 600, true) : await upImage(f, 480, 480, true), patch = {}; patch[k + '_url'] = url;
-      var r = await sb.from('mk_vendors').update(patch).eq('id', S.user.id); if (r.error) throw r.error;
+      var r = await sb.from('mk_vendors').update(patch).eq('id', S.vendor.id); if (r.error) throw r.error;
       S.vendor[k + '_url'] = url; renderDash(true); toast('Photo enregistrée');
     } else if (k === 'pcover') { edRead(); E.p.cover_url = await upImage(f, 1600, 600, true); edRender(); toast('Couverture ajoutée : pense à enregistrer'); }
     else if (k === 'pimg') { edRead(); E.p.image_url = await upImage(f, 800, 800, true); edRender(); toast('Photo ajoutée : pense à enregistrer'); }
@@ -1385,7 +1420,7 @@ document.addEventListener('change', async function (e) {
       if (!E.id) await edSave();
       var safe = f.name.normalize('NFD').replace(/[^\w.\-]+/g, '_').slice(-80) || 'fichier';
       var fu = await upload('mk-files', S.user.id + '/' + rnd() + rnd() + '/' + safe, f, f.type || 'application/octet-stream', 'Envoi de ' + f.name.slice(0, 40));
-      var ins = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.user.id, nom: f.name.slice(0, 150), url: fu, kind: 'fichier' }); if (ins.error) throw ins.error;
+      var ins = await sb.from('mk_product_files').insert({ product_id: E.id, vendor_id: S.vendor.id, nom: f.name.slice(0, 150), url: fu, kind: 'fichier' }); if (ins.error) throw ins.error;
       edRead(); await edLoadFiles(); edRender(); dropDraft(); toast('Fichier ajouté');
     }
   } catch (err) { toast(errMsg(err)); }
@@ -1398,7 +1433,7 @@ async function loadAdmin() {
 }
 async function pageAdmin(alive) {
   skeleton(); await loadMe(); if (!alive()) return;
-  if (!S.vendor || !S.vendor.is_admin) return notFound('Cet espace est réservé à l\'administrateur.');
+  if (!S.admin) return notFound('Cet espace est réservé à l\'administrateur.');
   await loadAdmin(); if (!alive()) return; renderAdmin();
 }
 function renderAdmin() {

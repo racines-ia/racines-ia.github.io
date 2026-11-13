@@ -558,3 +558,15 @@ body.noscroll{overflow:hidden}
 .wbtns .linkbtn{text-align:center}
 @keyframes wIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 @media (prefers-reduced-motion:reduce){.welcome{animation:none}}
+/* Plusieurs boutiques */
+.shopsw{margin-top:14px;border:1px solid var(--line);border-radius:var(--r-card);background:var(--surface);padding:12px 14px;display:grid;gap:10px}
+.shopsw-h{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.shopsw-h b{font-size:14px}
+.shopsw-h .linkbtn{display:inline-flex;align-items:center;gap:4px;font-size:13px;white-space:nowrap}
+.shopsw-h .linkbtn .i{width:16px;height:16px}
+.shopsw-l{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;margin:0 -14px;padding:0 14px}
+.shopsw-l::-webkit-scrollbar{display:none}
+.shopsw-i{flex:none;display:flex;align-items:center;gap:8px;max-width:200px;padding:6px 12px 6px 6px;border-radius:var(--r-pill);border:1px solid var(--line);background:var(--surface-2);color:var(--text);font:600 13px var(--f-body);cursor:pointer}
+.shopsw-i span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.shopsw-i>*:first-child{width:28px!important;height:28px!important;flex:none;font-size:12px}
+.shopsw-i.on{border-color:var(--brand);background:color-mix(in srgb,var(--brand) 14%,var(--surface))}

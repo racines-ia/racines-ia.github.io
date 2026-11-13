@@ -544,6 +544,47 @@ tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--ba
 .disc-paper .dp-rep{margin-top:26px;border-top:2px solid #222;padding-top:10px}
 .disc-paper .dp-rep h3{margin:0;font-size:16px}
 .disc-paper .dp-rep small{display:block;margin-top:6px;color:#555}
+/* Devoirs hebdomadaires */
+.dv-li{display:flex;align-items:center;gap:10px}
+.dv-ed textarea.inp{height:auto;min-height:60px;padding:10px 12px;line-height:1.4;resize:vertical}
+.dvch-r{display:flex;align-items:center;gap:8px}
+.dvch-r .inp{flex:1;min-width:0}
+.dv-ok{flex:none;width:38px;height:38px;border-radius:12px;border:1.5px solid var(--line);background:var(--sunk);color:var(--muted);font:700 15px inherit;cursor:pointer}
+.dv-ok.on{background:var(--good);border-color:var(--good);color:#fff}
+.dv-zoom{width:794px;height:auto}
+.dvp{width:794px;box-sizing:border-box;padding:34px 38px 30px;background:#fff;color:#151a2e;font-family:'Outfit',system-ui,sans-serif}
+.dvp-top{display:flex;align-items:center;gap:14px;border-bottom:2px solid #151a2e;padding-bottom:12px}
+.dvp-top>img{width:64px;height:64px;object-fit:contain;border-radius:50%}
+.dvp-sc{flex:1;min-width:0}
+.dvp-sc b{display:block;font-size:20px;font-weight:800;text-transform:uppercase;letter-spacing:.03em}
+.dvp-sc span{display:block;font-size:13px;color:#555c74;margin-top:2px}
+.dv-st{flex:none;width:300px;height:84px;box-sizing:border-box;border:1.5px solid #151a2e;border-radius:12px;display:flex;align-items:center;gap:10px;padding:6px 10px}
+.dv-st img,.dv-st>i{flex:none;width:64px;height:64px;border-radius:50%;object-fit:cover;border:2px solid #151a2e;display:grid;place-items:center;font-style:normal;font-weight:800;background:#d9dbe6}
+.dv-st small{display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:#5a6078}
+.dv-st b{display:block;font-size:14px;line-height:1.15}
+.dv-st span{display:block;font-size:12px;color:#3c425a}
+.dvp-h{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-top:14px}
+.dvp-h h1{margin:0;font-family:'Anton',Impact,sans-serif;font-weight:400;font-size:34px;text-transform:uppercase;letter-spacing:.02em}
+.dvp-h span{font-size:14px;font-weight:600;color:#3c425a}
+.dvp-meta{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.dvp-meta span{flex:1;min-width:120px;background:#f1f2f7;border-radius:10px;padding:7px 10px}
+.dvp-meta small{display:block;font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:#5a6078}
+.dvp-meta b{display:block;font-size:15px}
+.dvp-cons{margin-top:12px;border-left:4px solid #151a2e;padding:4px 0 4px 12px}
+.dvp-cons b{font-size:13px;text-transform:uppercase;letter-spacing:.05em}
+.dvp-cons p{margin:3px 0 0;font-size:13.5px;line-height:1.45;color:#2b3047}
+.dvp-q{margin-top:10px}
+.dvq{padding:10px 0 8px;border-bottom:1px solid #e3e5ee;break-inside:avoid}
+.dvq p{margin:0;font-size:15px;line-height:1.45}
+.dv-pts{color:#5a6078;font-size:12.5px;white-space:nowrap}
+.dvch{display:grid;grid-template-columns:1fr 1fr;gap:6px 18px;margin-top:7px;font-size:14.5px}
+.dvch span{display:flex;align-items:flex-start;gap:8px}
+.dvch i{flex:none;width:14px;height:14px;border:1.5px solid #151a2e;border-radius:3px;margin-top:3px}
+.dvl{height:30px;border-bottom:1.2px dotted #7a8098}
+.dvp-ft{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:18px}
+.dvp-ft div{border:1.5px solid #151a2e;border-radius:10px;padding:7px 10px;min-height:62px}
+.dvp-ft small{display:block;font-size:10.5px;letter-spacing:.06em;text-transform:uppercase;color:#5a6078}
+.dvp-ft b{display:block;font-size:16px;margin-top:10px}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1245,8 +1286,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs'};
-const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs'};
+const S={ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -1462,7 +1503,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'||S.view==='devall'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1483,9 +1524,9 @@ function screen(){
     if(!S.inscr[meId()]){const L=libres();return band({kicker:'Espace enseignant',title:L.length?'Bienvenue':'Créez votre profil'})+page((L.length?`<section class="card pad stack"><div><b>Votre profil a peut-être déjà été préparé par la direction</b><p class="muted small" style="margin:4px 0 0">Touchez votre nom pour l’utiliser.</p></div><div class="list">${L.map(p=>`<button class="li" data-act="claim" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(p.matiere||'')}</span></span><span class="badge-g">C’est moi</span></button>`).join('')}</div></section><h2 class="h2">Sinon, créez votre profil</h2>`:'')+inscription())}
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
-  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','regjour','disc'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
+  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','regjour','disc','devoir'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1553,7 +1594,7 @@ function vClasse(){
   const cid=S.cid,c=S.classes[cid];
   if(!c||!mesClasses().includes(cid)){S.view='classes';return vClasses()}
   const es=elevesOf(cid),f=es.filter(e=>e.sexe==='F').length,ts=teachersOf(cid),t0=ts[0];
-  const tabs=[['appel','Registre d’appel','check'],['cotes','Cahier de cotes','book'],['bul','Bulletins','doc'],['palm','Palmarès','chart'],['eleves','Élèves','users']];
+  const tabs=[['appel','Registre d’appel','check'],['cotes','Cahier de cotes','book'],['bul','Bulletins','doc'],['palm','Palmarès','chart'],['eleves','Élèves','users'],['dev','Devoirs','pen2']];
   const photo=t0?.photo?`<img src="${h(t0.photo)}" alt="">`:`<span class="pf-ini">${t0?h(initials({nom:t0.nom})):h((c.nom||'?').slice(0,3))}</span>`;
   return `<div class="pf-page cl"><div class="prof wide">
    <header class="pf-top"><button class="pf-ic" data-act="go" data-v="${isDir()?'classes':'prof'}" aria-label="${isDir()?'Retour aux classes':'Retour à mon profil'}">${ic('back',22)}</button><b>La classe</b>${t0?`<button class="pf-ic" data-act="prof" data-id="${h(t0.id)}" aria-label="Voir le profil de l’enseignant">${ic('shield',20)}</button>`:'<span class="pf-ic ghost"></span>'}</header>
@@ -1569,7 +1610,7 @@ function vClasse(){
      :isDir()?`<button class="pf-cta" data-act="new-ens" data-cls="${h(cid)}"><span><small>Aucun enseignant attribué</small><b>Créer le profil du titulaire</b></span><i>${ic('plus',18)} Créer</i></button>`:''}`}
   </div></div>`
    +`<div class="page wide flat"><div class="page-in"><nav class="ctabs pfx" aria-label="Rubriques de la classe">${tabs.map(([k,l,i],n)=>`<button class="ctab" data-act="ctab" data-v="${k}" ${S.ctab===k?'aria-current="page"':''}><small>${n+1}</small>${ic(i,18)}${l}</button>`).join('')}</nav>
-   ${(({appel:tabAppel,cotes:tabCotes,bul:tabBul,palm:tabPalm,eleves:tabEleves})[S.ctab]||(S.ctab='appel',tabAppel))()}</div></div>`;
+   ${(({appel:tabAppel,cotes:tabCotes,bul:tabBul,palm:tabPalm,eleves:tabEleves,dev:tabDev})[S.ctab]||(S.ctab='appel',tabAppel))()}</div></div>`;
 }
 
 /* ---- Cahier de cotes ---- */
@@ -1774,6 +1815,7 @@ function vGestion(){
   const sec=isSec(),mp=myPoste(),promo=sec&&mp==='promoteur';
   return band({back:'accueil',kicker:sec?h(POSTE_LBL[mp]||'Direction'):'Direction',title:'Gestion de l’école',sub:sec?'Secondaire · salles, personnel et accès':'Classes, branches, enseignants et informations du bulletin'})+page(`
   ${sec?`<div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('shield',20)}</span><span>${promo?'<b>Vous êtes le promoteur</b> : vous voyez tout ce qui se passe à l’école. Créez le profil du <b>préfet</b> et donnez-lui son code ; c’est lui qui crée les accès de tout le personnel.':'<b>Vous êtes le préfet</b> : vous créez les accès de tout le personnel (secrétaire, directeurs, titulaires, professeurs) et vous leur donnez leur code personnel.'}</span></div>`:''}
+  <button class="gcta" data-act="go" data-v="devall"><span><b>Devoirs hebdomadaires</b><small>Voir les devoirs de chaque classe et imprimer les copies de toute l’école, avec le nom et la photo de chaque élève.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
   ${canView('presence')?'':'<!--'}<button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence, avec l’heure d’arrivée écrite à la main.</small></span><i>${ic('chev',22)}</i></button>
@@ -2093,6 +2135,86 @@ function discAlert(){if(!S.ready||S.demo)return;let seen;try{seen=new Set(JSON.p
  if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(DNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
  if(S.view==='disc'&&!document.hidden)return;const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'} à votre courrier`:`${DK[m.kind]} de la direction`;
  sysNotif(title,(m.objet||m.texte||'').slice(0,140));toast(title+(dir?' · Discipline du personnel':' · ouvrez votre profil'))}
+/* ---------- Devoirs hebdomadaires ---------- */
+const dvSem=()=>S.dvSem||lundi(today());
+const addJ=(d,n)=>{const x=D(d);x.setUTCDate(x.getUTCDate()+n);return iso(x)};
+const semLbl=l=>{const a=D(l),b=D(addJ(l,4));return a.getUTCMonth()===b.getUTCMonth()?`du ${a.getUTCDate()===1?'1er':a.getUTCDate()} au ${b.getUTCDate()} ${MOIS[b.getUTCMonth()]} ${b.getUTCFullYear()}`:`du ${a.getUTCDate()} ${MOIS[a.getUTCMonth()]} au ${b.getUTCDate()} ${MOIS[b.getUTCMonth()]} ${b.getUTCFullYear()}`};
+const dvOf=(cid,sem)=>Object.entries(S.devoirs||{}).filter(([,d])=>d&&d.classeId===cid&&d.semaine===sem).map(([id,d])=>({id,...d})).sort((a,b)=>(a.at||'').localeCompare(b.at||''));
+const dvTot=d=>sum((d.q||[]).map(q=>+q.pts||0));
+const DV_CONS='Lis attentivement chaque question avant de répondre. Pour les questions à choix multiples, coche la bonne réponse. Pour les autres questions, réponds proprement dans l’espace prévu. Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.';
+const dvQ=t=>t==='qcm'?{t:'qcm',q:'',ch:['','','',''],bon:-1,pts:1}:{t:'txt',q:'',lig:3,pts:2};
+function dvBranches(cid){const c=S.classes[cid];const set=new Set();for(const r of grilleOf(c||{}))if(r.t==='br'||(r.t==='c'))set.add(r.nom);return [...set]}
+function dvSemNav(sem,act){const td=lundi(today());return `<div class="cj-nav"><button class="x" data-act="${act}" data-v="${addJ(sem,-7)}" aria-label="Semaine précédente">${ic('left',18)}</button><b>Semaine ${h(semLbl(sem))}</b><button class="x" data-act="${act}" data-v="${addJ(sem,7)}" ${sem>td?'disabled':''} aria-label="Semaine suivante">${ic('chev',18)}</button></div>`}
+function tabDev(){
+  const cid=S.cid,sem=dvSem();const L=dvOf(cid,sem);const es=elevesOf(cid);
+  return `<div class="card pad stack">${dvSemNav(sem,'dv-sem')}
+   <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer un devoir</button>${isDir()&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
+   <p class="muted small" style="margin:0">${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe imprimés. ':'La direction imprime les copies : chaque élève reçoit la sienne avec son nom et sa photo. '}Un devoir par semaine, ou un par branche.</p></div>
+   ${L.length?`<div class="card list">${L.map(d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic('pen2',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.branche||'Devoir')}${d.titre?' · '+h(d.titre):''}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`).join('')}</div>`
+   :`<div class="card empty"><h3>Aucun devoir cette semaine</h3><p class="muted small">Composez le devoir hebdomadaire : questions à choix multiples ou questions à réponse écrite.</p></div>`}`;
+}
+function dvPaper(d,e){const E=ECO();const cls=S.classes[d.classeId];const tot=dvTot(d);let n=0;
+ const qh=q=>{n++;const pts=`<span class="dv-pts">(${fmt(+q.pts||0)} pt${(+q.pts||0)>1?'s':''})</span>`;
+  if(q.t==='qcm')return `<div class="dvq"><p><b>${n}.</b> ${h(q.q||'…')} ${pts}</p><div class="dvch">${(q.ch||[]).filter(c=>c!=='').map((c,j)=>`<span><i></i>${'abcdefgh'[j]}) ${h(c)}</span>`).join('')}</div></div>`;
+  return `<div class="dvq"><p><b>${n}.</b> ${h(q.q||'…')} ${pts}</p>${'<div class="dvl"></div>'.repeat(Math.max(1,+q.lig||3))}</div>`};
+ return `<div class="dvp"><div class="dvp-top"><img src="${eLogo()}" alt=""><div class="dvp-sc"><b>${h(E.nom)}</b><span>Année scolaire ${ANNEE.replace('–',' - ')}</span></div>
+   <div class="dv-st">${e?`${e.photo?`<img src="${h(e.photo)}" alt="">`:`<i>${h(initials(e))}</i>`}<div><small>Élève</small><b>${h(nomComplet(e))}</b><span>${h(cls?.nom||'')}</span></div>`:''}</div></div>
+  <div class="dvp-h"><h1>Devoir hebdomadaire</h1><span>Semaine ${h(semLbl(d.semaine))}</span></div>
+  <div class="dvp-meta"><span><small>Branche</small><b>${h(d.branche||'—')}</b></span>${d.titre?`<span><small>Titre</small><b>${h(d.titre)}</b></span>`:''}<span><small>Classe</small><b>${h(cls?.nom||'')}</b></span><span><small>Total</small><b>/ ${fmt(tot)}</b></span></div>
+  ${d.consignes?`<div class="dvp-cons"><b>Consignes</b><p>${h(d.consignes).replace(/\n/g,'<br>')}</p></div>`:''}
+  <div class="dvp-q">${(d.q||[]).map(qh).join('')}</div>
+  <div class="dvp-ft"><div><small>Cote obtenue</small><b>………… / ${fmt(tot)}</b></div><div><small>Signature de l’enseignant</small><i></i></div><div><small>Signature du parent</small><i></i></div></div></div>`}
+function dvPrev(id){const d=S.devoirs[id];if(!d)return;const e=elevesOf(d.classeId)[0];
+ openSheet('Aperçu du devoir',`<div class="stack"><p class="muted small" style="margin:0">Exemple de copie${e?' pour '+h(nomComplet(e)):''}. Chaque élève aura la sienne.</p><div class="cert-prev dv-prev"><div class="cert-zoom dv-zoom">${dvPaper({id,...d},e)}</div></div>
+  <div class="btns"><button class="btn sm" data-act="dv-edit" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn grad sm" data-act="dv-pdf" data-v="one" data-id="${h(id)}">${ic('doc',16)} PDF pour toute la classe</button>`:''}</div></div>`);
+ requestAnimationFrame(()=>{const z=document.querySelector('.dv-zoom'),pv=document.querySelector('.dv-prev');if(z&&pv){const k=pv.clientWidth/794;z.style.transform=`scale(${k})`;pv.style.height=Math.round(z.firstElementChild.offsetHeight*k)+'px'}})}
+function vDevoir(){const d=S.dv;if(!d){S.view='classe';return screen()}const cls=S.classes[d.classeId];const br=dvBranches(d.classeId);
+ const qx=(q,i)=>`<div class="card pad stack dvq-e" data-i="${i}"><div class="sec-h"><b>Question ${i+1} · ${q.t==='qcm'?'choix multiples':'réponse écrite'}</b><span class="btns"><button type="button" class="x" data-act="dv-up" data-i="${i}" ${i?'':'disabled'} aria-label="Monter">↑</button><button type="button" class="x" data-act="dv-delq" data-i="${i}" aria-label="Supprimer la question">×</button></span></div>
+   <textarea class="inp" rows="2" data-dq="${i}" data-df="q" placeholder="Écrivez la question…">${h(q.q||'')}</textarea>
+   ${q.t==='qcm'?`<div class="stack dvch-e">${(q.ch||[]).map((c,j)=>`<div class="dvch-r"><button type="button" class="dv-ok${q.bon===j?' on':''}" data-act="dv-bon" data-i="${i}" data-j="${j}" aria-label="Bonne réponse">${q.bon===j?'✓':'abcdefgh'[j]}</button><input class="inp" data-dq="${i}" data-df="ch" data-dc="${j}" value="${h(c)}" placeholder="Réponse ${'abcdefgh'[j]}">${(q.ch||[]).length>2?`<button type="button" class="x" data-act="dv-delch" data-i="${i}" data-j="${j}" aria-label="Retirer">×</button>`:''}</div>`).join('')}${(q.ch||[]).length<6?`<button type="button" class="btn sm" data-act="dv-addch" data-i="${i}" style="align-self:flex-start">+ Ajouter une réponse</button>`:''}<small class="muted">Touchez la lettre pour marquer la bonne réponse (elle n’est pas imprimée).</small></div>`
+    :`<div class="field"><label>Lignes pour répondre</label><div class="seg">${[2,3,4,6,8].map(n=>`<button type="button" data-act="dv-lig" data-i="${i}" data-v="${n}" aria-pressed="${(+q.lig||3)===n}">${n}</button>`).join('')}</div></div>`}
+   <div class="field" style="max-width:150px"><label>Points</label><input class="inp num" inputmode="decimal" data-dq="${i}" data-df="pts" value="${h(q.pts??'')}"></div></div>`;
+ return band({back:'classe',home:true,kicker:'Devoir hebdomadaire',title:cls?.nom||'',sub:'Semaine '+semLbl(d.semaine)})+page(`<div class="stack dv-ed">
+  <div class="card pad stack"><div class="grid2"><div class="field"><label for="dv-br">Branche</label><input class="inp" id="dv-br" list="dv-brl" data-df="branche" value="${h(d.branche||'')}" placeholder="Ex. Mathématiques"><datalist id="dv-brl">${br.map(b=>`<option value="${h(b)}">`).join('')}</datalist></div>
+   <div class="field"><label for="dv-ti">Titre (facultatif)</label><input class="inp" id="dv-ti" data-df="titre" value="${h(d.titre||'')}" placeholder="Ex. Les fractions"></div></div>
+   <div class="field"><label for="dv-co">Consignes</label><textarea class="inp" id="dv-co" rows="3" data-df="consignes">${h(d.consignes||'')}</textarea></div>
+   ${!(d.q||[]).length?`<button type="button" class="btn grad sm" data-act="dv-modele" style="align-self:flex-start">Commencer avec le modèle de l’école</button><small class="muted">Le modèle prépare 3 questions à choix multiples et 2 questions à réponse écrite. Vous écrivez ensuite le texte.</small>`:''}</div>
+  ${(d.q||[]).map(qx).join('')}
+  <div class="card pad stack"><div class="btns"><button type="button" class="btn sm" data-act="dv-addq" data-v="qcm">+ Question à choix multiples</button><button type="button" class="btn sm" data-act="dv-addq" data-v="txt">+ Question à réponse écrite</button></div>
+   <div class="pm-tot num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · total ${fmt(dvTot(d))} points</div>
+   <button type="button" class="btn grad" data-act="dv-save">Enregistrer le devoir</button>
+   ${d.id&&S.devoirs[d.id]?`<button type="button" class="btn danger" data-act="dv-del" data-armtxt="Confirmer la suppression ?">Supprimer ce devoir</button>`:''}</div></div>`)}
+document.addEventListener('input',ev=>{const t=ev.target;if(!S.dv||!t.dataset||!t.closest('.dv-ed'))return;const f=t.dataset.df;if(!f)return;
+ if(t.dataset.dq!=null){const q=S.dv.q[+t.dataset.dq];if(!q)return;if(f==='ch')q.ch[+t.dataset.dc]=t.value;else if(f==='pts'){q.pts=t.value===''?'':numM(t.value);const el=document.querySelector('.dv-ed .pm-tot');if(el)el.textContent=`${S.dv.q.length} question${S.dv.q.length>1?'s':''} · total ${fmt(dvTot(S.dv))} points`}else q[f]=t.value}else S.dv[f]=t.value});
+/* PDF : la feuille du devoir est rendue une seule fois, puis chaque élève reçoit sa copie (photo, nom, classe) */
+async function dvPhoto(e){const cv=document.createElement('canvas');cv.width=cv.height=160;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,160,160);g.save();g.beginPath();g.arc(80,80,78,0,Math.PI*2);g.clip();
+ if(e.photo){await new Promise(r=>{const im=new Image();im.onload=()=>{const k=Math.max(160/im.width,160/im.height);g.drawImage(im,80-im.width*k/2,80-im.height*k/2,im.width*k,im.height*k);r()};im.onerror=r;im.src=e.photo})}
+ else{g.fillStyle='#d9dbe6';g.fillRect(0,0,160,160);g.fillStyle='#1b2440';g.font='bold 64px sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText(initials(e),80,84)}
+ g.restore();g.strokeStyle='#1b2440';g.lineWidth=4;g.beginPath();g.arc(80,80,77,0,Math.PI*2);g.stroke();return cv.toDataURL('image/jpeg',.85)}
+const pdfTxt=t=>String(t||'').replace(/[’‘]/g,"'").replace(/[“”«»]/g,'"').replace(/[–—]/g,'-');
+async function dvPDF(groups,filename,text){
+ const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+ const nb=sum(groups.map(g=>g.eleves.length*g.devs.length));if(!nb){toast('Aucune copie à préparer.');return}
+ toast(`Préparation de ${nb} copie${nb>1?'s':''}…`);try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+ const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4'});const mg=8,iw=210-2*mg,ph=297-2*mg;let first=true,ai=0;
+ const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';document.body.appendChild(host);
+ try{for(const g of groups)for(const d of g.devs){
+   host.innerHTML=dvPaper(d,null);const node=host.firstElementChild;await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+   const nr=node.getBoundingClientRect(),br=node.querySelector('.dv-st').getBoundingClientRect();const k=iw/794;const box={x:mg+(br.left-nr.left)*k,y:mg+(br.top-nr.top)*k,w:br.width*k,h:br.height*k};
+   const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const pxPage=Math.floor(cv.width*ph/iw);const pages=[];
+   for(let y=0;y<cv.height;y+=pxPage){const hh=Math.min(pxPage,cv.height-y);const c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;const gg=c2.getContext('2d');gg.fillStyle='#fff';gg.fillRect(0,0,c2.width,hh);gg.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);pages.push({url:c2.toDataURL('image/jpeg',.9),h:hh*iw/cv.width,alias:'dv'+(ai++)})}
+   for(const e of g.eleves){const photo=await dvPhoto(e);const pa='ph'+(ai++);
+    pages.forEach((pg,i)=>{if(!first)pdf.addPage();first=false;pdf.addImage(pg.url,'JPEG',mg,mg,iw,pg.h,pg.alias);
+     if(i===0){const s=Math.min(box.h-4,20);pdf.addImage(photo,'JPEG',box.x+2,box.y+(box.h-s)/2,s,s,pa);const tx=box.x+s+5;pdf.setTextColor(90,96,120);pdf.setFont('helvetica','normal');pdf.setFontSize(7.5);pdf.text('ÉLÈVE',tx,box.y+box.h/2-4.2);
+      pdf.setTextColor(20,24,40);pdf.setFont('helvetica','bold');pdf.setFontSize(10.5);const nm=pdf.splitTextToSize(pdfTxt(nomComplet(e)),box.w-s-8);pdf.text(nm.slice(0,2),tx,box.y+box.h/2+0.2);pdf.setFont('helvetica','normal');pdf.setFontSize(8.5);pdf.setTextColor(60,66,90);pdf.text(pdfTxt(g.cls?.nom||''),tx,box.y+box.h/2+(nm.length>1?8.6:4.6))}
+     else{pdf.setFontSize(8);pdf.setTextColor(90,96,120);pdf.text(pdfTxt(nomComplet(e)+' - '+(g.cls?.nom||'')+' (suite)'),210-mg,5.5,{align:'right'})}})}}
+  try{await dl.save({filename,data:pdf.output('blob'),text});toast('PDF prêt. Enregistrez-le ou envoyez-le sur WhatsApp pour l’impression.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+ }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
+function vDevAll(){if(!isDir()){S.view='prof';return screen()}const sem=dvSem();const ids=classIds();const rows=ids.map(c=>({c,L:dvOf(c,sem),n:elevesOf(c).length}));const done=rows.filter(r=>r.L.length).length;const cop=sum(rows.map(r=>r.L.length*r.n));
+ return band({back:'gestion',home:true,kicker:'Direction',title:'Devoirs hebdomadaires',sub:'Toute l’école'})+page(`<div class="stack">
+  <div class="card pad stack">${dvSemNav(sem,'dva-sem')}<div class="pc-day3 num"><div><b>${done} / ${ids.length}</b><span>classes ont composé</span></div><div><b>${sum(rows.map(r=>r.L.length))}</b><span>devoirs</span></div><div><b>${cop}</b><span>copies à imprimer</span></div></div>
+   ${cop?`<button class="btn grad" data-act="dv-pdf" data-v="all">${ic('doc',16)} PDF de toute l’école · ${cop} copies</button>`:''}</div>
+  <div class="card list">${rows.map(r=>`<div class="li dv-li"><button class="elmain" data-act="dva-open" data-id="${h(r.c)}"><span class="grow"><span class="ttl" style="display:block">${h(S.classes[r.c].nom)}</span><span class="muted small">${r.L.length?r.L.map(d=>h(d.branche||'Devoir')).join(', ')+` · ${r.n} élèves`:'Pas encore de devoir cette semaine'}</span></span></button>${r.L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls" data-id="${h(r.c)}">PDF</button>`:'<span class="pill warn">À faire</span>'}</div>`).join('')}</div></div>`)}
 function formEleve(id){
   const e=id?S.eleves[id]:{classeId:S.view==='classe'?S.cid:(S.fCls||mesClasses()[0]),nationalite:'Congolaise',sexe:'M'};
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
@@ -3458,6 +3580,32 @@ const A={
   mopen:b=>{S.mEns=b.dataset.id||'';S.mDraft='';S.view='msgs';render();scrollTo(0,0);if(S.mEns||!isDir())setTimeout(()=>$('#f-msg')?.scrollIntoView({block:'end'}),80)},
   mia:()=>msgIA(),
   dia:b=>discIA(b.dataset.ctx),
+  'dv-sem':b=>{S.dvSem=b.dataset.v;render()},
+  'dva-sem':b=>{S.dvSem=b.dataset.v;render()},
+  'dva-open':b=>{S.cid=b.dataset.id;S.view='classe';S.ctab='dev';render();scrollTo(0,0)},
+  'dv-new':()=>{S.dv={id:'',classeId:S.cid,semaine:dvSem(),branche:'',titre:'',consignes:DV_CONS,q:[]};S.view='devoir';render();scrollTo(0,0)},
+  'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.q=S.dv.q||[];S.view='devoir';render();scrollTo(0,0)},
+  'dv-prev':b=>dvPrev(b.dataset.id),
+  'dv-modele':()=>{S.dv.q=[dvQ('qcm'),dvQ('qcm'),dvQ('qcm'),dvQ('txt'),dvQ('txt')];if(!S.dv.consignes)S.dv.consignes=DV_CONS;render()},
+  'dv-addq':b=>{S.dv.q.push(dvQ(b.dataset.v));render();setTimeout(()=>{const l=[...document.querySelectorAll('.dvq-e')].pop();l?.scrollIntoView({block:'center'});l?.querySelector('textarea')?.focus()},60)},
+  'dv-delq':b=>{S.dv.q.splice(+b.dataset.i,1);render()},
+  'dv-up':b=>{const i=+b.dataset.i;if(i>0){const q=S.dv.q;[q[i-1],q[i]]=[q[i],q[i-1]];render()}},
+  'dv-addch':b=>{const q=S.dv.q[+b.dataset.i];if(q&&q.ch.length<6){q.ch.push('');render()}},
+  'dv-delch':b=>{const q=S.dv.q[+b.dataset.i],j=+b.dataset.j;if(q&&q.ch.length>2){q.ch.splice(j,1);if(q.bon===j)q.bon=-1;else if(q.bon>j)q.bon--;render()}},
+  'dv-bon':b=>{const q=S.dv.q[+b.dataset.i];if(q){q.bon=q.bon===+b.dataset.j?-1:+b.dataset.j;render()}},
+  'dv-lig':b=>{const q=S.dv.q[+b.dataset.i];if(q){q.lig=+b.dataset.v;render()}},
+  'dv-save':async()=>{const d=S.dv;if(!d)return;if(!(d.branche||'').trim()){toast('Écrivez la branche du devoir.');document.getElementById('dv-br')?.focus();return}
+    const q=(d.q||[]).filter(x=>(x.q||'').trim());if(!q.length){toast('Écrivez au moins une question.');return}
+    if(q.some(x=>x.t==='qcm'&&x.ch.filter(c=>(c||'').trim()).length<2)){toast('Chaque question à choix multiples doit avoir au moins 2 réponses.');return}
+    const id=d.id||'dv-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.devoirs[id]||{};
+    const doc={classeId:d.classeId,semaine:d.semaine,branche:d.branche.trim(),titre:(d.titre||'').trim(),consignes:(d.consignes||'').trim(),q:q.map(x=>x.t==='qcm'?{t:'qcm',q:x.q.trim(),ch:x.ch.map(c=>(c||'').trim()).filter(Boolean),bon:x.bon,pts:+x.pts||0}:{t:'txt',q:x.q.trim(),lig:+x.lig||3,pts:+x.pts||0}),by:old.by||meId(),nom:old.nom||S.inscr[meId()]?.nom||'',at:old.at||new Date().toISOString(),maj:new Date().toISOString()};
+    await put('devoirs',id,doc);S.dv=null;S.view='classe';S.ctab='dev';S.dvSem=doc.semaine;render();scrollTo(0,0);toast('Devoir enregistré.');setTimeout(()=>dvPrev(id),250)},
+  'dv-del':async b=>{if(!arm(b))return;const id=S.dv?.id;if(id)await del('devoirs',id);S.dv=null;S.view='classe';S.ctab='dev';render();toast('Devoir supprimé.')},
+  'dv-pdf':b=>{if(!isDir())return;const sem=dvSem();const v=b.dataset.v;let groups=[],name='';
+    if(v==='one'){const d=S.devoirs[b.dataset.id];if(!d)return;groups=[{cls:S.classes[d.classeId],eleves:elevesOf(d.classeId),devs:[{id:b.dataset.id,...d}]}];name=`Devoir ${d.branche||''} - ${S.classes[d.classeId]?.nom||''}`}
+    else if(v==='cls'){const c=b.dataset.id||S.cid;groups=[{cls:S.classes[c],eleves:elevesOf(c),devs:dvOf(c,sem)}];name=`Devoirs - ${S.classes[c]?.nom||''} - semaine du ${dfr(sem).replace(/\//g,'-')}`}
+    else{groups=classIds().map(c=>({cls:S.classes[c],eleves:elevesOf(c),devs:dvOf(c,sem)})).filter(g=>g.devs.length);name=`Devoirs - ${ECO().nom} - semaine du ${dfr(sem).replace(/\//g,'-')}`}
+    dvPDF(groups,name+'.pdf',`*${ECO().nom} · Devoirs hebdomadaires*\nSemaine ${semLbl(sem)}`)},
   diause:b=>{const box=$('#dia'),t=box?._list?.[+b.dataset.i];if(t&&$('#d-txt')){$('#d-txt').value=t;box.innerHTML='';toast('Texte remplacé. Relisez puis envoyez.')}},
   dnew:b=>{if(!isDir())return;discSheet(b.dataset.v||'de',b.dataset.id||'')},
   dopen:b=>{S.dId=b.dataset.id;S.view='disc';render();scrollTo(0,0)},

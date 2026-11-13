@@ -2441,7 +2441,7 @@ function tabSig(){
    <div class="card list">${es.map(e=>{const s=sigOf(e.id,key);const par=e.pere||e.mere||e.tuteur||'';
     return `<div class="li sigrow">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${s?`Signé par ${h(s.nom)} (${h(s.lien)}) · ${new Date(s.at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} à ${hm(s.at)}`:par?'Parent : '+h(par):'Parent non renseigné'}</span></span>
      ${hid(e.id)?`<span class="pill bad">Bloqué par la direction</span>`:`${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(s.nom)}"><span class="pill good">Signé</span>`:`<span class="pill warn">Pas signé</span><button class="btn grad sm" data-act="sign" data-id="${h(e.id)}">Faire signer</button>`}<button class="btn sm" data-act="rapport" data-id="${h(e.id)}">Rapport</button>`}
-     ${s&&isDir()?`<button class="x" data-act="unsign" data-id="${h(e.id)}" aria-label="Annuler la signature">×</button>`:''}</div>`}).join('')}</div>`;
+     ${s&&!hid(e.id)?`<button class="btn sm danger" data-act="unsign" data-armtxt="Confirmer ?" data-id="${h(e.id)}" data-k="${key}">Supprimer la signature</button>`:''}</div>`}).join('')}</div>`;
 }
 function signSheet(eid){
   const e=S.eleves[eid];if(!e)return;if(hid(eid)){toast(BLKTXT+'.');return}const key=S.pKey||'t1';
@@ -2645,14 +2645,15 @@ function rapportSheet(eid,k){
   const rap={...(S.rapports[rid(eid,k)]||{})};if(!rap.conduite&&k[0]==='p'){const v=S.notes[nid(eid,'vie')]?.cond?.[k];if(v)rap.conduite=v}const sg=sigOf(eid,k);
   openSheet('Rapport de l’élève',`<div class="stack">
    <div class="chips" role="group" aria-label="Période">${pkeys().map(([x,l])=>`<button class="chipb${x[0]==='t'||x==='an'?' strong':''}" data-act="rkey" data-v="${x}" aria-pressed="${x===k}">${l}</button>`).join('')}</div>
-   <div class="card pad sec-h"><span><b>Signature des parents · ${h(keyName(k))}</b><br><span class="muted small">${sg?`Signé par ${h(sg.nom)} (${h(sg.lien)}) le ${new Date(sg.at).toLocaleDateString('fr-FR')} à ${hm(sg.at)}`:'Pas encore signé'}</span></span>${sg?'<span class="pill good">✓ Signé</span>':`<button class="btn grad sm" data-act="rsign" data-id="${h(eid)}">Faire signer</button>`}</div>
+   <div class="card pad sec-h"><span><b>Signature des parents · ${h(keyName(k))}</b><br><span class="muted small">${sg?`Signé par ${h(sg.nom)} (${h(sg.lien)}) le ${new Date(sg.at).toLocaleDateString('fr-FR')} à ${hm(sg.at)}`:'Pas encore signé'}</span></span>${sg?`<span class="btns"><span class="pill good">✓ Signé</span><button class="btn sm danger" data-act="unsign" data-armtxt="Confirmer ?" data-id="${h(eid)}" data-k="${k}" data-rap="1">Supprimer la signature</button></span>`:`<button class="btn grad sm" data-act="rsign" data-id="${h(eid)}">Faire signer</button>`}</div>
    <form id="f-rap" class="card pad stack" data-id="${h(eid)}" data-k="${k}">
     <div class="eyebrow">À remplir par l’enseignant</div>
     <div class="field"><label>Conduite</label><div class="seg" role="group" aria-label="Conduite">${CONDUITES.map(([x,l])=>`<button type="button" data-act="rcond" data-v="${x}" aria-pressed="${rap.conduite===x}" title="${l}">${x}</button>`).join('')}</div><input type="hidden" name="conduite" value="${h(rap.conduite||'')}"></div>
     <div class="field"><label for="r-ct">Observation sur la conduite</label><textarea class="inp ta" id="r-ct" name="conduiteTxt" rows="2" placeholder="Ex. Élève calme et appliqué, participe bien en classe.">${h(rap.conduiteTxt||'')}</textarea>${aiBar('conduite')}</div>
     <div class="field"><label for="r-cs">Consignes aux parents</label><textarea class="inp ta" id="r-cs" name="consignes" rows="3" placeholder="Ex. Faire réviser les tables de multiplication chaque soir.">${h(rap.consignes||'')}</textarea>${aiBar('consignes')}</div>
     <div id="aibox" class="aibox" aria-live="polite"></div>
-    <button class="btn grad" type="submit">Enregistrer le rapport</button></form>
+    <button class="btn grad" type="submit">Enregistrer le rapport</button>
+    ${S.rapports[rid(eid,k)]?`<button type="button" class="btn danger" data-act="rap-del" data-armtxt="Confirmer : effacer les remarques ?" data-id="${h(eid)}" data-k="${k}">Effacer les remarques de ce rapport</button>`:''}</form>
    <div class="btns"><button class="btn grad" data-act="rpdf">${ic('doc',16)} Télécharger le PDF</button><button class="btn" data-act="rcopy">Copier le message WhatsApp</button></div>
    <p class="muted small" style="margin:0">Le PDF s’enregistre sur le téléphone. Ouvrez ensuite WhatsApp, choisissez le parent et joignez le fichier depuis vos téléchargements.</p>
    <div class="fitbox" id="rprev">${rapportPaper(eid,k)}</div></div>`,()=>applyFit());
@@ -3469,7 +3470,8 @@ const A={
   fspkey:b=>{S.pKey=b.dataset.v;renderFS(true);render()},
   sign:b=>signSheet(b.dataset.id),
   sigclear:()=>{const cv=$('#sigc');cv.getContext('2d').clearRect(0,0,cv.width,cv.height);cv.dataset.ink='0'},
-  unsign:async b=>{if(!arm(b))return;await del('signatures',sid(b.dataset.id,S.pKey||'t1'));toast('Signature annulée')},
+  unsign:async b=>{if(!arm(b))return;const eid=b.dataset.id,k=b.dataset.k||S.pKey||'t1',rap=b.dataset.rap;await del('signatures',sid(eid,k));toast('Signature supprimée. Le parent peut signer à nouveau.');if(rap)rapportSheet(eid,k);else render()},
+  'rap-del':async b=>{if(!arm(b))return;const eid=b.dataset.id,k=b.dataset.k;await del('rapports',rid(eid,k));toast('Remarques effacées.');rapportSheet(eid,k)},
   pond:()=>openPond(),
   'cours-pd':b=>{S.cours=b.dataset.id;closeSheet();if(S.ctab!=='cotes'){S.ctab='cotes';render()}},
   jour:b=>{if(!canEditAppel(S.cid,b.dataset.v)){toast('L’appel se fait seulement le jour même.');return}if($('#f-sp'))closeSheet();const es=elevesOf(S.cid).map(e=>e.id);marquer(S.cid,b.dataset.v,es,'P');toast('Élèves non notés marqués présents le '+dfr(b.dataset.v))},

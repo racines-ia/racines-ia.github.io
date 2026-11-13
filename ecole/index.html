@@ -58,6 +58,8 @@ svg.i{width:20px;height:20px;flex:none}
 .band-in{position:relative;z-index:1;max-width:1100px;margin:0 auto;display:flex;flex-direction:column;gap:6px}
 .wide .band-in,.band.wide .band-in{max-width:1500px}
 .band-top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.rootbtn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px 8px 10px;border-radius:999px;border:1px solid rgba(255,255,255,.28);background:rgba(255,255,255,.14);color:#fff;font:600 14px/1 inherit;font-family:inherit;cursor:pointer;backdrop-filter:blur(6px)}
+.rootbtn:active{transform:scale(.97)}
 .band-logo{width:42px;height:42px;border-radius:50%;background:#fff;box-shadow:0 0 0 3px rgba(255,255,255,.25)}
 .band-school{flex:1;min-width:0;display:flex;flex-direction:column;line-height:1.15}
 .band-school b{font-family:var(--f-d);font-weight:400;font-size:14.5px;letter-spacing:.02em;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -1490,7 +1492,7 @@ function keepSelected(prev,key){
 let LOGO_DONE=false;function calmLogos(){document.querySelectorAll('#view .band-anim svg.logo-anim').forEach(sv=>{if(sv.dataset.calm)return;sv.dataset.calm=1;const stop=()=>{try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}};if(LOGO_DONE)stop();else setTimeout(()=>{LOGO_DONE=true;stop()},6500)})}
 document.addEventListener('visibilitychange',()=>{document.querySelectorAll('svg.logo-anim').forEach(sv=>{try{document.hidden||sv.dataset.calm?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}})});
 let renderQ=0;function renderSoon(){if(renderQ)return;renderQ=requestAnimationFrame(()=>{renderQ=0;render()})}
-function render(){if(S.detFS&&!(S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det')){S.detFS=false;document.documentElement.classList.remove('dfs-lock')}if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
+function render(){if(S.detFS&&!(S.view==='classe'&&((S.ctab==='palm'&&S.pVue==='det')||(S.ctab==='cotes'&&!S.cVie)))){S.detFS=false;document.documentElement.classList.remove('dfs-lock')}if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
   const key=S.view+'|'+S.ctab+'|'+S.cid;const prevSc={key:lastKey,pos:[...document.querySelectorAll('#view :is('+SCR+')')].map(el=>[el.scrollLeft,el.scrollTop])};
   const keep={};['regwrap','egridw'].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.scrollLeft});
   const ae=document.activeElement,aid=ae&&ae.id&&$('#view').contains(ae)?ae.id:null,selS=ae&&ae.selectionStart;
@@ -1516,7 +1518,7 @@ function navHtml(){
 function demoPill(){if(!S.demo)return '';if(S.preview){const ts=ensList().filter(p=>!isGest(p)&&clsOfEns(p.id).length);return `<div class="demo prev"><span>Aperçu : ce que voit l’enseignant · données fictives</span><div class="btns"><select class="inp sm" data-act="prevens" aria-label="Enseignant">${ts.map(p=>`<option value="${h(p.id)}" ${p.id===S.demoEns?'selected':''}>${h(p.nom)} · ${h((S.classes[clsOfEns(p.id)[0]]?.nom||'').replace(' année primaire',' année'))}</option>`).join('')}</select></div></div>`}return `<div class="demo"><span>${S.sim?'Simulation · données fictives, rien n’est enregistré':'Démonstration · données d’exemple'}</span><div class="btns"><div class="seg" role="group" aria-label="Voir comme"><button data-act="demorole" data-v="dir" aria-pressed="${S.demoRole==='dir'}">Direction</button><button data-act="demorole" data-v="ens" aria-pressed="${S.demoRole==='ens'}">Enseignant</button></div>${S.sim?`<select class="inp sm" data-act="demoposte" aria-label="Type d’école et poste"><option value="" ${!S.demoSec?'selected':''}>Primaire · directeur</option>${['promoteur','prefet','secretaire','etudes','discipline'].map(k=>`<option value="${k}" ${S.demoSec&&S.demoPoste===k?'selected':''}>Secondaire · ${POSTE_LBL[k]}</option>`).join('')}</select>`:''}${S.sim?'<button class="btn sm" data-act="sim-stop">Quitter</button>':''}</div></div>`}
 function band({back,kicker,title,sub,extra='',extra2='',side='',wide=false,home=false}){
   return `<header class="band${wide?' wide':''}${home?' home':''}"><div class="band-in">
-   ${back?`<div class="band-top"><button class="iconbtn" data-act="go" data-v="${back}" aria-label="Retour">${ic('back',22)}</button></div>`:''}
+   ${back||home?`<div class="band-top">${back?`<button class="iconbtn" data-act="go" data-v="${back}" aria-label="Retour">${ic('back',22)}</button>`:''}${home?`<button class="rootbtn" data-act="toracine">${ic('back',18)} Retour sur racine</button>`:''}</div>`:''}
    <div class="band-row"><div style="min-width:0;display:flex;flex-direction:column;gap:6px">${kicker?`<div class="kicker">${kicker}</div>`:''}<h1>${title}</h1>${sub?`<p class="band-sub">${sub}</p>`:''}</div>${side}</div>
    ${extra}${extra2}${demoPill()}</div></header>`;
 }
@@ -1544,13 +1546,6 @@ function inscription(){return `<div class="card pad stack">
 /* ---------- Accueil ---------- */
 function vAccueil(){
   const ids=mesClasses();const nbEl=sum(ids.map(c=>elevesOf(c).length));const nbEns=ensList().filter(p=>!isGest(p)).length;
-  const feats=[
-   ['db','Base de données de l’école','Fiche complète de chaque élève : nom, postnom, prénom, sexe, lieu et date de naissance, N° Perm., N° ID, parents, téléphone et adresse.'],
-   ['check','Registre d’appel','Un registre de 30 jours de classe, du lundi au vendredi. L’enseignant marque P (présent) ou A (absent) pour chaque élève.'],
-   ['chart','Statistiques de présence','Présences, absences et taux de présence par mois, comparaison garçons et filles, élèves à suivre.'],
-   ['book','Cahier de cotes','Les points se saisissent cours par cours : 1re à 6e période et examens des trois trimestres.'],
-   ['doc','Bulletins officiels','Modèle du Ministère pour chaque degré. Les points du cahier de cotes s’y reportent seuls : totaux, sous-totaux, pourcentages et places.'],
-   ['chalk','Classes et enseignants','Six classes, de la 1re à la 6e année primaire. Chaque classe a son enseignant titulaire, attribué par la direction.']];
   return band({home:true,title:ECO().nom,sub:`${isSec()&&isDir()?'<span style="display:block">'+h(POSTE_LBL[myPoste()]||'')+'</span>':''}<span style="white-space:nowrap">Année scolaire ${ANNEE}</span>`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`
    <section class="card summary">
     <div class="sum3 num"><div><b>${ids.length}</b><span>Classes</span></div><div><b>${nbEl}</b><span>Élèves</span></div><div><b>${nbEns}</b><span>Enseignants</span></div></div>
@@ -1559,19 +1554,7 @@ function vAccueil(){
     ${isDir()&&canView('perception')?(()=>{const ids=classIds();const st=ids.map(c=>statClasse(c));const du=sum(st.map(x=>x.du)),pa=sum(st.map(x=>x.paye));const td=today();const j=sum(Object.values(S.paiem).filter(p=>p.date===td).map(p=>numM(p.montant)));return `<button class="li actsum" data-act="go" data-v="perception"><span class="ib g">${ic('money',22)}</span><span class="grow"><span class="ttl" style="display:block">Perception des frais</span><span class="muted small num">${du?`Aujourd’hui : ${fmtM(j)}`:'Frais pas encore fixés'}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()&&canView('activite')?(()=>{const td=today(),ci=classIds();const a=ci.filter(c=>appelClos(c,td)).length,cc=ci.filter(c=>cotesClos(c,td)).length,nb=unseen();return `<button class="li actsum" data-act="go" data-v="activite"><span class="ib g">${ic('bell',22)}</span><span class="grow"><span class="ttl" style="display:block">Activité du jour</span><span class="muted small num">Appel clôturé : ${a}/${ci.length} classes · Cotes : ${cc}/${ci.length}</span></span>${nb?`<span class="pill acc num">${nb} nouveau${nb>1?'x':''}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${canPalmSit()&&canView('palmsit')?(()=>{const ids=classIds();const k=S.psKey||'t1';let cl=0,re=0;for(const c of ids){const r=palmData(c,k).ranked;cl+=r.length;re+=r.filter(x=>x.pct>=50).length}return `<button class="li actsum" data-act="psit"><span class="ib g">${ic('chart',22)}</span><span class="grow"><span class="ttl" style="display:block">Situation des palmarès</span><span class="muted small num">${h(keyName(k))} : ${cl} élèves classés · ${cl?Math.round(re/cl*100):0} % de réussite</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
-    ${canView('classes')?'':'<!--'}<button class="gcta" data-act="go" data-v="classes"><span><b>Voir les classes</b><small>Choisissez une classe pour ouvrir son registre d’appel, son cahier de cotes et ses bulletins.</small></span><i>${ic('chev',22)}</i></button>${canView('classes')?'':'-->'}
-   </section>
-   <section class="sec"><h2 class="h2">Ce que fait l’application</h2>
-    <div class="feats">${feats.map(([i,t,d])=>`<div class="card feat"><span class="ib">${ic(i,22)}</span><div><h3>${t}</h3><p>${d}</p></div></div>`).join('')}</div></section>
-   <section class="sec"><h2 class="h2">Qui l’utilise</h2><div class="roles">
-    <div class="card rolec dark"><h3>${ic('shield',22)} La direction</h3><ul><li>Crée les classes et leurs branches, avec le maximum de chaque cours.</li><li>Attribue chaque classe à son enseignant titulaire.</li><li>Suit l’avancement des cotes et voit tous les bulletins.</li><li>Remplit les informations du bulletin : province, ville, code de l’école.</li></ul></div>
-    <div class="card rolec"><h3><span class="ib" style="width:36px;height:36px">${ic('chalk',18)}</span> L’enseignant</h3><ul><li>Inscrit les élèves de sa classe avec leur identité complète.</li><li>Fait l’appel chaque jour dans le registre.</li><li>Encode les points de chaque cours dans le cahier de cotes.</li><li>Consulte les bulletins de sa classe, calculés automatiquement.</li></ul></div>
-   </div></section>
-   <section class="sec"><h2 class="h2">Organisation de l’année scolaire</h2>
-    <div class="tris">${TRS().map(t=>[t,TRI[t]]).map(([t,n])=>`<div class="card tric"><h3>${n}<small>${PER[t].map(perLbl).join(' + ')} + Examen</small></h3><div class="flow"><span>${perLong(PER[t][0])}</span><em>+</em><span>${perLong(PER[t][1])}</span><em>+</em><span>Examen</span><em>=</em><span class="t">Total ${tShort(t)}</span></div></div>`).join('')}</div>
-    <div class="card pad rule"><span class="ib g">${ic('cal',22)}</span><div style="display:flex;flex-direction:column;gap:8px"><b>Exemple : un cours noté sur 10 par période</b><div class="ex num"><span>Période /10</span><span>Examen /20</span><span>${isSec()?'Semestre':'Trimestre'} /40</span><span>Année /${isSec()?80:120}</span></div></div></div>
-   </section>
-   ${canView('classes')?`<button class="btn grad big" data-act="go" data-v="classes">Voir les classes ${ic('arrow',20)}</button>`:''}`);
+   </section>`);
 }
 
 /* ---------- Classes ---------- */
@@ -1598,7 +1581,7 @@ function vClasse(){
   const cid=S.cid,c=S.classes[cid];
   if(!c||!mesClasses().includes(cid)){S.view='classes';return vClasses()}
   const es=elevesOf(cid),f=es.filter(e=>e.sexe==='F').length,ts=teachersOf(cid),t0=ts[0];
-  const tabs=[['appel','Registre d’appel','check'],['cotes','Cahier de cotes','book'],['bul','Bulletins','doc'],['palm','Palmarès','chart'],['eleves','Élèves','users'],['dev','Devoirs','pen2']];
+  const tabs=[['appel','Registre d’appel','check'],['cotes','Cahier de cotes','book'],['bul','Bulletins','doc'],['palm','Palmarès','chart'],['eleves','Élèves','users'],['dev','Devoirs hebdomadaires','pen2']];
   const photo=t0?.photo?`<img src="${h(t0.photo)}" alt="">`:`<span class="pf-ini">${t0?h(initials({nom:t0.nom})):h((c.nom||'?').slice(0,3))}</span>`;
   return `<div class="pf-page cl"><div class="prof wide">
    <header class="pf-top"><button class="pf-ic" data-act="go" data-v="${isDir()?'classes':'prof'}" aria-label="${isDir()?'Retour aux classes':'Retour à mon profil'}">${ic('back',22)}</button><b>La classe</b>${t0?`<button class="pf-ic" data-act="prof" data-id="${h(t0.id)}" aria-label="Voir le profil de l’enseignant">${ic('shield',20)}</button>`:'<span class="pf-ic ghost"></span>'}</header>
@@ -1640,17 +1623,13 @@ function mobileCourse(cls){
 function tabCotes(){
   const cid=S.cid,cls=S.classes[cid],es=elevesOf(cid),cours=cls.cours||[];
   if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3><p class="muted small">La direction applique le modèle du bulletin dans Gestion.</p></div>`;
-  if(S.cours!=='vie'&&!cours.find(c=>c.id===S.cours))S.cours=cours[0].id;
-  if(!es.find(e=>e.id===S.sel))S.sel=es[0]?.id||'';
-  const modeSeg=`<div class="seg full cmode" role="group" aria-label="Façon d’encoder"><button data-act="cmode" data-v="cours" aria-pressed="${S.cMode!=='eleve'}">Par cours</button><button data-act="cmode" data-v="eleve" aria-pressed="${S.cMode==='eleve'}">Par élève</button></div>`;
-  if(S.cMode==='eleve')return `${triPick()}${barCotes(cid)}${modeSeg}
-  <div class="cotes-grid fe"><section class="card entry">${es.length?ficheHtml(cls,es):`<div class="empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`}</section>${es.length?bulPane(false):''}</div>`;
-  return `${triPick()}${barCotes(cid)}${modeSeg}
-  <div class="cotes-grid">
-   <aside class="card courses" aria-label="Liste des cours">${courseList(cls,cid)}</aside>
-   <section class="card entry">${mobileCourse(cls)}${es.length?entryHtml(cls,es):`<div class="empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`}</section>
-   ${es.length?bulPane(true):''}
-  </div>`;
+  const t=S.tri;const grp=PER[t]?[...PER[t],EXK[t],t]:['an'];if(!grp.includes(S.cKey))S.cKey=grp[0];const key=S.cKey;
+  const LB=Object.fromEntries(pkeys());const lb=k=>k.startsWith('ex')?'Examen':k===t?'Total '+tShort(t):LB[k]||keyName(k);
+  const chips=`<div class="chips" role="group" aria-label="Période">${grp.map(k=>`<button class="chipb${k===t||k==='an'?' strong':''}" data-act="ckey" data-v="${k}" aria-pressed="${!S.cVie&&key===k}">${h(lb(k))}</button>`).join('')}<button class="chipb" data-act="cvie" aria-pressed="${!!S.cVie}">Application et conduite</button></div>`;
+  if(!es.length)return `${triPick()}${barCotes(cid)}<div class="card empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`;
+  const head=`<div class="card pad stack"><div class="sec-h"><div><h2 class="h2">${S.cVie?'Application et conduite':'Points par branche'}</h2><span class="muted small">${h(cls.nom)} · ${h(S.cVie?'Bas du bulletin':keyName(key))}</span></div>${S.cVie?'':`<span class="btns"><button class="btn sm grad" data-act="detfs">${ic('expand',16)} Plein écran</button></span>`}</div>${chips}</div>`;
+  if(S.cVie){S.cours='vie';return `${triPick()}${barCotes(cid)}${head}<section class="card entry">${entryHtml(cls,es)}</section>`}
+  return `${triPick()}${barCotes(cid)}${head}${palmDetail(cid,key,chips)}`;
 }
 function ficheTot(){const el=document.getElementById('fe-tot');if(!el)return;if(hid(el.dataset.e)){el.textContent='Bloqué';return}const cls=S.classes[S.cid],k=el.dataset.k,eid=el.dataset.e;let tot=0,mx=0,n=0;for(const c of cls.cours||[]){const v=V(eid,c,k);mx+=MX(c,k);if(v!=null){tot+=v;n++}}el.textContent=n?`${fmt(tot)} / ${fmt(mx)}`:`– / ${fmt(mx)}`}
 function ficheHtml(cls,es){
@@ -1712,7 +1691,7 @@ function bulPane(hl){
 function refreshBul(){
   const b=$('#bulprev');if(!b)return;const es=elevesOf(S.cid);const i=es.findIndex(e=>e.id===S.sel);const e=es[i];if(!e)return;
   b.innerHTML=bulletinHtml(e.id,S.ctab==='cotes'?{c:S.cours,t:S.tri}:null);
-  const n=$('#bpname');if(n)n.textContent=nomComplet(e);const x=$('#bpidx');if(x)x.textContent=`${i+1} / ${es.length}`;
+  const n=$('#bpname');if(n)n.textContent=nomComplet(e);const bs=$('#bsel');if(bs)bs.value=e.id;const x=$('#bpidx');if(x)x.textContent=`${i+1} / ${es.length}`;
   document.querySelectorAll('.etab tr[data-e]').forEach(tr=>tr.classList.toggle('sel',tr.dataset.e===S.sel));
   document.querySelectorAll('.rrow').forEach(r=>r.setAttribute('aria-current',r.dataset.id===S.sel));
   applyFit();
@@ -1755,14 +1734,11 @@ function gradeInput(inp){
 
 /* ---- Bulletins ---- */
 function tabBul(){
-  const cid=S.cid,cls=S.classes[cid],key=S.bTri;const es0=elevesOf(cid);
-  if(!es0.length)return `<div class="card empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`;
-  if(!es0.find(e=>e.id===S.sel))S.sel=es0[0].id;
-  const pl=places(cid,key);const es=es0.map(e=>({...e,r:resume(e.id,cls,key),p:pl.r[e.id]})).sort((a,b)=>(a.p??1e9)-(b.p??1e9)||coll.compare(nomComplet(a),nomComplet(b)));
-  return `<div class="bul-layout"><aside class="card rank"><div class="sec-h"><b>Classement</b><span class="muted small num">Moy. ${pctf(moyClasse(cid,key))}</span></div>
-   <div class="seg" role="group" aria-label="Période du classement">${[...TRS(),'an'].map(t=>`<button data-act="btri" data-v="${t}" aria-pressed="${S.bTri===t}">${tShort(t)}</button>`).join('')}</div>
-   <div class="list">${blkLast(es,e=>e.id).map(e=>`<button class="rrow" data-act="selel" data-id="${h(e.id)}" aria-current="${e.id===S.sel}"><span class="rk num">${hid(e.id)?'–':e.p||'–'}</span>${avEl(e,'sm')}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small num">${hid(e.id)?'Bloqué par la direction':`${fmt(e.r.tot)} / ${fmt(e.r.max)}`}</span></span>${hid(e.id)?'<span class="pill bad">Bloqué</span>':`<span class="pill ${e.r.pct==null?'':e.r.pct>=50?'good':'warn'} num">${pctf(e.r.pct)}</span>`}</button>`).join('')}</div></aside>
-   ${bulPane(false)}</div>${bulSignCard(cid)}`;
+  const cid=S.cid;const es=elevesOf(cid);
+  if(!es.length)return `<div class="card empty"><h3>Aucun élève dans cette classe</h3><button class="btn grad" data-act="new-eleve">+ Inscrire un élève</button></div>`;
+  if(!es.find(e=>e.id===S.sel))S.sel=es[0].id;
+  return `<div class="card pad"><div class="field"><label for="bsel">Élève</label><select class="inp" id="bsel" data-act="bsel">${es.map((x,j)=>`<option value="${h(x.id)}" ${x.id===S.sel?'selected':''}>${j+1}. ${h(nomComplet(x))}</option>`).join('')}</select></div></div>
+   ${bulPane(false)}${bulSignCard(cid)}`;
 }
 function bulSignCard(cid){
   const key=S.bTri||'t1';const ks=PER[key]||[];
@@ -1770,6 +1746,7 @@ function bulSignCard(cid){
   const rows=[...ks.map(k=>({r:'tit',k,lbl:(isSec()?'Titulaire':'Enseignant titulaire')+' · '+perLong(k),can:isTit})),{r:'chef',k:key,lbl:chefLbl()+' · '+keyName(key),can:canC}];
   const done=rows.filter(x=>bsig(cid,x.k,x.r)).length;
   return `<section class="card pad stack bsign"><div class="sec-h"><div><h2 class="h2" style="font-size:19px">${ic('pen',18)} Signature des bulletins</h2><span class="muted small">${h(keyName(key))} · une seule signature, placée sur tous les bulletins de la classe.</span></div><span class="pill ${done===rows.length?'good':'warn'} num">${done} / ${rows.length} signé${done>1?'s':''}</span></div>
+   <div class="seg" role="group" aria-label="Période des signatures">${TRS().map(t=>`<button data-act="btri" data-v="${t}" aria-pressed="${key===t}">${tShort(t)}</button>`).join('')}</div>
    <div class="list">${rows.map(x=>{const s=bsig(cid,x.k,x.r);return `<div class="li"><span class="grow"><span class="ttl" style="display:block">${h(x.lbl)}</span><span class="muted small">${s?`Signé par ${h(s.nom)} le ${new Date(s.at).toLocaleDateString('fr-FR')} à ${hm(s.at)}`:x.r==='tit'?(x.can?'Pas encore signé':'En attente de la signature du titulaire'):(x.can?'Pas encore signé':'En attente de la signature du '+chefLbl().toLowerCase())}</span></span>${s?`${miniSig(s,'sigimg')}${x.can?`<button class="x" data-act="bunsign" data-k="${x.k}" data-r="${x.r}" aria-label="Retirer la signature">×</button>`:'<span class="pill good">✓</span>'}`:x.can?`<button class="btn grad sm" data-act="bsign" data-k="${x.k}" data-r="${x.r}">Signer</button>`:'<span class="pill">En attente</span>'}</div>`}).join('')}</div>
    ${S.demo&&!isTit&&ks.length?'<p class="muted small" style="margin:0">Simulation : passez en vue « Enseignant » pour signer comme titulaire.</p>':''}${!isSec()||canC||!S.demo?'':'<p class="muted small" style="margin:0">Simulation : choisissez « Secondaire · Préfet » pour signer comme chef d’établissement.</p>'}</section>`;
 }
@@ -1822,10 +1799,6 @@ function vGestion(){
   <button class="gcta" data-act="go" data-v="devall"><span><b>Devoirs hebdomadaires</b><small>Voir les devoirs de chaque classe et imprimer les copies de toute l’école, avec le nom et la photo de chaque élève.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
-  ${canView('presence')?'':'<!--'}<button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence, avec l’heure d’arrivée écrite à la main.</small></span><i>${ic('chev',22)}</i></button>
-  ${canView('presence')?'':'-->'}<button class="gcta" data-act="go" data-v="perception"><span><b>Perception des frais</b><small>Frais fixés par classe, paiements de chaque élève, montants restants, reçus PDF et rappels aux parents.</small></span><i>${ic('money',22)}</i></button>
-  <button class="gcta" data-act="go" data-v="sante"><span><b>Cahier de sortie</b><small>Élèves malades : enregistrez l’heure, la date, le motif de sortie et les conseils aux parents (avec l’IA). La fiche part en PDF sur WhatsApp.</small></span><i>${ic('med',22)}</i></button>
-  ${S.demo?'':`<section class="card pad stack"><div style="display:flex;gap:14px;align-items:center"><span class="ib g">${ic('chart',22)}</span><div><b>Simulation complète</b><p class="muted small" style="margin:2px 0 0">Testez l’application avec des élèves, des cotes, des registres, des bulletins signés et des palmarès fictifs. Vos vraies données ne sont pas touchées.</p></div></div><div class="simch"><button class="btn ${isSec()?'':'grad'}" data-act="sim-start" data-v="pri"><b>École primaire</b><small>6 classes · bulletins par trimestre</small></button><button class="btn ${isSec()?'grad':''}" data-act="sim-start" data-v="sec"><b>École secondaire</b><small>6 salles · bulletins par semestre</small></button></div></section>`}
   <section class="sec"><div class="sec-h"><h2 class="h2">Informations du bulletin</h2><span class="btns"><button class="btn sm" data-act="cal">Calendrier des périodes</button><button class="btn sm" data-act="ecole">Modifier</button></span></div>
   <div class="card pad"><dl class="kv">${[['Province éducationnelle',ec.province],['Ville',ec.ville],['Commune / Ter.',ec.commune],['Code de l’école',ec.code],['Chef d’établissement',ec.chef]].map(([l,v])=>`<dt>${l}</dt><dd>${v?h(v):'<span class="muted">À compléter</span>'}</dd>`).join('')}</dl></div></section>
   <section class="sec"><div class="sec-h"><h2 class="h2">Classes et branches</h2><button class="btn sm" data-act="classe" data-id="">${ic('plus',16)} Nouvelle classe</button></div>
@@ -2154,11 +2127,11 @@ function dvBranches(cid){const c=S.classes[cid];const set=new Set();for(const r 
 function dvSemNav(sem,act){const td=lundi(today());return `<div class="cj-nav"><button class="x" data-act="${act}" data-v="${addJ(sem,-7)}" aria-label="Semaine précédente">${ic('left',18)}</button><b>Semaine ${h(semLbl(sem))}</b><button class="x" data-act="${act}" data-v="${addJ(sem,7)}" ${sem>td?'disabled':''} aria-label="Semaine suivante">${ic('chev',18)}</button></div>`}
 function tabDev(){
   const cid=S.cid,sem=dvSem();const L=dvOf(cid,sem);const es=elevesOf(cid);
-  return `<div class="card pad stack">${dvSemNav(sem,'dv-sem')}
-   <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer un devoir</button>${isDir()&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
+  return `<div class="card pad stack"><h2 class="h2">Devoirs hebdomadaires</h2>${dvSemNav(sem,'dv-sem')}
+   <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer les devoirs hebdomadaires</button>${isDir()&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
    <p class="muted small" style="margin:0">${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe imprimés. ':'La direction imprime les copies : chaque élève reçoit la sienne avec son nom et sa photo. '}Un devoir par semaine qui résume les leçons de plusieurs branches.</p></div>
    ${L.length?`<div class="card list">${L.map(d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic('pen2',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.titre||'Résumé de la semaine')}</span><span class="muted small" style="display:block">${h(dvBrs(d).join(' · ')||'—')}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`).join('')}</div>`
-   :`<div class="card empty"><h3>Aucun devoir cette semaine</h3><p class="muted small">Composez le devoir de la semaine : posez des questions dans plusieurs branches (choix multiples ou réponse écrite).</p></div>`}`;
+   :`<div class="card empty"><h3>Aucun devoir hebdomadaire cette semaine</h3><p class="muted small">Composez le devoir hebdomadaire : posez des questions dans plusieurs branches (choix multiples ou réponse écrite).</p></div>`}`;
 }
 function dvPaper(d,e){const E=ECO();const cls=S.classes[d.classeId];const tot=dvTot(d);let n=0;
  const qh=q=>{n++;const pts=`<span class="dv-pts">(${fmt(+q.pts||0)} pt${(+q.pts||0)>1?'s':''})</span>`;
@@ -2191,7 +2164,7 @@ function vDevoir(){const d=S.dv;if(!d){S.view='classe';return screen()}const cls
   ${(d.q||[]).map(qx).join('')}
   <div class="card pad stack"><div class="btns"><button type="button" class="btn sm" data-act="dv-addq" data-v="qcm">+ Question à choix multiples</button><button type="button" class="btn sm" data-act="dv-addq" data-v="txt">+ Question à réponse écrite</button></div>
    <div class="pm-tot num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · total ${fmt(dvTot(d))} points</div>
-   <button type="button" class="btn grad" data-act="dv-save">Enregistrer le devoir</button>
+   <button type="button" class="btn grad" data-act="dv-save">Enregistrer le devoir hebdomadaire</button>
    ${d.id&&S.devoirs[d.id]?`<button type="button" class="btn danger" data-act="dv-del" data-armtxt="Confirmer la suppression ?">Supprimer ce devoir</button>`:''}</div></div>`)}
 document.addEventListener('input',ev=>{const t=ev.target;if(!S.dv||!t.dataset||!t.closest('.dv-ed'))return;const f=t.dataset.df;if(!f)return;
  if(t.dataset.dq!=null){const q=S.dv.q[+t.dataset.dq];if(!q)return;if(f==='ch')q.ch[+t.dataset.dc]=t.value;else if(f==='pts'){q.pts=t.value===''?'':numM(t.value);const el=document.querySelector('.dv-ed .pm-tot');if(el)el.textContent=`${S.dv.q.length} question${S.dv.q.length>1?'s':''} · total ${fmt(dvTot(S.dv))} points`}else q[f]=t.value}else S.dv[f]=t.value});
@@ -2535,8 +2508,9 @@ function palmTable(cid,key,paper){const {mx,MT,list:list0}=palmData(cid,key);con
    ${list.map(r=>{if(hid(r.e.id))return `<tr class="blkrow"><td class="rkc num">–</td><td class="name"><span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span></td><td colspan="${GRPf().length+3}" class="blkc">${BLKTXT}</td></tr>`;const s=sigOf(r.e.id,key);return `<tr class="${r.p&&r.p<=3?'top':''}${blk(r.e.id)?' isblk':''}"><td class="rkc num">${r.p?`<span>${r.p}<sup>${r.p===1?'er':'e'}</sup></span>`:'–'}</td><td class="name">${paper?`<span class="pnm">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></span>`:`<button class="pnm" data-act="eleve" data-id="${h(r.e.id)}">${avEl(r.e,'sm')}<span>${h(nomComplet(r.e))}</span></button>`}</td>${GRPf().map(([k])=>cell(r.g[k],mx[k]||1)).join('')}<td class="num tt"><b>${r.tot==null?'–':fmt(r.tot)}</b></td><td class="num"><span class="pill ${r.pct==null?'':r.pct>=50?'good':'warn'}">${pctf(r.pct)}</span></td><td>${s?`<span class="pill good">✓ Signé</span>`:`<span class="pill">Non signé</span>`}</td></tr>`}).join('')}
   </tbody></table>`}
 function detRow(cid,key,eid){const cls=S.classes[cid];let tot=0,mx=0,any=false;for(const c of cls.cours||[]){mx+=MX(c,key);const v=V(eid,c,key);if(v!=null){tot+=v;any=true}}return{tot:any?tot:null,mx,pct:any&&mx?tot/mx*100:null}}
-function detTot(eid){const tr=document.querySelector(`.dtab tr[data-e="${CSS.escape(eid)}"]`);if(!tr)return;const r=detRow(S.cid,S.pKey||'t1',eid);tr.querySelector('.dt-t').textContent=r.tot==null?'–':fmt(r.tot);const pc=tr.querySelector('.dt-p');pc.textContent=pctf(r.pct);pc.className='dt-p num '+(r.pct==null?'':r.pct>=50?'ok':'ko')}
-function refreshDet(){const cls=S.classes[S.cid];if(!cls)return;const key=S.pKey||'t1';document.querySelectorAll('.dtab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,key);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});document.querySelectorAll('.dtab tr[data-e]').forEach(tr=>detTot(tr.dataset.e))}
+function detTot(eid){const tr=document.querySelector(`.dtab tr[data-e="${CSS.escape(eid)}"]`);if(!tr)return;const r=detRow(S.cid,dKey(),eid);tr.querySelector('.dt-t').textContent=r.tot==null?'–':fmt(r.tot);const pc=tr.querySelector('.dt-p');pc.textContent=pctf(r.pct);pc.className='dt-p num '+(r.pct==null?'':r.pct>=50?'ok':'ko')}
+const dKey=()=>S.ctab==='cotes'?S.cKey||'p1':S.pKey||'t1';
+function refreshDet(){const cls=S.classes[S.cid];if(!cls)return;const key=dKey();document.querySelectorAll('.dtab input.gi').forEach(inp=>{if(inp===document.activeElement||inp.classList.contains('bad'))return;const c=(cls.cours||[]).find(x=>x.id===inp.dataset.c);if(!c)return;const v=V(inp.dataset.e,c,key);const z=v==null?'':fmt(v);if(inp.value!==z)inp.value=z});document.querySelectorAll('.dtab tr[data-e]').forEach(tr=>detTot(tr.dataset.e))}
 function palmDetail(cid,key,chips){
   const cls=S.classes[cid],cours=cls.cours||[];const list=blkLast(palmData(cid,key).list,r=>r.e.id);const edit=key[0]==='p'||key.startsWith('ex');const MT=sum(cours.map(c=>MX(c,key)));
   if(!cours.length)return `<div class="card empty"><h3>Cette classe n’a pas encore de cours</h3></div>`;
@@ -3582,7 +3556,10 @@ const A={
   go:b=>go(b.dataset.v),
   open:b=>{S.cid=b.dataset.id;S.ctab='appel';S.sel='';S.aReg='';S.view='classe';render();scrollTo(0,0)},
   ctab:b=>{S.ctab=b.dataset.v;render()},
-  tri:b=>{S.tri=b.dataset.v;render()},
+  toracine:()=>{try{location.href=new URL('../',location.href).href}catch(e){location.href='/'}},
+  tri:b=>{S.tri=b.dataset.v;S.cVie=false;render()},
+  ckey:b=>{S.cKey=b.dataset.v;S.cVie=false;render()},
+  cvie:()=>{S.cVie=true;render()},
   cours:b=>{S.cours=b.dataset.id;render();if(innerWidth<1280)$('.entry')?.scrollIntoView({block:'start',behavior:'smooth'})},
   cnav:b=>{const cls=S.classes[S.cid];const all=[...(cls.cours||[]).map(c=>c.id),'vie'];const i=all.indexOf(S.cours)+ +b.dataset.v;if(all[i]){S.cours=all[i];render()}},
   viemode:b=>{S.vieMode=b.dataset.v;render()},
@@ -3785,7 +3762,7 @@ document.addEventListener('focusin',ev=>{const t=ev.target;if(t.classList?.conta
 document.addEventListener('pointerover',ev=>{const b=ev.target.closest&&ev.target.closest('.bars .b');if(b&&$('#tip'))$('#tip').textContent=b.dataset.tip});
 document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBulFS();return}if(ev.key==='Escape'&&!$('#sheet').hidden)closeSheet();
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi,.dtab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('.dtab')?1:ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
-document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}if(t.id==='rj-date'&&t.value){S.rjDate=t.value;render()}});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='bsel'){S.sel=t.value;refreshBul()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}if(t.id==='rj-date'&&t.value){S.rjDate=t.value;render()}});
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='m-txt')S.mDraft=t.value;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
@@ -3849,7 +3826,7 @@ function onData(key){
   if(key==='msgs')discAlert();
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
-  if(key==='notes'&&S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det'&&document.querySelector('.dtab')){refreshDet();return}
+  if(key==='notes'&&S.view==='classe'&&(S.ctab==='palm'&&S.pVue==='det'||S.ctab==='cotes')&&document.querySelector('.dtab')){refreshDet();const cb=$('#cbarC');if(cb){const t2=document.createElement('div');t2.innerHTML=barCotes(S.cid);cb.replaceWith(t2.firstElementChild)}return}
   if(key==='notes'&&S.view==='classe'&&(S.ctab==='cotes'||S.ctab==='bul')){S.ctab==='cotes'?refreshCotes():refreshBul();return}
   renderSoon();
 }

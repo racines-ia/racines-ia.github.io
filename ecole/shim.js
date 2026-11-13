@@ -666,7 +666,7 @@
   function accountBlock() {
     if (!ME) return;
     const inS = typeof S !== 'undefined';
-    const host = (inS && S.view === 'gestion' && document.querySelector('[data-act="go"][data-v="presence"]')?.parentElement)
+    const host = (inS && S.view === 'gestion' && document.querySelector('[data-act="go"][data-v="devall"]')?.parentElement)
       || (inS && S.view === 'prof' && (S.pid === ME.member.profile_id || S.pid === ME.uid) && document.querySelector('.pf-page .prof'));
     if (!host || host.querySelector(':scope > .clr-acc')) return;
     const d = document.createElement('div'); d.className = 'clr-acc';

@@ -2328,8 +2328,10 @@ function vCorbeille(){
 const canPalmSit=()=>isDir()&&(!isSec()||['promoteur','prefet','etudes'].includes(myPoste()));
 /* ---------- Certificat de mérite (lauréat de l'école ou de la classe) ---------- */
 const certPer=k=>k==='an'?'l’année scolaire entière':k[0]==='t'?'le '+TRI[k]:k.startsWith('ex')?'l’examen du '+TRI['t'+k.slice(2)]:'la '+perLong(k);
+function dirSig(){const c=chefPerson();if(c?.signature)return{img:c.signature,nom:c.nom,id:c.id};const me=ensList().find(x=>x.id===meId());if(isDir()&&me?.signature&&(!c||c.id===me.id))return{img:me.signature,nom:me.nom,id:me.id};
+ const b=Object.entries(S.sigs).filter(([k,v])=>k.startsWith('bul__')&&k.endsWith('__chef')&&v?.img).map(([,v])=>v).sort((a,b)=>(b.at||'').localeCompare(a.at||''))[0];return b?{img:b.img,nom:b.nom||c?.nom||'',id:c?.id||''}:{img:'',nom:c?.nom||'',id:c?.id||(isDir()?meId():'')}}
 function certData(eid,key,scope){const e=S.eleves[eid];if(!e)return null;const cid=e.classeId;const pd=palmData(cid,key);const r=pd.ranked.find(x=>x.e.id===eid);if(!r)return null;
- const F=e.sexe==='F';const ec=S.config.ecole||{};const cs=chefSig(cid);
+ const F=e.sexe==='F';const ec=S.config.ecole||{};const cs=dirSig();
  let nb=pd.ranked.length;if(scope==='ecole')nb=sum(classIds().map(c=>palmData(c,key).ranked.length));
  return{e,cid,cls:S.classes[cid],r,pd,F,ec,cs,nb,scope,key}}
 function certPaper(eid,key,scope){const d=certData(eid,key,scope);if(!d)return '';const{e,cls,r,pd,F,ec,cs,nb}=d;const E=ECO();
@@ -2352,6 +2354,7 @@ function certSheet(eid,key,scope){const d=certData(eid,key,scope);if(!d){toast('
  openSheet('Certificat de mérite',`<div class="stack"><p class="muted small" style="margin:0">${h(nomComplet(d.e))} · ${h(d.cls?.nom||'')} · ${h(keyName(key))} · ${pctf(d.r.pct)}</p>
   <div class="cert-prev"><div class="cert-zoom">${certPaper(eid,key,scope)}</div></div>
   <button class="btn grad" data-act="cert-pdf" data-id="${h(eid)}" data-k="${key}" data-s="${scope}">${ic('doc',16)} Envoyer aux parents (PDF · WhatsApp)</button>
+  ${d.cs.img?'<p class="muted small" style="margin:0">La signature du '+h(chefLbl().toLowerCase())+' est placée automatiquement.</p>':`<div class="card pad small stack"><span><b>Signature absente.</b> Enregistrez une fois la signature du ${h(chefLbl().toLowerCase())} dans son profil : elle se placera ensuite toute seule sur tous les certificats.</span>${d.cs.id&&isDir()?`<button class="btn sm" data-act="cert-sig" data-id="${h(d.cs.id)}">Ajouter la signature</button>`:''}</div>`}
   <p class="muted small" style="margin:0">Le certificat s’ouvre en PDF : choisissez WhatsApp, puis le numéro du parent${d.e.telephone||d.e.tel?' ('+h(d.e.telephone||d.e.tel)+')':''}.</p></div>`);
  requestAnimationFrame(()=>{const z=document.querySelector('.cert-zoom'),pv=document.querySelector('.cert-prev');if(z&&pv){const k=pv.clientWidth/1123;z.style.transform=`scale(${k})`;pv.style.height=Math.round(794*k)+'px'}})}
 async function certPDF(eid,key,scope){const d=certData(eid,key,scope);if(!d)return;
@@ -3365,6 +3368,7 @@ const A={
   amoisa:b=>{S.aMoisA=b.dataset.v;render()},
   ajour:b=>ajourSheet(S.cid,b.dataset.v),
   cert:b=>certSheet(b.dataset.id,b.dataset.k,b.dataset.s),
+  'cert-sig':b=>{closeSheet();editEns(b.dataset.id);setTimeout(()=>document.querySelector('#ens-sigwrap,#ens-sigprev')?.scrollIntoView({block:'center'}),350)},
   'cert-pdf':b=>certPDF(b.dataset.id,b.dataset.k,b.dataset.s),
   jmenu:b=>{const d=b.dataset.v;if(!canEditAppel(S.cid,d)){if(spDay(S.cid,d))toast(spLbl(spDay(S.cid,d)));else toast('L’appel se fait seulement le jour même.');return}spSheet(S.cid,d)},
   spmenu:b=>spSheet('',b.dataset.v),

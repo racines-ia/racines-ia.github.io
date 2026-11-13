@@ -30,7 +30,7 @@ for (const p of products) {
 <meta property="og:type" content="website"><meta property="og:site_name" content="cuervo.co">
 <meta property="og:title" content="${esc(p.titre)}"><meta property="og:description" content="${esc(desc)}">
 <meta property="og:url" content="${SITE}${dir}/${p.id}/">${img ? `<meta property="og:image" content="${esc(img)}"><meta name="twitter:card" content="summary_large_image">` : ''}
-<meta http-equiv="refresh" content="0;url=${esc(to)}"><script>location.replace(${JSON.stringify(to)}+(location.search?"&"+location.search.slice(1):""))</script></head>
+<script>location.replace(${JSON.stringify(to)}+(location.search?"&"+location.search.slice(1):""))</script></head>
 <body style="background:#07100B;color:#F1F5EE;font-family:sans-serif;padding:24px"><a style="color:#9BE36A" href="${esc(to)}">Ouvrir ${esc(p.titre)}</a></body></html>
 `);
   }

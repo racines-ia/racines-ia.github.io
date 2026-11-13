@@ -105,14 +105,16 @@
     async clear() { try { const d = await this.open(); await new Promise(ok => { const t = d.transaction('kv', 'readwrite'); t.objectStore('kv').clear(); t.oncomplete = ok; t.onerror = ok; }); } catch (e) {} }
   };
   const ckey = () => 'cache:' + ME.uid + ':' + ME.member.school_id;
-  let since = null, saveT = 0;
+  let since = null, saveT = 0, verAt = 0;
+  const stamp = new Map();   // 'col/id' -> updated_at connu du serveur (sert à vérifier que rien ne manque)
+  const sameT = (a, b) => { const x = Date.parse(a), y = Date.parse(b); return !isNaN(x) && x === y; };
   const myClasses = () => JSON.stringify(((mapOf('affectations').get(ME.member.profile_id) || {}).classes || []).slice().sort());
   const finger = () => ME.member.role + '|' + ME.member.profile_id + '|' + (ME.member.role === 'admin' ? '' : myClasses());
   function saveSoon() {
     clearTimeout(saveT);
     saveT = setTimeout(() => {
       const rows = {}; for (const [c, m] of Object.entries(cache)) rows[c] = Object.fromEntries(m);
-      IDB.set(ckey(), { rows, since, finger: finger(), full: fullAt });
+      IDB.set(ckey(), { rows, since, finger: finger(), full: fullAt, stamps: Object.fromEntries(stamp), ver: verAt });
     }, 1500);
   }
   let fullAt = 0;
@@ -139,18 +141,69 @@
       for (const [id, d] of mapOf(col)) if (busyKey(col + '/' + id)) m.set(id, d);   // écriture locale en cours
       cache[col] = m;
     }
+    stamp.clear(); for (const r of rows) stamp.set(r.col + '/' + r.id, r.updated_at);
     since = rows.reduce((a, r) => (r.updated_at > a ? r.updated_at : a), since || '1970-01-01T00:00:00Z');
-    fullAt = Date.now();
+    fullAt = Date.now(); verAt = Date.now();
   }
   async function deltaLoad() {
     const sid = ME.member.school_id, after = back(since);
     const rows = await fetchRows(after);
     const { data: gone, error } = await sb.from('ecole_deleted').select('col,id,at').eq('school_id', sid).gt('at', after).limit(5000);
     if (error) throw error;
-    for (const g of gone) if (!busyKey(g.col + '/' + g.id)) mapOf(g.col).delete(g.id);
-    for (const r of rows) if (!busyKey(r.col + '/' + r.id)) mapOf(r.col).set(r.id, r.data);
+    for (const g of gone) if (!busyKey(g.col + '/' + g.id)) { mapOf(g.col).delete(g.id); stamp.delete(g.col + '/' + g.id); }
+    for (const r of rows) if (!busyKey(r.col + '/' + r.id)) { mapOf(r.col).set(r.id, r.data); stamp.set(r.col + '/' + r.id, r.updated_at); }
     since = rows.reduce((a, r) => (r.updated_at > a ? r.updated_at : a), since);
   }
+
+  /* Vérification : compare la liste du serveur (identifiant + date) avec ce téléphone et répare ce qui manque ou a changé.
+     Sans elle, une mise à jour manquée (réseau coupé, téléphone en veille) pouvait ne jamais arriver. */
+  let verifying = false;
+  async function verify(force) {
+    if (verifying || !ME || !loaded) return;
+    if (!force && stamp.size && Date.now() - verAt < 2 * 3600000) return;
+    if (typeof navigator !== 'undefined' && navigator.onLine === false) return;
+    verifying = true;
+    try {
+      if (loading) { try { await loading; } catch (e) {} }
+      const sid = ME.member.school_id, srv = new Map();
+      for (let from = 0; ; from += 1000) {
+        const { data, error } = await sb.from('ecole_docs').select('col,id,updated_at').eq('school_id', sid).order('col').order('id').range(from, from + 999);
+        if (error) throw error;
+        for (const r of data) srv.set(r.col + '/' + r.id, r);
+        if (data.length < 1000) break;
+      }
+      const need = [];
+      for (const [k, r] of srv) { if (busyKey(k)) continue; if (!mapOf(r.col).has(r.id) || !sameT(stamp.get(k), r.updated_at)) need.push(r); }
+      const extra = [];
+      for (const [col, m] of Object.entries(cache)) for (const id of m.keys()) { const k = col + '/' + id; if (!srv.has(k) && !busyKey(k)) extra.push([col, id]); }
+      if (!need.length && !extra.length) { verAt = Date.now(); saveSoon(); return; }
+      if (need.length > 1500) { since = null; await loadAll(); return; }
+      let changed = false;
+      const byCol = {}; for (const r of need) (byCol[r.col] = byCol[r.col] || []).push(r.id);
+      for (const [col, ids] of Object.entries(byCol)) for (let i = 0; i < ids.length; i += 80) {
+        const { data, error } = await sb.from('ecole_docs').select('col,id,data,updated_at').eq('school_id', sid).eq('col', col).in('id', ids.slice(i, i + 80));
+        if (error) throw error;
+        for (const r of data) { const k = r.col + '/' + r.id; if (busyKey(k)) continue; mapOf(r.col).set(r.id, r.data); stamp.set(k, r.updated_at); changed = true; }
+      }
+      if (extra.length) {
+        const dead = new Set();
+        const { data: gone } = await sb.from('ecole_deleted').select('col,id').eq('school_id', sid).limit(10000);
+        for (const g of gone || []) dead.add(g.col + '/' + g.id);
+        for (const [col, id] of extra) { const k = col + '/' + id; if (busyKey(k)) continue;
+          // saisi sur ce téléphone mais jamais arrivé au serveur : on le renvoie ; supprimé ailleurs : on l'enlève
+          if (!dead.has(k) && (col === 'notes' || col === 'appel') && gone) { outbox.set(k, { col, id, op: 'set', data: mapOf(col).get(id), t: Date.now(), quiet: true }); }
+          else { mapOf(col).delete(id); stamp.delete(k); changed = true; } }
+        if (outbox.size) { IDB.set(okey(), [...outbox.values()]); bar(); }
+      }
+      verAt = Date.now();
+      if (changed) emitAll();
+      saveSoon();
+      if (outbox.size) flush();
+    } catch (e) { /* on réessaiera */ } finally { verifying = false; }
+  }
+  setInterval(() => { if (!document.hidden) verify(); }, 15 * 60000);
+  window.racineSync = async () => { try { since = null; await loadAll(); await flush(); } catch (e) { return false; } return true; };   // bouton « Actualiser » : recharge tout depuis le serveur
+  window.racineVerify = () => verify(true);
 
   let loading = null;
   function loadAll() {
@@ -173,7 +226,8 @@
     const c = await IDB.get(ckey());
     if (!c || !c.rows) return false;
     for (const [col, obj] of Object.entries(c.rows)) cache[col] = new Map(Object.entries(obj));
-    since = c.since; fullAt = c.full || 0;
+    since = c.since; fullAt = c.full || 0; verAt = c.ver || 0;
+    stamp.clear(); for (const [k, v] of Object.entries(c.stamps || {})) stamp.set(k, v);
     if (c.finger !== finger()) { since = null; }   // rôle ou classes changés : rechargement complet
     loaded = true; emitAll();
     return true;
@@ -187,19 +241,18 @@
         const row = p.eventType === 'DELETE' ? p.old : p.new;
         if (!row || !row.col) return;
         if (busyKey(row.col + '/' + row.id)) return;
-        if (p.eventType === 'DELETE') mapOf(row.col).delete(row.id);
-        else mapOf(row.col).set(row.id, row.data);
-        if (row.updated_at && since && row.updated_at > since) since = row.updated_at;
+        if (p.eventType === 'DELETE') { mapOf(row.col).delete(row.id); stamp.delete(row.col + '/' + row.id); }
+        else { mapOf(row.col).set(row.id, row.data); if (row.updated_at) stamp.set(row.col + '/' + row.id, row.updated_at); }
         emit(row.col); saveSoon();
       })
       .subscribe(st => {
-        if (st === 'SUBSCRIBED') { if (!first) { loadAll().catch(() => {}); flush(); } first = false; }
+        if (st === 'SUBSCRIBED') { if (!first) { loadAll().catch(() => {}).then(() => verify(true)); flush(); } first = false; }
       });
   }
   document.addEventListener('visibilitychange', () => {
     if (document.hidden) { hiddenAt = Date.now(); return; }
     if (ME && loaded) flush();
-    if (ME && loaded && hiddenAt && Date.now() - hiddenAt > 45000) loadAll().catch(() => {});
+    if (ME && loaded && hiddenAt && Date.now() - hiddenAt > 45000) loadAll().catch(() => {}).then(() => verify());
   });
 
 
@@ -239,7 +292,7 @@
     if (flushing || !ME || !outbox.size) { bar(); return; }
     if (typeof navigator !== 'undefined' && navigator.onLine === false) { bar(); return; }
     flushing = true; bar();
-    let refused = 0, sent = 0;
+    let refused = 0, sent = 0, quietRef = 0;
     try {
       for (const o of [...outbox.values()].sort((a, b) => a.t - b.t)) {
         const k = o.col + '/' + o.id;
@@ -254,11 +307,12 @@
         } catch (e) { error = e; }
         if (error && isNet(error)) break;            // toujours pas de réseau : on réessaiera
         if (outbox.get(k) === o) { outbox.delete(k); IDB.set(okey(), [...outbox.values()]); }
-        if (error) refused++; else sent++;
+        if (error) { if (o.quiet) { mapOf(o.col).delete(o.id); quietRef++; } else refused++; } else sent++;
       }
     } finally { flushing = false; bar(); }
     if (refused) { since = null; try { window.toast && window.toast(refused > 1 ? refused + ' modifications faites hors connexion ont été refusées.' : 'Une modification faite hors connexion a été refusée.'); } catch (e) {} }
     else if (sent && !outbox.size) { try { window.toast && window.toast(sent > 1 ? sent + ' modifications envoyées.' : 'Modification envoyée.'); } catch (e) {} }
+    if (quietRef && !refused) emitAll();
     if (sent || refused) { try { await loading; } catch (e) {} loadAll().catch(() => {}); }
   }
   window.addEventListener('online', () => { bar(); flush(); if (ME && loaded) loadAll().catch(() => {}); });
@@ -280,9 +334,10 @@
           if (typeof navigator !== 'undefined' && navigator.onLine === false) throw { message: 'network offline' };
           const { data: out, error } = await withTmo(sb.from('ecole_docs')
             .upsert({ school_id: ME.member.school_id, col, id, data: clean, updated_by: ME.uid })
-            .select('data')).maybeSingle();
+            .select('data,updated_at')).maybeSingle();
           if (error) throw error;
           if (out && pending[key()] === 1) m.set(id, out.data);
+          if (out && out.updated_at) stamp.set(key(), out.updated_at);
           unhold(col, id);
           saveSoon();
         } catch (e) {
@@ -544,10 +599,10 @@
     box.hidden = true;
     const had = await restoreLocal();
     await restoreOut();
-    if (had) { emitAll(); readyResolve(); loadAll().catch(() => {}).then(flush); listen(); return; }
+    if (had) { emitAll(); readyResolve(); loadAll().catch(() => {}).then(flush).then(() => verify()); listen(); return; }
     try { await loadAll(); } catch (e) { loaded = true; emitAll(); }
     listen();
-    readyResolve(); flush();
+    readyResolve(); flush(); verify();
   }
 
   async function backup() {

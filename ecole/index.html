@@ -1295,7 +1295,7 @@ function V(eid,c,key){
   const v=noteOf(eid,c.id,TOF[key])[key.startsWith('ex')?'ex':key];return isNum(v)?v:null}
 function MX(c,key){return key[0]==='p'?c.max:key.startsWith('ex')?2*c.max:key==='an'?(isSec()?8:12)*c.max:4*c.max}
 function resume(eid,cls,key){let tot=0,any=false,max=0;for(const c of cls.cours||[]){max+=MX(c,key);const v=V(eid,c,key);if(v!=null){tot+=v;any=true}}return{tot:any?tot:null,max,pct:any&&max?tot/max*100:null}}
-function places(cid,key){const cls=S.classes[cid];const es=elevesOf(cid);const arr=es.map(e=>[e.id,resume(e.id,cls,key).tot]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]);const r={};arr.forEach(([id,v],i)=>{r[id]=i>0&&arr[i-1][1]===v?r[arr[i-1][0]]:i+1});return{r,n:es.length}}
+function places(cid,key){const cls=S.classes[cid];const es=elevesOf(cid);const arr=es.map(e=>[e.id,resume(e.id,cls,key).tot]).filter(x=>x[1]!=null).sort((a,b)=>b[1]-a[1]||coll.compare(nomComplet(S.eleves[a[0]]||{}),nomComplet(S.eleves[b[0]]||{})));const r={};arr.forEach(([id],i)=>{r[id]=i+1});return{r,n:es.length}}
 function progression(cid,t){if(!PER[t])t='t1';const cls=S.classes[cid];const es=elevesOf(cid);const C=(cls.cours||[]).length;if(!es.length||!C)return 0;let f=0;for(const e of es)for(const c of cls.cours){const n=noteOf(e.id,c.id,t);f+=[...PER[t],'ex'].filter(k=>isNum(n[k])).length}return f/(es.length*C*3)}
 function moyClasse(cid,key){const cls=S.classes[cid];const p=elevesOf(cid).map(e=>resume(e.id,cls,key).pct).filter(v=>v!=null);return p.length?sum(p)/p.length:null}
 function courseFill(cid,c,t){const es=elevesOf(cid);if(!es.length)return 0;const ks=PER[t]?[...PER[t],'ex']:['p1','p2','ex','p3','p4','p5','p6'];let f=0,n=0;for(const e of es){if(PER[t]){const nn=noteOf(e.id,c.id,t);for(const k of ks){n++;if(isNum(nn[k]))f++}}else{for(const tt of TRS()){const nn=noteOf(e.id,c.id,tt);for(const k of [...PER[tt],'ex']){n++;if(isNum(nn[k]))f++}}}}return n?f/n:0}
@@ -2245,7 +2245,7 @@ const GRP=[['fr','Français'],['ma','Mathématiques'],['cg','Culture générale'
 function palmData(cid,key){const cls=S.classes[cid];const es=elevesOf(cid);const gm=groupes(cls);
   const mx={fr:0,ma:0,cg:0};for(const c of cls.cours||[])mx[gm[c.id]]+=MX(c,key);const MT=mx.fr+mx.ma+mx.cg;
   const rows=es.map(e=>{const g={fr:null,ma:null,cg:null};for(const c of cls.cours||[]){const v=V(e.id,c,key);if(v!=null){const k=gm[c.id];g[k]=(g[k]||0)+v}}const any=GRPf().some(([k])=>g[k]!=null);const tot=any?(g.fr||0)+(g.ma||0)+(g.cg||0):null;return{e,g,tot,pct:tot==null?null:tot/MT*100}});
-  const ranked=rows.filter(r=>r.tot!=null).sort((a,b)=>b.tot-a.tot);let rk=0,prev=null;ranked.forEach((r,i)=>{if(r.tot!==prev){rk=i+1;prev=r.tot}r.p=rk});
+  const ranked=rows.filter(r=>r.tot!=null).sort((a,b)=>b.tot-a.tot||coll.compare(nomComplet(a.e),nomComplet(b.e)));ranked.forEach((r,i)=>{r.p=i+1});
   return{mx,MT,ranked,list:[...ranked,...rows.filter(r=>r.tot==null)],n:es.length}}
 function palmTable(cid,key,paper){const {mx,MT,list}=palmData(cid,key);
   const cell=(v,m)=>`<td class="num"><b>${v==null?'–':fmt(v)}</b><small>${v==null?'':fmt(v/m*100)+' %'}</small></td>`;
@@ -2268,7 +2268,7 @@ function tabPalm(){
   const cid=S.cid,cls=S.classes[cid],key=S.pKey||'t1';const es=elevesOf(cid);
   if(!es.length)return `<div class="card empty"><h3>Aucun élève dans cette classe</h3></div>`;
   const vue=S.pVue||'cl';
-  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures</button></div>`;
+  const seg=`<div class="seg full" role="group" aria-label="Affichage"><button data-act="pvue" data-v="cl" aria-pressed="${vue==='cl'}">Classement</button><button data-act="pvue" data-v="det" aria-pressed="${vue==='det'}">Par branche</button><button data-act="pvue" data-v="sig" aria-pressed="${vue==='sig'}">Signatures</button></div><button class="btn sm" data-act="sync" style="align-self:flex-start">Actualiser les cotes</button>`;
   const chips=`<div class="chips" role="group" aria-label="Période">${pkeys().map(([k,l])=>`<button class="chipb${k[0]==='t'||k==='an'?' strong':''}" data-act="pkey" data-v="${k}" aria-pressed="${key===k}">${l}</button>`).join('')}</div>`;
   if(vue==='sig')return `<div class="card pad stack">${seg}${chips}</div>`+tabSig();
   if(vue==='det')return `<div class="card pad stack">${seg}<div class="sec-h"><div><h2 class="h2">Points par branche</h2><span class="muted small">${h(cls.nom)} · ${h(keyName(key))}</span></div><span class="btns"><button class="btn sm grad" data-act="detfs">${ic('expand',16)} Plein écran</button></span></div>${chips}</div>`+palmDetail(cid,key,chips);
@@ -2379,7 +2379,7 @@ function vPalmSit(){
   const chips=`<div class="chips" role="group" aria-label="Période">${pkeys().map(([k,l])=>`<button class="chipb${k[0]==='t'||k==='an'?' strong':''}" data-act="pskey" data-v="${k}" aria-pressed="${key===k}">${l}</button>`).join('')}</div>`;
   const tile=(l,v,sub)=>`<div class="card pad pst"><small class="muted">${l}</small><b class="num">${v}</b><span class="muted small">${sub}</span></div>`;
   return band({back:'accueil',kicker:isSec()?'Préfecture des études':'Direction',title:'Situation des palmarès',sub:`${keyName(key)} · ${ids.length} classe${ids.length>1?'s':''} · ${N} élèves`})+page(`
-   <div class="card pad stack">${chips}<p class="muted small" style="margin:0">Le résultat de chaque classe pour la période choisie, calculé à partir des cahiers de cotes. Touchez une classe pour ouvrir son palmarès.</p></div>
+   <div class="card pad stack">${chips}<p class="muted small" style="margin:0">Le résultat de chaque classe pour la période choisie, calculé à partir des cahiers de cotes. Touchez une classe pour ouvrir son palmarès.</p><button class="btn sm" data-act="sync" style="align-self:flex-start">Actualiser les cotes</button></div>
    <div class="pstiles">${tile('Élèves classés',`${CL} / ${N}`,N?Math.round(CL/N*100)+' % des élèves ont des points':'—')}${tile('Moyenne de l’école',pctf(MOY),'moyenne des élèves classés')}${tile('Réussite (≥ 50 %)',CL?Math.round(REU/CL*100)+' %':'—',`${REU} réussite${REU>1?'s':''} · ${CL-REU} échec${CL-REU>1?'s':''}`)}${tile('Parents ont signé',`${SP} / ${N}`,'signatures du palmarès')}</div>
    ${best?`<div class="card pad psbest">${avEl(best.e,'')}<span class="grow"><small class="muted">Meilleur(e) élève de l’école</small><b style="display:block">${h(nomComplet(best.e))}</b><span class="muted small">${h(S.classes[best.e.classeId]?.nom||'')} · ${pctf(best.pct)}</span></span><span class="pill good">1<sup>${best.e.sexe==='F'?'re':'er'}</sup></span></div>
    <button class="btn grad" data-act="cert" data-id="${h(best.e.id)}" data-k="${key}" data-s="ecole" style="align-self:flex-start">${ic('doc',16)} Certificat de mérite du lauréat de l’école</button>`:''}
@@ -3367,6 +3367,7 @@ const A={
   popen:b=>{S.cid=b.dataset.id;S.ctab=b.dataset.v;S.sel='';S.view='classe';render();scrollTo(0,0)},
   amoisa:b=>{S.aMoisA=b.dataset.v;render()},
   ajour:b=>ajourSheet(S.cid,b.dataset.v),
+  sync:async b=>{if(S.demo||!window.racineSync){toast('Données à jour.');return}b.disabled=true;toast('Actualisation des données…');const ok=await window.racineSync();toast(ok?'Données à jour : vous voyez ce que les enseignants ont enregistré.':'Pas de connexion : réessayez quand le réseau revient.');render()},
   cert:b=>certSheet(b.dataset.id,b.dataset.k,b.dataset.s),
   'cert-sig':b=>{closeSheet();editEns(b.dataset.id);setTimeout(()=>document.querySelector('#ens-sigwrap,#ens-sigprev')?.scrollIntoView({block:'center'}),350)},
   'cert-pdf':b=>certPDF(b.dataset.id,b.dataset.k,b.dataset.s),

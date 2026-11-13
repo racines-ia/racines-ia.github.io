@@ -2986,7 +2986,9 @@ function santeList(){return Object.entries(S.sante).map(([id,x])=>({id,...x})).s
 const santeEl=x=>S.eleves[x.eleveId]||{nom:x.nom||'Élève',prenom:'',sexe:x.sexe||'M',classeId:x.classeId};
 const santeMotif=x=>{const s=(x.symptomes||[]).join(', ');return s&&x.motif?s+' · '+x.motif:s||x.motif||''};
 const ageOf=e=>{if(!e?.dateNaissance)return null;const b=new Date(e.dateNaissance+'T12:00'),n=new Date();let a=n.getFullYear()-b.getFullYear();if(n.getMonth()<b.getMonth()||(n.getMonth()===b.getMonth()&&n.getDate()<b.getDate()))a--;return a>0&&a<30?a:null};
-const santeBy=()=>{const p=ensList().find(x=>x.id===meId())||(S.demo?ensList().find(x=>isGest(x)&&/direct/i.test(x.matiere||'')):null);return{nom:p?.nom||'La direction',fn:p?.matiere||'Direction',sig:p?.signature||''}};
+const santeBy=()=>{const p=ensList().find(x=>x.id===meId())||(S.demo?ensList().find(x=>isGest(x)&&/direct/i.test(x.matiere||'')):null);return{nom:p?.nom||'La direction',fn:p?.matiere||'Direction',sig:p?.signature||'',pid:p?.id||''}};
+/* la signature n'est plus copiée dans chaque document : on garde seulement la référence du profil qui a signé */
+const sigOfPid=id=>{const x=id&&S.inscr[id];return x?.signature||(x?.profil?S.inscr[x.profil]?.signature:'')||''};
 const waNum=t=>{let d=String(t||'').replace(/\D/g,'');if(d.startsWith('00'))d=d.slice(2);if(d.length===10&&d[0]==='0')d='243'+d.slice(1);else if(d.length===9)d='243'+d;return d.length>=11?d:''};
 function vSante(){
   if(!isDir()){S.view='prof';return screen()}
@@ -3053,7 +3055,7 @@ function santePaper(id){
    <div class="rp-sec"><h4>2. Motif de la sortie</h4>${(x.symptomes||[]).length?`<p class="rp-note" style="margin:0 0 6px"><b>Symptômes :</b> ${h(x.symptomes.join(', '))}</p>`:''}<p class="rp-box">${x.motif?h(x.motif).replace(/\n/g,'<br>'):'—'}</p></div>
    <div class="rp-sec"><h4>3. Conseils aux parents</h4><p class="rp-box">${x.conseils?h(x.conseils).replace(/\n/g,'<br>'):'—'}</p>
     <p class="rp-note">Ces conseils ne remplacent pas l’avis d’un agent de santé. Si l’état de l’enfant s’aggrave, conduisez-le sans attendre au centre de santé le plus proche, puis informez l’école.</p></div>
-   <div class="rp-sign" style="grid-template-columns:1fr 1fr"><div>Pour la direction${x.bySig?`<br><img class="rp-sig" src="${h(x.bySig)}" alt="">`:''}<br><small>${h(x.byNom||ec.chef||'')}${x.byFn?' · '+h(x.byFn):''}</small></div><div>Enfant remis à<br><small>${x.remis?h(x.remis):'………………………………'}</small></div></div>
+   <div class="rp-sign" style="grid-template-columns:1fr 1fr"><div>Pour la direction${x.bySig||sigOfPid(x.byPid)?`<br><img class="rp-sig" src="${h(x.bySig||sigOfPid(x.byPid))}" alt="">`:''}<br><small>${h(x.byNom||ec.chef||'')}${x.byFn?' · '+h(x.byFn):''}</small></div><div>Enfant remis à<br><small>${x.remis?h(x.remis):'………………………………'}</small></div></div>
   </div>`;
 }
 function santeTexte(id){const x=S.sante[id];const e=santeEl(x);const dc=DECIS.find(d=>d[0]===x.decision);
@@ -3298,7 +3300,7 @@ function journalSheet(d){d=d||S.jDate||today();S.jDate=d;const L=Object.entries(
   <div class="card list">${L.map(p=>{const e=S.eleves[p.eleveId]||{nom:p.nom||'Élève'};return `<button class="li" data-act="pc-el" data-id="${h(p.eleveId)}">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${h(S.classes[e.classeId]?.nom||'')}${p.at?' · '+hm(p.at):''}</span></span><b class="num">${fmtM(p.montant)}</b></button>`}).join('')||'<div class="pad muted small">Aucun paiement ce jour-là.</div>'}</div>
   ${L.length?`<button class="btn sm" data-act="pc-jcopy">Copier le résumé du jour</button>`:''}</div>`);
 }
-function recuPaper(pid){const p=S.paiem[pid];const e=S.eleves[p.eleveId]||{nom:p.nom||''};const s=situation(p.eleveId);const ec=S.config.ecole||{};const by=p.byNom?{nom:p.byNom,fn:p.byFn,sig:p.bySig}:santeBy();
+function recuPaper(pid){const p=S.paiem[pid];const e=S.eleves[p.eleveId]||{nom:p.nom||''};const s=situation(p.eleveId);const ec=S.config.ecole||{};const by=p.byNom?{nom:p.byNom,fn:p.byFn,sig:p.bySig||sigOfPid(p.byPid)}:santeBy();
  return `<div class="ob rp sn-paper">
   <div class="ob-top"><img src="${eLogo()}" alt=""><div class="ob-tt"><div>${h(ECO().nom)}</div><div>Reçu de paiement · Frais scolaires</div><div>Année scolaire ${ANNEE.replace('–',' - ')}</div></div><img src="${eLogo()}" alt=""></div>
   <div class="rp-id"><div><b>${h(nomComplet(e))}</b><span>${h(S.classes[e.classeId]?.nom||p.classeNom||'')}${e.matricule?' · N° Perm. '+h(e.matricule):''}</span><span>Reçu n° ${h(p.recu||'—')} · ${h(dfr(p.date))} ${D(p.date).getUTCFullYear()}</span></div></div>
@@ -3845,17 +3847,17 @@ document.addEventListener('submit',async ev=>{
     const btn=f.querySelector('button[type=submit]');if(btn.dataset.busy)return;btn.dataset.busy='1';btn.textContent='Enregistrement…';
     const by=santeBy();const y=today().slice(0,4);let n=Object.values(S.paiem).filter(p=>(p.recu||'').startsWith(y+'-')).length;const now=Date.now();let ok=0,tot=0;
     for(const [i,[eid,m]] of L.entries()){const e=S.eleves[eid];const id='p-'+(now+i).toString(36)+Math.random().toString(36).slice(2,6);n++;
-      try{await put('paiements',id,{eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:'',ref:'',recu:y+'-'+String(n).padStart(4,'0'),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:meId(),at:new Date(now+i*1000).toISOString()});ok++;tot+=m}catch(err){}}
+      try{await put('paiements',id,{eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:'',ref:'',recu:y+'-'+String(n).padStart(4,'0'),byNom:by.nom,byFn:by.fn||'',byPid:by.pid||'',bySig:by.pid?'':by.sig||'',by:meId(),at:new Date(now+i*1000).toISOString()});ok++;tot+=m}catch(err){}}
     closeSheet();toast(ok===L.length?`${ok} paiement${ok>1?'s':''} enregistré${ok>1?'s':''} · ${fmtM(tot)}`:`${ok} paiement(s) enregistré(s) sur ${L.length}. Vérifiez la liste du jour.`);render();return}
   if(f.id==='f-pay'){const eid=fd.eleveId;const e=S.eleves[eid];const m=numM(fd.montant);if(!e){toast('Choisissez l’élève.');return}if(!(m>0)){toast('Indiquez le montant payé.');return}
-    const id=f.dataset.id||'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.paiem[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
-    await put('paiements',id,{...old,eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:(fd.payeur||'').trim(),ref:(fd.ref||'').trim(),recu:old.recu||nextRecu(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()});
+    const id=f.dataset.id||'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.paiem[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig,pid:old.byPid}:santeBy();
+    await put('paiements',id,{...old,eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:(fd.payeur||'').trim(),ref:(fd.ref||'').trim(),recu:old.recu||nextRecu(),byNom:by.nom,byFn:by.fn||'',byPid:by.pid||'',bySig:by.pid?'':by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()});
     toast(f.dataset.id?'Paiement modifié':'Paiement enregistré');if(f.dataset.id)eleveFinSheet(eid);else recuSheet(id);return}
   if(f.id==='f-remise'){const eid=f.dataset.id;const v=numM(fd.valeur);if(!(v>0)){await del('frais','r_'+eid);eleveFinSheet(eid);return}await put('frais','r_'+eid,{type:fd.type,valeur:v,motif:(fd.motif||'').trim()});toast('Réduction enregistrée');eleveFinSheet(eid);return}
   if(f.id==='f-pparam'){await put('frais','_param',{...PAR(),devise:fd.devise||'FC'});closeSheet();toast('Monnaie enregistrée');return}
   if(f.id==='f-sante'){const id=f.dataset.id||'s-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const e=S.eleves[fd.eleveId];if(!e){toast('Choisissez l’élève.');return}
-    const old=S.sante[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig}:santeBy();
-    const doc={...old,eleveId:fd.eleveId,classeId:e.classeId,nom:nomComplet(e),classeNom:S.classes[e.classeId]?.nom||'',date:fd.date,heure:fd.heure,symptomes:(fd.symptomes||'').split('|').filter(Boolean),motif:(fd.motif||'').trim(),temp:(fd.temp||'').trim(),remis:(fd.remis||'').trim(),decision:fd.decision||'maison',conseils:(fd.conseils||'').trim(),byNom:by.nom,byFn:by.fn||'',bySig:by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()};
+    const old=S.sante[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig,pid:old.byPid}:santeBy();
+    const doc={...old,eleveId:fd.eleveId,classeId:e.classeId,nom:nomComplet(e),classeNom:S.classes[e.classeId]?.nom||'',date:fd.date,heure:fd.heure,symptomes:(fd.symptomes||'').split('|').filter(Boolean),motif:(fd.motif||'').trim(),temp:(fd.temp||'').trim(),remis:(fd.remis||'').trim(),decision:fd.decision||'maison',conseils:(fd.conseils||'').trim(),byNom:by.nom,byFn:by.fn||'',byPid:by.pid||'',bySig:by.pid?'':by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()};
     if(!doc.symptomes.length&&!doc.motif){toast('Indiquez le motif de la sortie.');return}
     await put('sante',id,doc);toast(f.dataset.id?'Fiche mise à jour':'Sortie enregistrée');santeFiche(id);render();return}
   if(f.id==='f-ins'){await put('inscriptions',meId(),{nom:fd.nom.trim(),tel:fd.tel.trim(),matiere:fd.matiere.trim(),date:new Date().toISOString()});toast('Demande envoyée à la direction')}

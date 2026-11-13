@@ -502,6 +502,8 @@ table.cjt .cj-del.armed{background:var(--bad);color:#fff;text-decoration:none;bo
 .pm-n i{font-style:normal;color:var(--muted);font-size:12px;min-width:18px}
 .pm-r .inp{width:116px;flex:none;height:42px;text-align:right;font-weight:700;font-size:16px;padding:0 12px}
 .pm-tot{position:sticky;bottom:0;background:var(--soft);border-radius:14px;padding:10px 14px;font-weight:700;text-align:center}
+table.cjt tr.nw td{background:var(--soft)}
+.nwb{color:var(--accent)}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -3085,7 +3087,17 @@ function barCotes(cid){
 function seenGet(){try{return localStorage.getItem('clr-seen')||''}catch(e){return ''}}
 function seenSet(v){try{localStorage.setItem('clr-seen',v)}catch(e){}}
 function events(){const out=[];for(const j of Object.values(S.journal)){if(!S.classes[j.classeId])continue;if(j.appel)out.push({t:'appel',j,at:j.appel.at,e:j.appel});if(j.cotes)out.push({t:'cotes',j,at:j.cotes.at,e:j.cotes})}return out.sort((a,b)=>(b.at||'').localeCompare(a.at||''))}
-function unseen(){const s=seenGet();return events().filter(x=>!s||x.at>s).length}
+function iAmChef(){if(!isDir())return false;if(S.demo)return !isSec()||['promoteur','prefet'].includes(myPoste());if(isSec())return ['promoteur','prefet'].includes(myPoste());const c=chefPerson();if(!c)return true;const me=S.inscr[meId()];return c.id===meId()||me?.profil===c.id||(!!me&&/direct/i.test(me.matiere||''))}
+function payNews(){if(!iAmChef())return[];const s=seenGet();return Object.entries(S.paiem).filter(([,p])=>p.at&&(!s||p.at>s)&&p.by!==meId()).map(([id,p])=>({id,...p}))}
+function unseen(){const s=seenGet();return events().filter(x=>!s||x.at>s).length+payNews().length}
+const PNK='clr-pay-vus';
+function payAlert(){if(!S.ready||S.demo||!iAmChef())return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(PNK)||'null')||[])}catch(e){seen=new Set()}
+  const first=!localStorage.getItem(PNK);const td=today();const N=Object.entries(S.paiem).filter(([id,p])=>!seen.has(id)&&p.by!==meId()&&p.date===td);
+  Object.keys(S.paiem).forEach(id=>seen.add(id));try{localStorage.setItem(PNK,JSON.stringify([...seen].slice(-3000)))}catch(e){}
+  if(first||!N.length)return;const tot=sum(N.map(([,p])=>numM(p.montant)));const p0=N[N.length-1][1];const e=S.eleves[p0.eleveId]||{nom:p0.nom||''};const qui=p0.byNom||'Le surécole';
+  const title=N.length>1?`${qui} a enregistré ${N.length} paiements · ${fmtM(tot)}`:`${qui} a enregistré un paiement · ${fmtM(tot)}`;
+  const body=N.length>1?N.slice(-4).map(([,p])=>{const x=S.eleves[p.eleveId]||{nom:p.nom||''};return nomComplet(x)+' : '+fmtM(p.montant)}).join('\n'):`${nomComplet(e)} · ${(S.classes[e.classeId]?.nom||p0.classeNom||'')} · ${fmtM(p0.montant)}`;
+  sysNotif(title,body);if(S.view!=='activite')toast(title+' · voir la cloche')}
 function personOf(id,cid){const all=ensList();return all.find(p=>p.id===id)||teachersOf(cid)[0]||{nom:'Enseignant',id:''}}
 function vActivite(){
   const evs=events();const seen=S.seenAt||'';const td=today();
@@ -3111,6 +3123,9 @@ function vActivite(){
      <span class="${st.ap}">Appel <em class="num">${st.apTxt}</em></span><span class="${st.co}">Cotes <em class="num">${st.coTxt}</em></span></button>`}).join('')}</div>
    <button class="btn sm" data-act="rjopen" data-v="" style="align-self:flex-start">${ic('book',16)} Feuilleter le registre jour par jour</button>
    <p class="muted small" style="margin:0"><span class="lg-dot on"></span> Fait et clôturé · <span class="lg-dot mid"></span> En cours · <span class="lg-dot"></span> Pas encore fait (clignote). Touchez une classe pour voir le bilan du jour.</p></div>
+   ${iAmChef()?(()=>{const {L,tot,nel}=caisseData(td);const nw=p=>seen&&p.at>seen&&p.by!==meId();return `<section class="card pad stack paynot"><div class="sec-h"><div><h2 class="h2">Paiements du jour</h2><span class="muted small num">${L.length?`${nel} élève${nel>1?'s':''} · ${fmtM(tot)}`:'Aucun paiement enregistré aujourd’hui'}</span></div><button class="btn sm" data-act="pc-journal">Autres jours</button></div>
+    ${L.length?`<div class="tblwrap"><table class="t cjt"><thead><tr><th>N°</th><th class="name">Nom, postnom et prénom</th><th>Classe</th><th class="mt">Montant</th></tr></thead><tbody>${L.map((p,i)=>`<tr class="${nw(p)?'nw':''}"><td class="num muted">${i+1}</td><td class="name"><button class="cj-n" data-act="pc-el" data-id="${h(p.eleveId)}">${h(nomComplet(p.e))}</button><small class="muted num">${hm(p.at)} · par ${h(p.byNom||'la direction')}${nw(p)?' · <b class="nwb">Nouveau</b>':''}</small></td><td class="cl">${h(p.cls.replace(' année primaire',''))}</td><td class="mt num"><b>${fmtM(p.montant)}</b></td></tr>`).join('')}<tr class="tot"><td></td><td class="name">Total du jour</td><td></td><td class="mt num"><b>${fmtM(tot)}</b></td></tr></tbody></table></div>`:''}
+    <p class="muted small" style="margin:0">Vous seul voyez ce tableau. Il se remplit dès que le surécole enregistre un paiement.</p></section>`})():''}
    ${cards||`<div class="card empty"><span class="ib g">${ic('check',22)}</span><h3>Aucune activité pour l’instant</h3><p class="muted small">Les clôtures d’appel et de cotes des enseignants apparaîtront ici.</p></div>`}`);
 }
 
@@ -3271,7 +3286,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -3509,6 +3524,7 @@ let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(applyFit,80
 /* ---------- données ---------- */
 function onData(key){
   if(!S.ready)return;
+  if(key==='paiem')payAlert();
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
   if(key==='notes'&&S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det'&&document.querySelector('.dtab')){refreshDet();return}

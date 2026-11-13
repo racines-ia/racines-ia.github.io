@@ -611,6 +611,7 @@
         return;
       }
     } catch (err) {}
+    if (member.role === 'teacher' && await accesBloque(box)) return;
     if (ME) return;
     ME = { uid: session.user.id, member, phone: session.user.email.split('@')[0] };
     box.hidden = true;
@@ -621,6 +622,26 @@
     listen();
     readyResolve(); flush(); verify();
   }
+
+  /* Accès d'un enseignant suspendu à distance par la direction */
+  async function accesBloque(box) {
+    let r = null;
+    try { const { data, error } = await sb.rpc('ecole_mon_acces'); if (!error) r = data; } catch (e) {}
+    if (!r || !r.bloque) return false;
+    const motif = (r.info && r.info.motif) ? String(r.info.motif).replace(/[<>&]/g, '') : '';
+    box = box || document.getElementById('auth'); if (!box) return true;
+    box.hidden = false;
+    box.querySelector('.box').innerHTML = `<img class="lg" src="icon-192-v3.png" alt=""><h1>Accès suspendu</h1>
+      <p>La direction de <b>${((window.ECOLE && window.ECOLE.nom) || 'votre école').replace(/[<>&]/g, '')}</b> a suspendu l’accès de votre compte à l’application.</p>
+      ${motif ? `<p style="font-size:14px">Motif : <b>${motif}</b></p>` : ''}
+      <p style="font-size:14px">Vos données sont conservées. Adressez-vous à la direction pour rouvrir l’accès.</p>
+      <button class="go" type="button" id="a-retry">Réessayer</button><button class="lnk" type="button" id="a-out">Se déconnecter</button>`;
+    box.querySelector('#a-out').onclick = () => window.appLogout();
+    box.querySelector('#a-retry').onclick = () => location.reload();
+    return true;
+  }
+  setInterval(async () => { if (ME && ME.member && ME.member.role === 'teacher' && !document.hidden) await accesBloque(); }, 3 * 60000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && ME && ME.member && ME.member.role === 'teacher') accesBloque(); });
 
   async function backup() {
     try { await loadAll(); } catch (e) {}

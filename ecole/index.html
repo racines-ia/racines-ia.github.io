@@ -524,6 +524,26 @@ tr.blkrow td{opacity:.9}
 tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--bad);font-weight:700;font-size:11.5px}
 .closebar.blkn{background:var(--bad-soft)}
 .closebar.blkn .cb-ic{background:var(--bad);color:#fff}
+/* Discipline du personnel */
+.acc-card{display:flex;align-items:center;gap:14px}
+.acc-card b{display:block}
+.acc-card small{display:block;color:var(--muted);margin-top:2px;line-height:1.35}
+.acc-card.off{background:var(--bad-soft)}
+.disc-li .ib.bad{background:var(--bad-soft);color:var(--bad)}
+.disc-tx{margin:0;line-height:1.55;overflow-wrap:anywhere}
+.disc-r{border-left:4px solid var(--good)}
+#f-drep textarea,#f-disc textarea{height:auto;min-height:130px;padding:12px 14px;line-height:1.45;resize:vertical}
+.disc-paper .dp-to{margin:18px 0 0;font-size:15px;line-height:1.5;text-align:right}
+.disc-paper .dp-t{margin:22px 0 0;text-align:center;font-size:22px;letter-spacing:.08em;text-decoration:underline}
+.disc-paper .dp-o{margin:16px 0 0;font-size:15px}
+.disc-paper .dp-x{margin:12px 0 0;font-size:15px;line-height:1.65;text-align:justify}
+.disc-paper .dp-sg{margin:28px 0 0 auto;width:260px;text-align:center;font-size:15px}
+.disc-paper .dp-sg img{display:block;height:60px;margin:4px auto;object-fit:contain;max-width:220px}
+.disc-paper .dp-sg i{display:block;height:56px}
+.disc-paper .dp-sg b{display:block;border-top:1px solid #222;padding-top:4px}
+.disc-paper .dp-rep{margin-top:26px;border-top:2px solid #222;padding-top:10px}
+.disc-paper .dp-rep h3{margin:0;font-size:16px}
+.disc-paper .dp-rep small{display:block;margin-top:6px;color:#555}
 /* Registre d'appel */
 .reg th,.reg td{padding:0;font-size:13px;border-bottom:1px solid var(--line);text-align:center;white-space:nowrap}
 .reg{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -1442,7 +1462,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1463,9 +1483,9 @@ function screen(){
     if(!S.inscr[meId()]){const L=libres();return band({kicker:'Espace enseignant',title:L.length?'Bienvenue':'Créez votre profil'})+page((L.length?`<section class="card pad stack"><div><b>Votre profil a peut-être déjà été préparé par la direction</b><p class="muted small" style="margin:4px 0 0">Touchez votre nom pour l’utiliser.</p></div><div class="list">${L.map(p=>`<button class="li" data-act="claim" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(p.matiere||'')}</span></span><span class="badge-g">C’est moi</span></button>`).join('')}</div></section><h2 class="h2">Sinon, créez votre profil</h2>`:'')+inscription())}
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
-  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','regjour'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
+  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','regjour','disc'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1754,6 +1774,7 @@ function vGestion(){
   const sec=isSec(),mp=myPoste(),promo=sec&&mp==='promoteur';
   return band({back:'accueil',kicker:sec?h(POSTE_LBL[mp]||'Direction'):'Direction',title:'Gestion de l’école',sub:sec?'Secondaire · salles, personnel et accès':'Classes, branches, enseignants et informations du bulletin'})+page(`
   ${sec?`<div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('shield',20)}</span><span>${promo?'<b>Vous êtes le promoteur</b> : vous voyez tout ce qui se passe à l’école. Créez le profil du <b>préfet</b> et donnez-lui son code ; c’est lui qui crée les accès de tout le personnel.':'<b>Vous êtes le préfet</b> : vous créez les accès de tout le personnel (secrétaire, directeurs, titulaires, professeurs) et vous leur donnez leur code personnel.'}</span></div>`:''}
+  <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
   ${canView('presence')?'':'<!--'}<button class="gcta" data-act="go" data-v="presence"><span><b>Présence du personnel</b><small>Chaque jour : administration, enseignants et travailleurs signent leur présence, avec l’heure d’arrivée écrite à la main.</small></span><i>${ic('chev',22)}</i></button>
   ${canView('presence')?'':'-->'}<button class="gcta" data-act="go" data-v="perception"><span><b>Perception des frais</b><small>Frais fixés par classe, paiements de chaque élève, montants restants, reçus PDF et rappels aux parents.</small></span><i>${ic('money',22)}</i></button>
@@ -1934,8 +1955,8 @@ document.addEventListener('input',ev=>{const i=ev.target;if(!i.matches||!i.match
 /* ---------- Remarques et suggestions : direction ↔ enseignant ---------- */
 const myEnsIds=()=>[meId(),S.inscr[meId()]?.profil].filter(Boolean);
 const ensIdsOf=id=>[id,S.inscr[id]?.profil,...Object.entries(S.inscr).filter(([,p])=>p.profil===id).map(([k])=>k)].filter(Boolean);
-function msgsOf(ensId){const ids=isDir()?ensIdsOf(ensId):myEnsIds();return Object.entries(S.msgs||{}).filter(([,m])=>m&&ids.includes(m.ens)).map(([id,m])=>({id,...m})).sort((a,b)=>(a.at||'')<(b.at||'')?-1:1)}
-function msgUnread(ensId){const L=Object.values(S.msgs||{}).filter(m=>m&&!m.luAt);if(isDir())return L.filter(m=>m.sens==='ens'&&(!ensId||ensIdsOf(ensId).includes(m.ens))).length;const ids=myEnsIds();return L.filter(m=>m.sens==='dir'&&ids.includes(m.ens)).length}
+function msgsOf(ensId){const ids=isDir()?ensIdsOf(ensId):myEnsIds();return Object.entries(S.msgs||{}).filter(([,m])=>m&&!m.kind&&ids.includes(m.ens)).map(([id,m])=>({id,...m})).sort((a,b)=>(a.at||'')<(b.at||'')?-1:1)}
+function msgUnread(ensId){const L=Object.values(S.msgs||{}).filter(m=>m&&!m.kind&&!m.luAt);if(isDir())return L.filter(m=>m.sens==='ens'&&(!ensId||ensIdsOf(ensId).includes(m.ens))).length;const ids=myEnsIds();return L.filter(m=>m.sens==='dir'&&ids.includes(m.ens)).length}
 const msgSeenBusy=new Set();
 function msgSeen(ensId){const mine=isDir()?'ens':'dir';for(const m of msgsOf(ensId)){if(m.sens!==mine||m.luAt||msgSeenBusy.has(m.id))continue;msgSeenBusy.add(m.id);const{id,...doc}=m;put('messages',id,{...doc,luAt:new Date().toISOString()}).catch(()=>{}).then(()=>msgSeenBusy.delete(id))}}
 const jourLbl=d=>{const td=today();if(d===td)return 'Aujourd’hui';const y=new Date(td+'T00:00:00Z');y.setUTCDate(y.getUTCDate()-1);if(d===iso(y))return 'Hier';const dd=D(d);return JLONG[dd.getUTCDay()]+' '+dfr(d)};
@@ -1979,13 +2000,99 @@ const MNK='clr-msg-vus';
 function msgAlert(){
   if(!S.ready||S.sim&&!S.demo)return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(MNK)||'[]'))}catch(e){seen=new Set()}
   const dir=isDir(),ids=dir?null:myEnsIds();
-  const N=Object.entries(S.msgs||{}).filter(([id,m])=>m&&!m.luAt&&!seen.has(id)&&(dir?m.sens==='ens':m.sens==='dir'&&ids.includes(m.ens)));
+  const N=Object.entries(S.msgs||{}).filter(([id,m])=>m&&!m.kind&&!m.luAt&&!seen.has(id)&&(dir?m.sens==='ens':m.sens==='dir'&&ids.includes(m.ens)));
   if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(MNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
   if(S.view==='msgs'&&!document.hidden)return;
   const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'}`:(N.length>1?`${N.length} nouveaux messages de la direction`:'Nouveau message de la direction');
   if(!S.demo)sysNotif(title,(m.texte||'').slice(0,140));
   toast(title+' · ouvrez '+(dir?'« Remarques aux enseignants »':'« Messages de la direction »'));
 }
+/* ---------- Discipline du personnel : accès à l'application, demandes d'explication, blâmes ---------- */
+const ACCM=()=>S.config.acces||{};
+const ensBloque=p=>{const A=ACCM();return ensIdsOf(p.id).map(k=>A[k]).find(Boolean)||null};
+async function setAcces(p,on,motif){const A={...ACCM()};for(const k of ensIdsOf(p.id))delete A[k];if(on)A[p.id]={at:new Date().toISOString(),motif:motif||'',by:meId()};S.config={...S.config,acces:A};await put('config','acces',A)}
+const DK={de:'Demande d’explication',blame:'Blâme'};
+const discTeachers=()=>ensList().filter(p=>!isGest(p));
+function discItems(ensId){const ids=isDir()?(ensId?ensIdsOf(ensId):null):myEnsIds();return Object.entries(S.msgs||{}).filter(([,m])=>m&&(m.kind==='de'||m.kind==='blame')&&(!ids||ids.includes(m.ens))).map(([id,m])=>({id,...m})).sort((a,b)=>(b.at||'').localeCompare(a.at||''))}
+const discRep=id=>Object.entries(S.msgs||{}).filter(([,m])=>m&&m.kind==='rep'&&m.ref===id).map(([rid,m])=>({id:rid,...m})).sort((a,b)=>(a.at||'').localeCompare(b.at||''));
+const discNom=ens=>{const p=ensList().find(x=>ensIdsOf(x.id).includes(ens)||x.id===ens);return p?.nom||S.inscr[ens]?.nom||'Enseignant'};
+function discState(d){const R=discRep(d.id);if(d.kind==='blame')return R.length?['good','Pris connaissance']:d.luAt?['acc','Lu']:['warn','Non lu'];if(R.length)return['good','Répondu'];if(d.delai&&d.delai<today())return['bad','Délai dépassé'];return d.luAt?['acc','Lu, sans réponse']:['warn','En attente']}
+function discUnread(){if(isDir())return Object.values(S.msgs||{}).filter(m=>m&&m.kind==='rep'&&!m.luAt).length;const ids=myEnsIds();return Object.values(S.msgs||{}).filter(m=>m&&(m.kind==='de'||m.kind==='blame')&&!m.luAt&&ids.includes(m.ens)).length}
+function vDisc(){
+  const dir=isDir();
+  if(S.dId&&S.msgs?.[S.dId])return discDetail(S.dId);S.dId='';
+  const L=discItems();
+  const card=d=>{const [c,l]=discState(d);return `<button class="li disc-li" data-act="dopen" data-id="${h(d.id)}"><span class="ib ${d.kind==='blame'?'bad':'acc'}">${ic(d.kind==='blame'?'shield':'pen',20)}</span><span class="grow"><span class="ttl" style="display:block">${DK[d.kind]}${dir?' · '+h(discNom(d.ens)):''}</span><span class="muted small">${h(d.objet||'')} · ${h(dfr(d.date||today()))}</span></span><span class="pill ${c}">${l}</span></button>`};
+  if(!dir)return band({back:'prof',home:true,kicker:'Direction',title:'Demandes d’explication',sub:'Courriers de la direction'})+page(`<div class="stack">${L.length?`<div class="card list">${L.map(card).join('')}</div>`:'<div class="card empty"><h3>Aucun courrier</h3><p class="muted small">Les demandes d’explication et les blâmes de la direction apparaîtront ici.</p></div>'}</div>`);
+  const T=discTeachers();
+  return band({back:'gestion',home:true,kicker:'Direction',title:'Discipline du personnel',sub:'Accès, demandes d’explication et blâmes'})+page(`<div class="stack">
+   <section class="card pad stack"><div class="sec-h"><div><h2 class="h2">Courriers</h2><span class="muted small">Demandes d’explication et blâmes adressés aux enseignants</span></div></div>
+    <div class="btns"><button class="btn grad sm" data-act="dnew" data-v="de">${ic('plus',16)} Demande d’explication</button><button class="btn sm danger" data-act="dnew" data-v="blame">${ic('plus',16)} Blâme</button></div></section>
+   ${L.length?`<div class="card list">${L.map(card).join('')}</div>`:'<div class="card pad muted small">Aucun courrier pour l’instant.</div>'}
+   <section class="sec"><div class="sec-h"><h2 class="h2">Accès à l’application</h2></div>
+    <p class="muted small" style="margin:0 0 8px">Un enseignant suspendu ne peut plus ouvrir l’application, sur aucun téléphone. Ses données restent intactes et tout revient dès que vous rétablissez l’accès.</p>
+    <div class="card list">${T.map(p=>{const b=ensBloque(p);return `<div class="li elrow${b?' off':''}"><button class="elmain" data-act="prof" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${b?`<b class="blkt">Suspendu</b> depuis le ${h(dfr(b.at.slice(0,10)))}${b.motif?' · '+h(b.motif):''}`:'Accès actif'}</span></span></button><button class="bsw${b?'':' on'}" data-act="acc" data-id="${h(p.id)}" role="switch" aria-checked="${!b}" aria-label="${b?'Rétablir':'Suspendre'} l’accès de ${h(p.nom)}"><i></i></button></div>`}).join('')||'<div class="pad muted small">Aucun enseignant.</div>'}</div></section></div>`);
+}
+function discDetail(id){
+  const d={id,...S.msgs[id]};const dir=isDir();const R=discRep(id);const [c,l]=discState(d);
+  if(!dir&&!d.luAt&&!msgSeenBusy.has(id)){msgSeenBusy.add(id);const{id:_,...doc}=d;put('messages',id,{...doc,luAt:new Date().toISOString()}).catch(()=>{}).then(()=>msgSeenBusy.delete(id))}
+  if(dir)R.filter(r=>!r.luAt&&!msgSeenBusy.has(r.id)).forEach(r=>{msgSeenBusy.add(r.id);const{id:rid,...doc}=r;put('messages',rid,{...doc,luAt:new Date().toISOString()}).catch(()=>{}).then(()=>msgSeenBusy.delete(rid))});
+  const canRep=!dir&&!R.length;const isB=d.kind==='blame';
+  return band({back:'disc',home:true,kicker:DK[d.kind],title:dir?discNom(d.ens):'La direction',sub:h(d.objet||'')})+page(`<div class="stack">
+   <div class="card pad stack disc-l"><div class="sec-h"><div><span class="eyebrow">${DK[d.kind]} · ${h(dfr(d.date||today()))}</span><h2 class="h2" style="margin-top:4px">${h(d.objet||'')}</h2></div><span class="pill ${c}">${l}</span></div>
+    <p class="disc-tx">${h(d.texte||'').replace(/\n/g,'<br>')}</p>
+    <small class="muted">${h(d.nom||'La direction')}${d.delai&&!isB?` · réponse attendue avant le ${h(dfr(d.delai))}`:''}${d.luAt?` · lu le ${h(dfr(d.luAt.slice(0,10)))} à ${hm(d.luAt)}`:''}</small></div>
+   ${R.map(r=>`<div class="card pad stack disc-r"><span class="eyebrow">${r.acc?'Accusé de réception':'Réponse de l’enseignant'} · ${h(dfr(r.at.slice(0,10)))} à ${hm(r.at)}</span>${r.texte?`<p class="disc-tx">${h(r.texte).replace(/\n/g,'<br>')}</p>`:''}<small class="muted">${h(r.nom||discNom(d.ens))}</small></div>`).join('')}
+   ${canRep?`<form id="f-drep" class="card pad stack" data-id="${h(id)}"><label class="eyebrow" for="d-txt">${isB?'Votre observation (facultatif)':'Votre réponse'}</label>
+     <textarea class="inp" id="d-txt" name="texte" rows="6" maxlength="4000" placeholder="${isB?'Vous pouvez écrire une observation…':'Écrivez votre explication…'}" ${isB?'':'required'}></textarea>
+     <div class="btns"><button type="button" class="btn sm" data-act="dia" data-ctx="ens">${ic('spark',16)} Corriger avec l’IA</button><button class="btn grad" type="submit" style="margin-left:auto">${isB?'J’ai pris connaissance':'Envoyer ma réponse'}</button></div><div id="dia" class="stack"></div></form>`:''}
+   ${dir?`<div class="btns"><button class="btn sm" data-act="dpdf" data-id="${h(id)}">${ic('doc',16)} PDF du courrier</button><button class="btn sm danger" data-act="ddel" data-armtxt="Confirmer ?" data-id="${h(id)}">Supprimer</button></div>`:''}
+  </div>`);
+}
+function discSheet(kind,ensId){const T=discTeachers();const td=today();const dl=new Date(Date.now()+2*864e5).toISOString().slice(0,10);
+  openSheet(DK[kind],`<form id="f-disc" class="stack" data-k="${kind}">
+   <div class="field"><label for="d-ens">Enseignant</label><select class="inp" id="d-ens" name="ens" required>${T.map(p=>`<option value="${h(p.id)}" ${p.id===ensId?'selected':''}>${h(p.nom)}</option>`).join('')}</select></div>
+   <div class="field"><label for="d-obj">Objet</label><input class="inp" id="d-obj" name="objet" required maxlength="120" placeholder="${kind==='de'?'Ex. Absence du 12 novembre sans justification':'Ex. Retards répétés'}"></div>
+   <div class="field"><label for="d-txt">Texte</label><textarea class="inp" id="d-txt" name="texte" rows="7" required maxlength="4000" placeholder="Écrivez les faits et ce que vous attendez de l’enseignant…"></textarea></div>
+   <div class="btns"><button type="button" class="btn sm" data-act="dia" data-ctx="${kind}">${ic('spark',16)} Corriger avec l’IA</button></div><div id="dia" class="stack"></div>
+   ${kind==='de'?`<div class="field"><label for="d-dl">Réponse attendue avant le</label><input class="inp" type="date" id="d-dl" name="delai" value="${dl}" min="${td}"></div>`:''}
+   <button class="btn ${kind==='blame'?'danger':'grad'}" type="submit">Envoyer ${kind==='de'?'la demande':'le blâme'}</button>
+   <p class="muted small" style="margin:0">L’enseignant reçoit une notification dans l’application. Le courrier est gardé dans « Discipline du personnel ».</p></form>`)}
+let dAiCtl=null;
+async function discIA(ctx){
+  const ta=$('#d-txt'),box=$('#dia');if(!ta||!box)return;const base=ta.value.trim();
+  if(!base){box.innerHTML='<p class="muted small">Écrivez d’abord votre texte, puis l’assistant le corrigera.</p>';return}
+  const sample=window.claude?.use?await claude.use('sample').catch(()=>null):null;
+  if(!sample){box.innerHTML='<p class="muted small">L’assistant IA n’est pas disponible ici.</p>';return}
+  const qui=ctx==='ens'?'un enseignant à répondre par écrit à une demande d’explication (ou à un blâme) de la direction de son école':ctx==='blame'?'la direction d’une école à rédiger un blâme adressé à un enseignant':'la direction d’une école à rédiger une demande d’explication adressée à un enseignant';
+  const ton=ctx==='ens'?'respectueux, factuel et calme':'administratif, ferme et respectueux';
+  const prompt=`Tu aides ${qui}, en République démocratique du Congo. Corrige l’orthographe et la grammaire du texte ci-dessous, puis propose 3 versions en français, sur un ton ${ton} : 1) le texte corrigé, fidèle autant que possible ; 2) une version plus soignée, au style d’un courrier administratif ; 3) une version plus courte. Garde le vouvoiement, ne change pas le sens, n’ajoute aucun fait, aucun nom, aucune date ni aucun chiffre qui n’est pas dans le texte. Réponds uniquement par un tableau JSON de 3 chaînes de caractères, sans autre texte.\n\nTexte : « ${base} »`;
+  dAiCtl?.abort();dAiCtl=new AbortController();box.innerHTML='<p class="muted small">L’assistant corrige votre texte…</p>';
+  try{const out=await sample.json(prompt,{signal:dAiCtl.signal,modelTier:'quick'});const list=(Array.isArray(out)?out:[out]).map(String).filter(Boolean).slice(0,3);const T=['Corrigé','Style administratif','Plus court'];
+    box._list=list;box.innerHTML=list.map((t,i)=>`<div class="aiprop"><b class="small">${T[i]||'Version '+(i+1)}</b><p>${h(t).replace(/\n/g,'<br>')}</p><button type="button" class="btn sm grad" data-act="diause" data-i="${i}">Utiliser ce texte</button></div>`).join('')||'<p class="muted small">Aucune proposition. Réessayez.</p>';
+  }catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}
+}
+function discPaper(id){const d={id,...S.msgs[id]};const R=discRep(id);const E=ECO();const ec=S.config.ecole||{};const cs=dirSig();const dd=D(d.date||today());
+ return `<div class="ob rp sn-paper disc-paper"><div class="ob-top"><img src="${eLogo()}" alt=""><div class="ob-tt"><div>${h(E.nom)}</div><div>${h([E.commune||ec.commune,E.ville||ec.ville].filter(Boolean).join(' · '))}</div><div>Année scolaire ${ANNEE.replace('–',' - ')}</div></div><img src="${eLogo()}" alt=""></div>
+  <div class="dp-to">Fait à ${h(E.ville||ec.ville||'Kinshasa')}, le ${dd.getUTCDate()===1?'1er':dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}<br><br>À Monsieur / Madame <b>${h(discNom(d.ens))}</b><br>Enseignant(e)</div>
+  <h2 class="dp-t">${DK[d.kind].toUpperCase()}</h2><p class="dp-o"><b>Objet :</b> ${h(d.objet||'')}</p>
+  <p class="dp-x">${h(d.texte||'').replace(/\n/g,'<br>')}</p>${d.delai&&d.kind==='de'?`<p class="dp-x"><b>Réponse attendue avant le ${h(dfr(d.delai))}.</b></p>`:''}
+  <div class="dp-sg"><span>${h(chefLbl())}</span>${cs.img?`<img src="${h(cs.img)}" alt="">`:'<i></i>'}<b>${h(ec.chef||cs.nom||E.directeur||'')}</b></div>
+  ${R.length?`<div class="dp-rep"><h3>Réponse de l’enseignant</h3>${R.map(r=>`<p class="dp-x">${r.texte?h(r.texte).replace(/\n/g,'<br>'):'A pris connaissance.'}</p><small>${h(r.nom||discNom(d.ens))} · le ${h(dfr(r.at.slice(0,10)))} à ${hm(r.at)}</small>`).join('')}</div>`:''}</div>`}
+async function htmlPDF(html,width,filename,text,land){const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+ toast('Préparation du PDF…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+ const host=document.createElement('div');host.style.cssText=`position:fixed;left:-10000px;top:0;width:${width}px;background:#fff`;host.innerHTML=html;document.body.appendChild(host);const node=host.firstElementChild;node.style.width=width+'px';
+ try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+  const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4'});const mg=8,iw=210-2*mg,ph=297-2*mg;const pxPage=Math.floor(cv.width*ph/iw);
+  for(let y=0,n=0;y<cv.height;y+=pxPage,n++){const hh=Math.min(pxPage,cv.height-y);const c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;const g=c2.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,c2.width,hh);g.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);if(n)pdf.addPage();pdf.addImage(c2.toDataURL('image/jpeg',.92),'JPEG',mg,mg,iw,hh*iw/cv.width)}
+  try{await dl.save({filename,data:pdf.output('blob'),text});toast('PDF prêt.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
+ }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
+const DNK='clr-disc-vus';
+function discAlert(){if(!S.ready||S.demo)return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(DNK)||'[]'))}catch(e){seen=new Set()}
+ const dir=isDir(),ids=myEnsIds();const N=Object.entries(S.msgs||{}).filter(([id,m])=>m&&!m.luAt&&!seen.has(id)&&(dir?m.kind==='rep':(m.kind==='de'||m.kind==='blame')&&ids.includes(m.ens)));
+ if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(DNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
+ if(S.view==='disc'&&!document.hidden)return;const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'} à votre courrier`:`${DK[m.kind]} de la direction`;
+ sysNotif(title,(m.objet||m.texte||'').slice(0,140));toast(title+(dir?' · Discipline du personnel':' · ouvrez votre profil'))}
 function formEleve(id){
   const e=id?S.eleves[id]:{classeId:S.view==='classe'?S.cid:(S.fCls||mesClasses()[0]),nationalite:'Congolaise',sexe:'M'};
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
@@ -2116,6 +2223,7 @@ function vProf(){
   const presRow=row('users','Cahier de présence',`${sigAuj?`Signé aujourd’hui à ${hm(sigAuj.at)}`:'Pas encore signé aujourd’hui'} · ce mois : ${sig} / ${jm.length} jour${jm.length>1?'s':''}`,isDir()?'data-act="go" data-v="presence"':'');
   const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
    :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : ${tri.map((v,i)=>tShort(TRS()[i])+' '+v+' %').join(' · ')}`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves'))]:[presRow];
+  if(!isGest(p)){const DL=discItems(isDir()?p.id:'');const du=isDir()?DL.reduce((a,d)=>a+discRep(d.id).filter(r=>!r.luAt).length,0):DL.filter(d=>!d.luAt).length;if(DL.length||isDir())rows.unshift(row('shield',isDir()?'Demandes d’explication et blâmes':'Courriers de la direction',DL.length?`${DL.length} courrier${DL.length>1?'s':''} · dernier : ${h(DK[DL[0].kind].toLowerCase())}, ${h(dfr(DL[0].date||today()))}`:'Aucun courrier',isDir()?`data-act="dnew" data-v="de" data-id="${h(p.id)}"`:'data-act="go" data-v="disc"',du?`<span class="pill bad num">${du} nouveau${du>1?'x':''}</span>`:''))}
   if(!isGest(p)){const nu=msgUnread(p.id),L=msgsOf(p.id),last=L[L.length-1];rows.unshift(row('pen',isDir()?'Remarques et suggestions':'Messages de la direction',last?h((last.sens==='dir'?(isDir()?'Vous : ':'Direction : '):(isDir()?'Réponse : ':'Vous : '))+last.texte.slice(0,70)):(isDir()?'Écrire une remarque à cet enseignant':'Aucun message pour le moment'),`data-act="mopen" data-id="${h(p.id)}"`,nu?`<span class="pill bad num">${nu} nouveau${nu>1?'x':''}</span>`:''))}
   return band({back:backV,home:true,title:ECO().nom,sub:`${isGest(p)?'Profil gestionnaire':'Profil enseignant'} · ${ANNEE}`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`<div class="prof">
    <section class="ticket">
@@ -2127,6 +2235,8 @@ function vProf(){
    ${!isDir()&&msgUnread()?`<button class="pf-cta" data-act="mopen" data-id="${h(p.id)}"><span><small>Message de la direction</small><b>${msgUnread()} nouveau${msgUnread()>1?'x messages':' message'} à lire</b></span><i>Lire ${ic('chev',18)}</i></button>`:''}
    ${!isGest(p)&&c?profHello(p,cid,es,p.id===meId()||(S.demo&&S.demoRole==='ens')):''}
    ${!isGest(p)&&!c?`<div class="pf-card pf-empty">Aucune classe attribuée.${isDir()?` <button class="pf-btn" data-act="ens" data-id="${h(p.id)}">Attribuer une classe</button>`:''}</div>`:''}
+   ${isDir()&&!isGest(p)&&p.id!==meId()?(()=>{const b=ensBloque(p);return `<section class="card pad acc-card${b?' off':''}"><div class="grow"><b>Accès à l’application</b><small>${b?`Suspendu depuis le ${h(dfr(b.at.slice(0,10)))}${b.motif?' · '+h(b.motif):''}. L’enseignant ne peut plus ouvrir l’application.`:'Actif : l’enseignant peut ouvrir l’application.'}</small></div><button class="bsw${b?'':' on'}" data-act="acc" data-id="${h(p.id)}" role="switch" aria-checked="${!b}" aria-label="${b?'Rétablir':'Suspendre'} l’accès"><i></i></button></section>`})():''}
+   ${!isDir()&&discItems().filter(d=>!d.luAt).length?`<button class="pf-cta" data-act="go" data-v="disc"><span><small>Courrier de la direction</small><b>${discItems().filter(d=>!d.luAt).length} courrier${discItems().filter(d=>!d.luAt).length>1?'s':''} à lire</b></span><i>Lire ${ic('chev',18)}</i></button>`:''}
    <section class="card summary pf-menu">${rows.join('')}</section>
    ${c?`<section class="pf-sec"><div class="pf-h"><b>Appel de la semaine</b><span class="num">${faits} / 5 jours clôturés</span></div>
     <div class="pf-list">${sem.map(d=>{const j=jour(d);const ja=JR(cid,d);const clos=!!ja?.appel;const st=clos?'ok':d===td?'now':d<td?'miss':'next';const dd=D(d);
@@ -3318,7 +3428,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -3334,6 +3444,7 @@ function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.a
 function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   if(v==='maclasse'){const c=mesClasses()[0];if(c){S.cid=c;S.view='classe';S.ctab='appel'}render();scrollTo(0,0);return}
   if(v==='msgs'&&isDir())S.mEns='';
+  if(v==='disc')S.dId='';
   if(v==='activite'){S.seenAt=seenGet();seenSet(new Date().toISOString())}
   S.view=v;render();scrollTo(0,0)}
 const A={
@@ -3346,6 +3457,17 @@ const A={
   viemode:b=>{S.vieMode=b.dataset.v;render()},
   mopen:b=>{S.mEns=b.dataset.id||'';S.mDraft='';S.view='msgs';render();scrollTo(0,0);if(S.mEns||!isDir())setTimeout(()=>$('#f-msg')?.scrollIntoView({block:'end'}),80)},
   mia:()=>msgIA(),
+  dia:b=>discIA(b.dataset.ctx),
+  diause:b=>{const box=$('#dia'),t=box?._list?.[+b.dataset.i];if(t&&$('#d-txt')){$('#d-txt').value=t;box.innerHTML='';toast('Texte remplacé. Relisez puis envoyez.')}},
+  dnew:b=>{if(!isDir())return;discSheet(b.dataset.v||'de',b.dataset.id||'')},
+  dopen:b=>{S.dId=b.dataset.id;S.view='disc';render();scrollTo(0,0)},
+  ddel:async b=>{if(!isDir()||!arm(b))return;const id=b.dataset.id;for(const r of discRep(id))await del('messages',r.id).catch(()=>{});await del('messages',id);S.dId='';toast('Courrier supprimé.');render()},
+  dpdf:b=>{const d=S.msgs[b.dataset.id];if(!d)return;htmlPDF(discPaper(b.dataset.id),794,`${DK[d.kind]} - ${discNom(d.ens)}.pdf`,`*${ECO().nom} · ${DK[d.kind]}*\n${discNom(d.ens)} · ${d.objet||''}`)},
+  acc:b=>{if(!isDir())return;const p=ensList().find(x=>x.id===b.dataset.id);if(!p)return;if(ensBloque(p)){setAcces(p,false).then(()=>{toast(`Accès de ${p.nom} rétabli.`);render()});return}
+    openSheet('Suspendre l’accès',`<form id="f-acc" class="stack" data-id="${h(p.id)}"><p style="margin:0"><b>${h(p.nom)}</b> ne pourra plus ouvrir l’application, sur aucun téléphone, jusqu’à ce que vous rétablissiez son accès. Ses données restent intactes.</p>
+     <div class="field"><label>Motif</label><div class="spopts">${['Blâme','Absence','Travail à distance non autorisé','Autre'].map((m,i)=>`<label class="spo"><input type="radio" name="motif" value="${m}" ${i===0?'checked':''}><span>${m}</span></label>`).join('')}</div></div>
+     <div class="field"><label for="acc-x">Précision (facultatif, visible par l’enseignant)</label><input class="inp" id="acc-x" name="prec" maxlength="100"></div>
+     <button class="btn danger" type="submit">Suspendre l’accès</button></form>`)},
   miause:b=>{const box=$('#mia'),t=box?._list?.[+b.dataset.i];if(t&&$('#m-txt')){$('#m-txt').value=t;S.mDraft=t;box.innerHTML='';toast('Texte remplacé. Relisez puis envoyez.')}},
   mdel:async b=>{if(!arm(b))return;await del('messages',b.dataset.id);toast('Message supprimé')},
   mnotif:async()=>{try{const r=await Notification.requestPermission();toast(r==='granted'?'Notifications activées sur ce téléphone.':'Notifications refusées. Vous pouvez les activer dans les réglages du téléphone.')}catch(e){}render()},
@@ -3537,6 +3659,11 @@ document.addEventListener('submit',async ev=>{
   if(f.id==='f-rap'){const eid=f.dataset.id,k=f.dataset.k;const doc={eleveId:eid,classeId:S.eleves[eid]?.classeId,key:k,conduite:fd.conduite||'',conduiteTxt:(fd.conduiteTxt||'').trim(),consignes:(fd.consignes||'').trim(),at:new Date().toISOString(),by:meId()};await put('rapports',rid(eid,k),doc);if(k[0]==='p'&&doc.conduite){const vid=nid(eid,'vie');const v=JSON.parse(JSON.stringify(S.notes[vid]||{eleveId:eid,classeId:doc.classeId,coursId:'vie'}));v.cond={...(v.cond||{}),[k]:doc.conduite};S.notes={...S.notes,[vid]:v};await put('notes',vid,v)}const pv=$('#rprev');if(pv){pv.innerHTML=rapportPaper(eid,k);applyFit()}toast('Rapport enregistré')}
   if(f.id==='f-cal'){const doc={};for(const k of Object.keys(CAL_DEF)){const a=fd[k+'_a'],b=fd[k+'_b'];if(a&&b)doc[k]=[a,b]}await put('config','calendrier',doc);closeSheet();toast('Calendrier enregistré')}
   if(f.id==='f-msg'){const texte=(fd.texte||'').trim();if(!texte)return;const dir=isDir();const ens=f.dataset.ens;if(!ens)return;const nom=dir?(S.inscr[meId()]?.nom||(typeof chefPerson==='function'&&chefPerson()?.nom)||'La direction'):(S.inscr[meId()]?.nom||'');const now=new Date().toISOString();S.mDraft='';f.texte.value='';$('#mia').innerHTML='';await put('messages',uid(),{ens,sens:dir?'dir':'ens',texte,date:today(),at:now,by:meId(),nom});toast(dir?'Remarque envoyée à l’enseignant':'Réponse envoyée à la direction');render();setTimeout(()=>$('#f-msg')?.scrollIntoView({block:'end'}),80)}
+  if(f.id==='f-acc'){const p=ensList().find(x=>x.id===f.dataset.id);if(!p)return;const m=[fd.motif,(fd.prec||'').trim()].filter(Boolean).join(' · ');closeSheet();await setAcces(p,true,m);toast(`Accès de ${p.nom} suspendu.`);render();return}
+  if(f.id==='f-disc'){const k=f.dataset.k;const objet=(fd.objet||'').trim(),texte=(fd.texte||'').trim();if(!objet||!texte)return;const nom=S.inscr[meId()]?.nom||chefPerson()?.nom||'La direction';const id='d-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    await put('messages',id,{kind:k,ens:fd.ens,sens:'dir',objet,texte,delai:k==='de'?(fd.delai||''):'',date:today(),at:new Date().toISOString(),by:meId(),nom});closeSheet();toast(DK[k]+' envoyé'+(k==='de'?'e':'')+' à '+discNom(fd.ens)+'.');S.dId=id;S.view='disc';render();scrollTo(0,0);return}
+  if(f.id==='f-drep'){const pid=f.dataset.id;const d=S.msgs[pid];if(!d)return;const texte=(fd.texte||'').trim();if(d.kind==='de'&&!texte)return;const id='r-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+    await put('messages',id,{kind:'rep',ref:pid,ens:d.ens,sens:'ens',texte,acc:d.kind==='blame',date:today(),at:new Date().toISOString(),by:meId(),nom:S.inscr[meId()]?.nom||''});toast(d.kind==='blame'?'Accusé de réception envoyé.':'Réponse envoyée à la direction.');render();return}
   if(f.id==='f-sp'){const t=fd.t;if(!t){toast('Choisissez le type de journée.');return}const sp={t,l:(fd.l||'').trim()||SPT[t][0]};const cid=f.dataset.cid,d=f.dataset.d;closeSheet();if(cid)await setSpClasse(cid,d,sp);else await setSpEcole(d,sp);toast(sp.l+' : journée barrée');render()}
   if(f.id==='f-pres'){const hr=(fd.heure||'').trim();if(!/^\d{1,2}:\d{2}/.test(hr)){$('#sigmsg').textContent='Écrivez l’heure d’arrivée.';f.heure?.focus();return}const img=sigData();if(!img){$('#sigmsg').textContent='La personne doit signer dans le cadre.';return}const id=f.dataset.id,d=today();const at=new Date(d+'T'+hr.slice(0,5).padStart(5,'0')+':00').toISOString();const p=personnel().find(x=>x.id===id);
     await put('presence',pid2(d,id),{date:d,personId:id,nom:p?.nom||'',fonction:p?.fonction||'',img,at,signeAt:new Date().toISOString(),by:meId()});closeSheet();toast('Présence enregistrée · arrivée à '+hm(at))}
@@ -3561,6 +3688,7 @@ let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(applyFit,80
 function onData(key){
   if(!S.ready)return;
   if(key==='paiem')payAlert();
+  if(key==='msgs')discAlert();
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);
   if(key==='notes'&&S.view==='classe'&&S.ctab==='palm'&&S.pVue==='det'&&document.querySelector('.dtab')){refreshDet();return}

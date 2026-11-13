@@ -1,0 +1,4 @@
+-- 13/11/2026 (migration ecole_acces_enseignant_et_devoirs)
+-- config/acces : enseignants dont l'accès est suspendu par la direction. ecole_role() renvoie null pour eux,
+-- donc plus aucune lecture ni écriture ; ecole_mon_acces() leur dit pourquoi.
+-- Collection « devoirs » (devoirs hebdomadaires) : lisible et modifiable par l'enseignant de la classe.

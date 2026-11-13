@@ -851,7 +851,7 @@ var A = {
   edAddVidLink: function () {
     edRead(); var u = safeUrl($('e-vurl').value);
     if (!u) return toast('Colle un lien complet qui commence par https://');
-    if (E.p.videos.length >= 3) return toast('3 vidéos maximum');
+    if (E.p.videos.length >= 4) return toast('4 vidéos maximum');
     E.p.videos.push({ url: u, titre: $('e-vtitre').value.trim(), format: /youtube\.com\/shorts\//.test(u) ? '9:16' : $('e-vfmt').value }); edRender();
   },
   edAddLink: async function (el) {
@@ -1271,11 +1271,11 @@ function edRender() {
     '<label>Fin de la promo<input id="e-fin" type="datetime-local" value="' + localDT(p.promo_fin) + '"></label></div>' +
     '<div class="box"><h3>Photo de couverture du produit</h3><p class="note">Format bannière 1600 × 600 (large et peu haute). Elle s\'affiche en entier en haut de la page du produit et de ta landing page.</p>' + upBox('pcover', p.cover_url, 'Photo de couverture', 'cover wide') + '</div>' +
     '<div class="box"><h3>Photo du produit (carrée)</h3><div style="width:160px">' + upBox('pimg', p.image_url, 'Photo du produit', 'sq') + '</div></div>' +
-    '<div class="box"><h3>Photos d\'exemples</h3><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
-    (p.exemples.length < 5 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
-    '<div class="box"><h3>Vidéos explicatives</h3><p class="note">Comment utiliser ou installer le produit. 3 vidéos maximum. Une vidéo de plus de 50 Mo est compressée automatiquement. Formats : horizontale 16:9 ou verticale 9:16 (touche le format pour le changer).</p>' +
+    '<div class="box"><h3>Photos d\'exemples</h3><p class="note">10 photos maximum (' + p.exemples.length + '/10).</p><div class="exgrid">' + p.exemples.map(function (e, i) { return '<div><div class="sq">' + pic(e.url) + '<button class="xs" style="position:absolute;right:8px;top:8px;background:rgba(14,14,11,.85)" type="button" data-act="edRmEx" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div><input type="text" data-exleg="' + i + '" placeholder="Légende" value="' + esc(e.legende || '') + '"></div>'; }).join('') +
+    (p.exemples.length < 10 ? '<div>' + upBox('pex', '', 'Ajouter un exemple', 'sq') + '</div>' : '') + '</div></div>' +
+    '<div class="box"><h3>Vidéos explicatives</h3><p class="note">Comment utiliser ou installer le produit. 4 vidéos maximum. Une vidéo de plus de 50 Mo est compressée automatiquement. Formats : horizontale 16:9 ou verticale 9:16 (touche le format pour le changer).</p>' +
     p.videos.map(function (v, i) { return '<div class="item">' + ico('i-play') + '<span class="grow">' + esc(v.titre || v.url) + '</span><button class="fmt" type="button" data-act="edVidFmt" data-i="' + i + '" title="Changer le format">' + (v.format === '9:16' ? '9:16' : '16:9') + '</button><button class="xs" type="button" data-act="edRmVid" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +
-    (p.videos.length < 3 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +
+    (p.videos.length < 4 ? '<label>Titre de la vidéo<input id="e-vtitre" placeholder="Ex. Comment installer"></label><label class="btn btn-ghost btn-sm filebtn"><span>Envoyer une vidéo depuis mon téléphone</span><input type="file" accept="video/*" data-up="pvid"></label>' +
       '<label>Ou un lien YouTube<input id="e-vurl" type="url" inputmode="url" placeholder="https://…"></label><label>Format de la vidéo<select id="e-vfmt"><option value="16:9">Horizontale (16:9)</option><option value="9:16">Verticale (9:16)</option></select></label><button class="btn btn-ghost btn-sm" type="button" data-act="edAddVidLink">Ajouter ce lien</button>' : '') + '</div>' +
     '<div class="box"><h3>Témoignages de clients</h3><p class="note">Recopie les vrais retours de tes clients, avec leur accord. 6 maximum.</p>' +
     (p.temoignages || []).map(function (t, i) { return '<div class="item"><span class="grow"><b>' + esc(t.nom || 'Client') + '</b> — ' + esc(t.texte) + '</span><button class="xs" type="button" data-act="edRmTem" data-i="' + i + '" aria-label="Retirer">' + ico('i-x') + '</button></div>'; }).join('') +

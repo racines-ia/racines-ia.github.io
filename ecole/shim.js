@@ -597,8 +597,11 @@
         const prev = window.ECOLE;
         try { localStorage.setItem('racine-ecole', JSON.stringify(info)); } catch (x) {}
         const changed = !prev ? e.code !== 'CLR' : (prev.code !== info.code || prev.nom !== info.nom || prev.logo !== info.logo || prev.devise !== info.devise || (prev.theme || '') !== info.theme || (prev.type || 'primaire') !== info.type);
-        if (changed && !sessionStorage.getItem('racine-reload')) { try { sessionStorage.setItem('racine-reload', '1'); } catch (x) {} location.reload(); return; }
+        // Autre école ou autre type : il faut recharger. Sinon (nom, logo, devise, thème) on applique sur place, sans rejouer l'intro.
+        const hard = prev ? (prev.code !== info.code || (prev.type || 'primaire') !== info.type) : e.code !== 'CLR';
+        if (changed && hard && !sessionStorage.getItem('racine-reload')) { try { sessionStorage.setItem('racine-reload', '1'); } catch (x) {} location.reload(); return; }
         window.ECOLE = info; document.title = info.nom; window.__theme = info.theme || 'violet'; window.applyTheme();
+        if (changed && window.introRefresh) window.introRefresh();
         if (member.role === 'admin' && !info.theme) { const wait = () => { const it = document.getElementById('intro'); if (it && !it.hidden) return setTimeout(wait, 600); setTimeout(() => themePicker(true), 400); }; setTimeout(wait, 800); } try { sessionStorage.removeItem('racine-reload'); } catch (x) {}
       }
       if (e && e.actif === false) {

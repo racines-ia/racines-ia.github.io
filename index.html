@@ -253,7 +253,10 @@ async function loadSchools(){
     classes:r.classes||0,enseignants:r.enseignants||0,logo:r.logo||'',cov:r.couleur||COVS[k%COVS.length],url:r.app||'',actif:r.actif,payeJusqua:r.paye_jusqua||'9999-12-31',plan:r.plan||'Standard',depuis:r.depuis||'',codeDir:!!r.code_dir,devise:r.devise||'',type:r.type||'primaire'}));
   render();
 }
-function goSchool(s){try{localStorage.setItem('racine-ecole',JSON.stringify({code:s.code,nom:s.nom,devise:s.devise||'',logo:s.logo||'',type:s.type||'primaire'}));sessionStorage.removeItem('racine-reload')}catch(e){}location.href=s.url}
+/* on enregistre l'école avec son thème actuel avant d'entrer : l'intro s'affiche une seule fois, directement aux bonnes couleurs */
+async function goSchool(s){let e=null;try{const {data}=await sb.rpc('racine_mon_ecole');e=(data||[])[0]||null}catch(x){}
+  if(e&&e.code!==s.code)e=null;
+  try{localStorage.setItem('racine-ecole',JSON.stringify({code:s.code,nom:(e&&e.nom)||s.nom,devise:(e?e.devise:s.devise)||'',logo:(e?e.logo:s.logo)||'',theme:(e&&e.theme)||'',type:(e&&e.type)||s.type||'primaire'}));sessionStorage.removeItem('racine-reload')}catch(x){}location.href=s.url}
 async function checkAdmin(){if(!sb)return false;const {data:{session}}=await sb.auth.getSession();if(!session)return false;const {data}=await sb.rpc('racine_is_admin');return !!data}
 const S={view:'accueil',filtre:'toutes',q:'',sid:null,admin:false};
 const today=()=>new Date().toISOString().slice(0,10);

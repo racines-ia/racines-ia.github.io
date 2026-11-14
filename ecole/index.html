@@ -3924,6 +3924,7 @@ function introBg(){
   return `<div class="intro-bg" aria-hidden="true">${out}</div>`;
 }
 function startIntro(){
+  LOGO_DONE=true; // le logo s'anime une seule fois, dans l'intro ; ensuite il reste fixe dans l'application
   const el=$('#intro');
   el.innerHTML=introBg()+`<div class="intro-in"><div class="intro-tile"><div class="intro-logo">${eAnim()}</div></div><div class="intro-name">${h(ECO().nom)}</div><div class="intro-motto">${h(ECO().devise||'')}</div></div><div class="intro-skip">Touchez l’écran pour entrer</div>`;
   el.hidden=false;const sv=el.querySelector('svg');try{sv.pauseAnimations();sv.setCurrentTime(0)}catch(e){}
@@ -3931,6 +3932,10 @@ function startIntro(){
   el.onclick=endIntro;el.ontouchstart=()=>endIntro();
   INTRO_MIN=Date.now()+(first?3800:1300);setTimeout(endIntro,first?6000:2600);
 }
+/* mise à jour de l'intro déjà affichée (nouveau logo, nom ou couleurs) sans la rejouer */
+window.introRefresh=()=>{const el=$('#intro');if(!el||el.hidden)return;const lg=el.querySelector('.intro-logo'),nm=el.querySelector('.intro-name'),mo=el.querySelector('.intro-motto');
+  if(lg){lg.innerHTML=eAnim();const sv=lg.querySelector('svg');try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}}
+  if(nm)nm.textContent=ECO().nom;if(mo)mo.textContent=ECO().devise||''};
 let INTRO_MIN=0;function introReady(){const w=INTRO_MIN-Date.now();w>0?setTimeout(endIntro,w):endIntro()}
 let dustRAF=0;
 function papers(cv){

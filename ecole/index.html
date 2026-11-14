@@ -3332,7 +3332,9 @@ async function recuPDF(pid){const p=S.paiem[pid];if(!p)return;const e=S.eleves[p
  }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
 function rappelTexte(eid){const s=situation(eid);return `*${ECO().nom} · Frais scolaires*\n\nBonjour, chers parents de ${nomComplet(s.e)} (${S.classes[s.cid]?.nom||''}).\n\nFrais de l’année : ${fmtM(s.du)}\nDéjà payé : ${fmtM(s.paye)}\n*Reste à payer : ${fmtM(s.reste)}*${s.retard>0?`\nMontant attendu à ce jour : ${fmtM(s.retard)}`:''}\n\n${s.etapes.filter(t=>t.paye<t.du-0.001).map(t=>`• ${t.nom} : ${fmtM(t.du-t.paye)}${t.echeance?' avant le '+dfr(t.echeance):''}`).join('\n')}\n\nMerci de passer à la direction. — La direction`}
 function copyTxt(t,msg){const done=()=>toast(msg||'Copié. Collez-le dans WhatsApp.');try{navigator.clipboard.writeText(t).then(done,()=>fallbackCopy(t))}catch(e){fallbackCopy(t)}}
-function nextRecu(){const y=today().slice(0,4);const n=Object.values(S.paiem).filter(p=>(p.recu||'').startsWith(y+'-')).length+1;return y+'-'+String(n).padStart(4,'0')}
+/* numéro de reçu = le plus grand numéro de l'année + 1 (un paiement supprimé ne fait plus revenir un numéro déjà donné) */
+const recuMax=y=>Math.max(0,...Object.values(S.paiem).map(p=>p.recu||'').filter(r=>r.startsWith(y+'-')).map(r=>parseInt(r.slice(5),10)||0));
+function nextRecu(){const y=today().slice(0,4);return y+'-'+String(recuMax(y)+1).padStart(4,'0')}
 /* ---------- Assistant IA pour les textes aux parents ---------- */
 const AI_MODES=[['corriger','Corriger et reformuler'],['court','Plus court'],['chaleureux','Plus chaleureux'],['ferme','Plus ferme'],['trois','3 propositions']];
 let aiCtl=null;
@@ -3858,11 +3860,15 @@ document.addEventListener('submit',async ev=>{
     const cs=fd.toutes?classIds():[cid];for(const c of cs)await put('frais','c_'+c,doc);closeSheet();toast(cs.length>1?'Frais appliqués à toutes les classes':'Frais enregistrés');return}
   if(f.id==='f-paym'){const L=[...f.querySelectorAll('#pm-l input')].map(i=>[i.name.slice(2),numM(i.value)]).filter(x=>x[1]>0&&S.eleves[x[0]]);if(!L.length){toast('Écrivez au moins un montant.');return}
     const btn=f.querySelector('button[type=submit]');if(btn.dataset.busy)return;btn.dataset.busy='1';btn.textContent='Enregistrement…';
-    const by=santeBy();const y=today().slice(0,4);let n=Object.values(S.paiem).filter(p=>(p.recu||'').startsWith(y+'-')).length;const now=Date.now();let ok=0,tot=0;
+    const by=santeBy();const y=today().slice(0,4);let n=recuMax(y);const now=Date.now();let ok=0,tot=0;
     for(const [i,[eid,m]] of L.entries()){const e=S.eleves[eid];const id='p-'+(now+i).toString(36)+Math.random().toString(36).slice(2,6);n++;
       try{await put('paiements',id,{eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:'',ref:'',recu:y+'-'+String(n).padStart(4,'0'),byNom:by.nom,byFn:by.fn||'',byPid:by.pid||'',bySig:by.pid?'':by.sig||'',by:meId(),at:new Date(now+i*1000).toISOString()});ok++;tot+=m}catch(err){}}
     closeSheet();toast(ok===L.length?`${ok} paiement${ok>1?'s':''} enregistré${ok>1?'s':''} · ${fmtM(tot)}`:`${ok} paiement(s) enregistré(s) sur ${L.length}. Vérifiez la liste du jour.`);render();return}
   if(f.id==='f-pay'){const eid=fd.eleveId;const e=S.eleves[eid];const m=numM(fd.montant);if(!e){toast('Choisissez l’élève.');return}if(!(m>0)){toast('Indiquez le montant payé.');return}
+    if(f.dataset.busy)return;
+    if(!f.dataset.id&&!f.dataset.dupok){const d0=Date.now();const dup=Object.values(S.paiem).find(p=>p.eleveId===eid&&+p.montant===m&&p.at&&d0-new Date(p.at)<6*3600e3);
+     if(dup){f.dataset.dupok='1';const b=f.querySelector('button[type=submit]');if(b)b.textContent='Confirmer : enregistrer encore';toast(`Attention : ${nomComplet(e)} a déjà un paiement de ${fmtM(m)} à ${hm(dup.at)} (reçu ${dup.recu||'—'}). Touchez encore pour l’enregistrer une 2e fois.`);return}}
+    f.dataset.busy='1';{const b=f.querySelector('button[type=submit]');if(b)b.textContent='Enregistrement…'}
     const id=f.dataset.id||'p-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.paiem[id]||{};const by=old.byNom?{nom:old.byNom,fn:old.byFn,sig:old.bySig,pid:old.byPid}:santeBy();
     await put('paiements',id,{...old,eleveId:eid,classeId:e.classeId,nom:nomComplet(e),montant:m,date:fd.date||today(),mode:fd.mode||'especes',payeur:(fd.payeur||'').trim(),ref:(fd.ref||'').trim(),recu:old.recu||nextRecu(),byNom:by.nom,byFn:by.fn||'',byPid:by.pid||'',bySig:by.pid?'':by.sig||'',by:old.by||meId(),at:old.at||new Date().toISOString()});
     toast(f.dataset.id?'Paiement modifié':'Paiement enregistré');if(f.dataset.id)eleveFinSheet(eid);else recuSheet(id);return}

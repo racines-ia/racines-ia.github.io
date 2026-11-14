@@ -2713,28 +2713,33 @@ function vPalmSit(){
 }
 
 /* ---------- Signatures des parents ---------- */
+/* période proposée pour la signature : la période choisie si c'en est une, sinon la première période du trimestre pas encore signée */
+function sigDefKey(eid,k){if(/^p/.test(k))return k;const t=k==='an'?null:k[0]==='t'?k:TOF[k];const L=t&&PER[t]?PER[t]:Object.values(PER).flat();return L.find(p=>!sigOf(eid,p))||L[L.length-1]||k}
 const sid=(eid,k)=>eid+'__'+k;
 const sigOf=(eid,k)=>S.sigs[sid(eid,k)]||null;
 const keyName=k=>k==='an'?'Année entière':k[0]==='t'?TRI[k]:k.startsWith('ex')?'Examen du '+TRI['t'+k.slice(2)]:perLong(k);
 function tabSig(){
   const cid=S.cid,key=S.pKey||'t1',es=elevesOf(cid);const n=es.filter(e=>sigOf(e.id,key)).length;
   return `<div class="card pad stack"><div class="sec-h"><div><h2 class="h2">Signatures des parents</h2><span class="muted small">${keyName(key)} · le parent signe pour confirmer qu’il a vu le palmarès et le bulletin.</span></div><span class="pill ${n===es.length&&es.length?'good':'warn'} num">${n} / ${es.length} signé${n>1?'s':''}</span></div>
-   <div class="meter"><i style="width:${es.length?Math.round(n/es.length*100):0}%"></i></div></div>
+   <div class="meter"><i style="width:${es.length?Math.round(n/es.length*100):0}%"></i></div>
+   ${/^p/.test(key)?'':`<div class="card pad small stack" style="background:var(--sunk)"><span><b>Vous regardez un total (${h(keyName(key))}).</b> Les parents signent chaque période. Choisissez la période :</span><span class="btns">${(PER[key[0]==='t'?key:TOF[key]]||Object.values(PER).flat()).map(k=>`<button class="btn sm grad" data-act="pkey" data-v="${k}">${h(keyName(k))}</button>`).join('')}</span></div>`}</div>
    <div class="card list">${es.map(e=>{const s=sigOf(e.id,key);const par=e.pere||e.mere||e.tuteur||'';
     return `<div class="li sigrow">${avEl(e)}<span class="grow"><span class="ttl" style="display:block">${h(nomComplet(e))}</span><span class="muted small">${s?`Signé par ${h(s.nom)} (${h(s.lien)}) · ${new Date(s.at).toLocaleDateString('fr-FR',{day:'numeric',month:'short'})} à ${hm(s.at)}`:par?'Parent : '+h(par):'Parent non renseigné'}</span></span>
      ${hid(e.id)?`<span class="pill bad">Bloqué par la direction</span>`:`${s?`<img class="sigimg" src="${h(s.img)}" alt="Signature de ${h(s.nom)}"><span class="pill good">Signé</span>`:`<span class="pill warn">Pas signé</span><button class="btn grad sm" data-act="sign" data-id="${h(e.id)}">Faire signer</button>`}<button class="btn sm" data-act="rapport" data-id="${h(e.id)}">Rapport</button>`}
      ${s&&!hid(e.id)?`<button class="btn sm danger" data-act="unsign" data-armtxt="Confirmer ?" data-id="${h(e.id)}" data-k="${key}">Supprimer la signature</button>`:''}</div>`}).join('')}</div>`;
 }
 function signSheet(eid){
-  const e=S.eleves[eid];if(!e)return;if(hid(eid)){toast(BLKTXT+'.');return}const key=S.pKey||'t1';
+  const e=S.eleves[eid];if(!e)return;if(hid(eid)){toast(BLKTXT+'.');return}const key=sigDefKey(eid,S.pKey||'t1');
   const opts=[['Père',e.pere],['Mère',e.mere],['Tuteur',e.tuteur]];const first=opts.find(o=>o[1])||['Père',''];
   openSheet('Signature du parent',`<form id="f-sig" class="stack" data-id="${h(eid)}">
-   <p class="muted small" style="margin:0">Élève : <b>${h(nomComplet(e))}</b> · ${keyName(key)}. Le parent signe avec le doigt dans le cadre ci-dessous.</p>
+   <p class="muted small" style="margin:0">Élève : <b>${h(nomComplet(e))}</b>. Le parent signe avec le doigt dans le cadre ci-dessous.</p>
+   <div class="field"><label for="g-per">Période signée</label><select class="inp" id="g-per" name="per">${pkeys().map(([k,l])=>`<option value="${k}" ${k===key?'selected':''}>${h(keyName(k))}${/^p/.test(k)?'':' (total)'}</option>`).join('')}</select><small class="muted" id="g-perw">${/^p/.test(key)?'':'Attention : ceci est un total. D’habitude, le parent signe la période (1re P, 2e P…).'}</small></div>
    <div class="grid2"><div class="field"><label for="g-lien">Lien avec l’élève</label><select class="inp" id="g-lien" name="lien">${opts.map(([l,v])=>`<option ${l===first[0]?'selected':''} data-n="${h(v||'')}">${l}</option>`).join('')}</select></div>
    <div class="field"><label for="g-nom">Nom du parent</label><input class="inp" id="g-nom" name="nom" required value="${h(first[1]||'')}" placeholder="Nom complet"></div></div>
    <div class="sigpad"><canvas id="sigc" aria-label="Zone de signature"></canvas><span class="sigline">Signez ici</span></div>
    <div class="btns"><button type="button" class="btn sm" data-act="sigclear">Effacer</button><span class="muted small" id="sigmsg"></span></div>
    <button class="btn grad" type="submit">Enregistrer la signature</button></form>`,s=>{
+    s.querySelector('#g-per').addEventListener('change',ev=>{s.querySelector('#g-perw').textContent=/^p/.test(ev.target.value)?'':'Attention : ceci est un total. D’habitude, le parent signe la période (1re P, 2e P…).'});
     s.querySelector('#g-lien').addEventListener('change',ev=>{const o=ev.target.selectedOptions[0];if(o.dataset.n)s.querySelector('#g-nom').value=o.dataset.n});
     const cv=s.querySelector('#sigc');const dpr=Math.min(2,devicePixelRatio||1);const W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.6;c.lineCap='round';c.lineJoin='round';c.strokeStyle='#1a0a10';
     let draw=false,last=null;cv.dataset.ink='0';
@@ -3890,7 +3895,7 @@ document.addEventListener('submit',async ev=>{
     await put('inscriptions',meId(),{nom:p.nom,tel:p.tel||'',matiere:p.matiere||'',profil:pid,date:new Date().toISOString()});closeSheet();toast('Profil relié à votre compte')}
   if(f.id==='f-bsig'){const k=f.dataset.k,r=f.dataset.r;const me=signer(r);const pv=$('#bs-prev');const img=pv&&!pv.hidden?me?.signature:sigData();if(!img){$('#sigmsg').textContent='Signez dans le cadre.';return}
     await put('signatures',bsid(S.cid,k,r),{type:'bul',classeId:S.cid,key:k,role:r,nom:(fd.nom||'').trim(),img,at:new Date().toISOString(),by:meId()});closeSheet();toast('Bulletins signés : la signature apparaît sur chaque bulletin');return}
-  if(f.id==='f-sig'){const img=sigData();if(!img){$('#sigmsg').textContent='Le parent doit signer dans le cadre.';return}const eid=f.dataset.id,e=S.eleves[eid],key=S.pKey||'t1';
+  if(f.id==='f-sig'){const img=sigData();if(!img){$('#sigmsg').textContent='Le parent doit signer dans le cadre.';return}const eid=f.dataset.id,e=S.eleves[eid],key=pkeys().some(([k])=>k===fd.per)?fd.per:(S.pKey||'t1');
     await put('signatures',sid(eid,key),{eleveId:eid,classeId:e.classeId,key,nom:(fd.nom||'').trim(),lien:fd.lien||'Parent',img,at:new Date().toISOString(),by:meId()});closeSheet();toast('Signature enregistrée');if(S.fromRap){S.fromRap=false;rapportSheet(eid,key)}}
   if(f.id==='f-ens'){let id=f.dataset.id;const isNew=!id;if(isNew)id='p-'+(fd.nom||'ens').trim().toLowerCase().normalize('NFD').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,40)+'-'+Date.now().toString(36).slice(-4);
     const cur=S.inscr[id]||{prepare:true,date:new Date().toISOString()};const doc={...cur,role:fd.role||cur.role||'enseignant',nom:(fd.nom||cur.nom||'').trim(),tel:(fd.tel??cur.tel??'').trim(),matricule:(fd.matricule??cur.matricule??'').trim(),code:(fd.code??cur.code??'').replace(/\D/g,'').slice(0,4),sexe:fd.sexe||cur.sexe||'M',matiere:(fd.matiere??cur.matiere??'').trim()};if(isSec()){if(fd.poste)doc.poste=fd.poste;if(!doc.matiere&&doc.poste)doc.matiere=POSTE_LBL[doc.poste]||''}{const sg=sigData();if(sg)doc.signature=sg}if(ensPhoto!==null){if(ensPhoto)doc.photo=ensPhoto;else delete doc.photo}
@@ -3932,7 +3937,6 @@ function introBg(){
   return `<div class="intro-bg" aria-hidden="true">${out}</div>`;
 }
 function startIntro(){
-  LOGO_DONE=true; // le logo s'anime une seule fois, dans l'intro ; ensuite il reste fixe dans l'application
   const el=$('#intro');
   el.innerHTML=introBg()+`<div class="intro-in"><div class="intro-tile"><div class="intro-logo">${eAnim()}</div></div><div class="intro-name">${h(ECO().nom)}</div><div class="intro-motto">${h(ECO().devise||'')}</div></div><div class="intro-skip">Touchez l’écran pour entrer</div>`;
   el.hidden=false;const sv=el.querySelector('svg');try{sv.pauseAnimations();sv.setCurrentTime(0)}catch(e){}
@@ -3940,10 +3944,6 @@ function startIntro(){
   el.onclick=endIntro;el.ontouchstart=()=>endIntro();
   INTRO_MIN=Date.now()+(first?3800:1300);setTimeout(endIntro,first?6000:2600);
 }
-/* mise à jour de l'intro déjà affichée (nouveau logo, nom ou couleurs) sans la rejouer */
-window.introRefresh=()=>{const el=$('#intro');if(!el||el.hidden)return;const lg=el.querySelector('.intro-logo'),nm=el.querySelector('.intro-name'),mo=el.querySelector('.intro-motto');
-  if(lg){lg.innerHTML=eAnim();const sv=lg.querySelector('svg');try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}}
-  if(nm)nm.textContent=ECO().nom;if(mo)mo.textContent=ECO().devise||''};
 let INTRO_MIN=0;function introReady(){const w=INTRO_MIN-Date.now();w>0?setTimeout(endIntro,w):endIntro()}
 let dustRAF=0;
 function papers(cv){

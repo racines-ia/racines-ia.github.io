@@ -640,7 +640,13 @@ tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--ba
 .dv-ui{border:1.5px dashed #9b7be6;background:#faf7ff;color:#5b34c4;border-radius:10px;padding:8px 14px;font:600 14px/1.2 'Outfit',system-ui,sans-serif;cursor:pointer}
 .dv-ui.on{background:#6d3fe0;color:#fff;border-style:solid}.dv-ui.sm{padding:4px 8px;font-size:12px}
 .dv-add{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0 4px 36px}.dv-add.big{padding:18px 0 6px;justify-content:center}
-.comp-seg{display:grid!important;grid-template-columns:repeat(3,1fr)}.comp-seg button{font-size:13px;line-height:1.15;white-space:normal;padding-left:6px;padding-right:6px}
+.comp-tiles{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.comp-tile{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;min-height:84px;padding:12px 6px;border-radius:18px;border:1.5px solid var(--line);background:var(--sunk);color:var(--muted);font:700 13.5px/1.2 inherit;font-family:inherit;text-align:center;cursor:pointer}
+.comp-tile[aria-pressed="true"]{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 10px 24px rgba(120,60,200,.35)}
+.comp-tile:active{transform:scale(.97)}
+.dvp.ed .dvp-br.off span{border-color:#d9480f;color:#d9480f}
+.dv-pd{margin:6px 0 2px;padding:8px 10px;border-radius:10px;background:#fff4e6;color:#8a3b00;font-size:13px;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.dvp-ft.two{grid-template-columns:1fr 1fr}
 .dvq-img{display:grid;grid-template-columns:auto minmax(0,1fr);align-items:center;gap:10px;padding:12px;border:1.5px dashed var(--line);border-radius:14px}
 .dvq-img>.seg,.dvq-img>.btns{grid-column:1/-1}.dvq-img .stp{margin-top:6px}
 .dvq-img img{width:56px;height:56px;background:#fff;border-radius:10px;padding:4px}
@@ -2195,13 +2201,16 @@ function dvSemNav(sem,act){const td=lundi(today());return `<div class="cj-nav"><
 const DVT={hebdo:{t:'Devoir hebdomadaire',n:'devoir hebdomadaire',ti:'Résumé de la semaine',ic:'pen2'},interro:{t:'Interrogation',n:'interrogation',ti:'Interrogation',ic:'check'},examen:{t:'Examen',n:'examen',ti:'Examen',ic:'doc'}};
 const dvTy=d=>DVT[d?.type]?d.type:'hebdo';
 const dvWhen=d=>{const t=dvTy(d);if(t==='hebdo')return 'Semaine '+semLbl(d.semaine);const dt=d.date?dfr(d.date):'';return [d.per?keyName(d.per):'',dt?'du '+dt:''].filter(Boolean).join(' · ')||DVT[t].t};
+/* pondération du bulletin : interrogation = maximum de la période, examen = maximum de l'examen (le double) */
+function dvPondMap(cid){const m={};let br=null;for(const r of grilleOf(S.classes[cid]||{})){if(r.t==='br'){br=r.nom;m[br]=0}else if(r.t==='st'||r.t==='dom')br=null;else if(r.t==='c'){const x=+r.max||0;if(r.nom&&!(r.nom in m))m[r.nom]=x;if(br)m[br]+=x}}return m}
+const dvPond=(d,br)=>{const t=dvTy(d);if(t==='hebdo')return null;const x=dvPondMap(d.classeId)[(br||'').trim()];return x?(t==='examen'?2*x:x):null};
 const dvList=(cid,t)=>Object.entries(S.devoirs||{}).filter(([,d])=>d&&d.classeId===cid&&dvTy(d)===t).map(([id,d])=>({id,...d})).sort((a,b)=>((b.date||b.semaine||'')+(b.at||'')).localeCompare((a.date||a.semaine||'')+(a.at||'')));
 function tabDev(){
   const cid=S.cid,T=DVT[S.dvT]?S.dvT:'hebdo',es=elevesOf(cid);const sem=dvSem();
   const L=T==='hebdo'?dvOf(cid,sem):dvList(cid,T);
-  const seg=`<div class="seg full comp-seg" role="group" aria-label="Type de composition">${Object.entries(DVT).map(([k,x])=>`<button data-act="dv-t" data-v="${k}" aria-pressed="${k===T}">${x.t}</button>`).join('')}</div>`;
+  const seg=`<div class="comp-tiles" role="group" aria-label="Type de composition">${Object.entries(DVT).map(([k,x])=>`<button class="comp-tile" data-act="dv-t" data-v="${k}" aria-pressed="${k===T}">${ic(x.ic,22)}<span>${k==='hebdo'?'Devoir<br>hebdomadaire':x.t}</span></button>`).join('')}</div>`;
   const li=d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic(DVT[T].ic,20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.titre||DVT[T].ti)}</span><span class="muted small" style="display:block">${h(T==='hebdo'?dvBrs(d).join(' · ')||'—':dvWhen(d)+' · '+(dvBrs(d).join(' · ')||'—'))}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`;
-  const txt={hebdo:'Un devoir par semaine qui résume les leçons de plusieurs branches.',interro:'Une interrogation courte, sur une ou plusieurs branches.',examen:'Les questions de l’examen, branche par branche.'}[T];
+  const txt={hebdo:'Un devoir par semaine qui résume les leçons de plusieurs branches.',interro:'Les points de chaque branche suivent la pondération du bulletin pour une période.',examen:'Les points de chaque branche suivent la pondération de l’examen dans le bulletin.'}[T];
   return `<div class="card pad stack"><h2 class="h2">Cahier de composition</h2>${seg}${T==='hebdo'?dvSemNav(sem,'dv-sem'):''}
    <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer ${T==='hebdo'?'le devoir hebdomadaire':T==='interro'?'une interrogation':'un examen'}</button>${isDir()&&T==='hebdo'&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
    <p class="muted small" style="margin:0">${txt} Vous écrivez directement sur la feuille A4, comme sur papier. ${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe.':'La direction imprime une copie par élève, avec son nom et sa photo.'}</p></div>
@@ -2244,9 +2253,9 @@ function dvPaper(d,e,ed){const E=ECO();const cls=S.classes[d.classeId];const tot
   <div class="dvp-h"><div><small${ed&&dvTy(d)!=='hebdo'?' data-act="dv-set"':''}>${h(dvWhen(d))}</small><h1>${T.t}</h1></div><div class="dvp-tot"><small>Total</small><b>…… / ${fmt(tot)}</b></div></div>
   <div class="dvp-meta"><span><small>Titre</small><b>${ce('titre',d.titre||(ed?'':T.ti),T.ti)}</b></span><span><small>Classe</small><b>${h(cls?.nom||'')}</b></span><span><small>${B.length>1?'Branches':'Branche'}</small><b>${h(B.join(' · ')||'—')}</b></span></div>
   ${d.consignes||ed?`<div class="dvp-cons"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/></svg><p><b>Consignes.</b> ${ed?ce('consignes',d.consignes,'Écrivez les consignes…'):h(d.consignes).replace(/\n/g,'<br>')}</p></div>`:''}
-  <div class="dvp-q">${G.map(g=>{const P=sum(g.it.map(x=>+x.q.pts||0));return `<div class="dvp-br"><b>${ed?`<span class="dve" contenteditable="plaintext-only" spellcheck="false" data-e="br" data-br="${h(g.br)}" data-ph="Branche">${h(g.br)}</span>`:h(g.br)}</b><i></i><span>${fmt(P)} pt${P>1?'s':''}</span></div>${g.it.map(x=>qh(x.q,x.i)).join('')}${ed?`<div class="dv-add"><button class="dv-ui" data-act="dv-addq" data-v="qcm" data-br="${h(g.br)}">+ Question à choix</button><button class="dv-ui" data-act="dv-addq" data-v="txt" data-br="${h(g.br)}">+ Question à écrire</button></div>`:''}`}).join('')}
+  <div class="dvp-q">${G.map(g=>{const P=sum(g.it.map(x=>+x.q.pts||0));const PD=dvPond(d,g.br);return `<div class="dvp-br${ed&&PD!=null&&PD!==P?' off':''}"><b>${ed?`<span class="dve" contenteditable="plaintext-only" spellcheck="false" data-e="br" data-br="${h(g.br)}" data-ph="Branche">${h(g.br)}</span>`:h(g.br)}</b><i></i><span>${PD!=null&&ed?`${fmt(P)} / ${fmt(PD)} pts`:`${fmt(P)} pt${P>1?'s':''}`}</span></div>${ed&&PD!=null&&PD!==P?`<div class="dv-pd">Pondération du bulletin : <b>${fmt(PD)} points</b> (${fmt(P)} pour l’instant). <button class="dv-ui sm on" data-act="dv-ajust" data-br="${h(g.br)}">Ajuster les points</button></div>`:''}${g.it.map(x=>qh(x.q,x.i)).join('')}${ed?`<div class="dv-add"><button class="dv-ui" data-act="dv-addq" data-v="qcm" data-br="${h(g.br)}">+ Question à choix</button><button class="dv-ui" data-act="dv-addq" data-v="txt" data-br="${h(g.br)}">+ Question à écrire</button></div>`:''}`}).join('')}
    ${ed?`<div class="dv-add big">${G.length?'':`<button class="dv-ui on" data-act="dv-modele">Commencer avec le modèle de l’école</button>`}<button class="dv-ui" data-act="dv-addbr">+ Ajouter une branche</button></div>`:''}</div>
-  <div class="dvp-ft"><div><small>Cote obtenue</small><b>………… / ${fmt(tot)}</b></div><div><small>Signature de l’enseignant</small></div><div><small>Signature du parent</small></div></div></div>`}
+  <div class="dvp-ft${dvTy(d)==='hebdo'?'':' two'}"><div><small>Cote obtenue</small><b>………… / ${fmt(tot)}</b></div><div><small>Signature de l’enseignant</small></div>${dvTy(d)==='hebdo'?'<div><small>Signature du parent</small></div>':''}</div></div>`}
 function dvPrev(id,dd){const d=dd||S.devoirs[id];if(!d)return;const e=elevesOf(d.classeId)[0];
  openSheet('Aperçu · '+DVT[dvTy(d)].t,`<div class="stack"><p class="muted small" style="margin:0">Exemple de copie${e?' pour '+h(nomComplet(e)):''}. Chaque élève aura la sienne. <span class="pill num" id="dv-a4">Format A4</span></p><div class="cert-prev dv-prev"><div class="cert-zoom dv-zoom">${dvPaper({id,...d},e)}</div></div>
   ${dd?'':`<div class="btns"><button class="btn sm" data-act="dv-edit" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn grad sm" data-act="dv-pdf" data-v="one" data-id="${h(id)}">${ic('doc',16)} PDF pour toute la classe</button>`:''}<button class="btn sm danger" data-act="dv-del" data-id="${h(id)}" data-armtxt="Confirmer la suppression ?">Supprimer</button></div>`}</div>`);
@@ -2301,7 +2310,7 @@ function dvSetSheet(){const d=S.dv;if(!d)return;const t=dvTy(d);const ks=pkeys()
   <div class="field"><label for="dvs-p">Période</label><select class="inp" id="dvs-p" name="per">${ks.map(([k])=>`<option value="${k}" ${k===d.per?'selected':''}>${h(keyName(k))}</option>`).join('')}</select></div>
   <button class="btn grad">Valider</button></form>`)}
 function dvBrSheet(){const d=S.dv;if(!d)return;const used=dvBrs(d);const L=dvBranches(d.classeId).filter(b=>!used.includes(b));
- openSheet('Ajouter une branche',`<div class="stack"><div class="chips">${L.map(b=>`<button class="chipb" data-act="dv-brpick" data-v="${h(b)}">${h(b)}</button>`).join('')||'<span class="muted small">Toutes les branches de la classe sont déjà sur la feuille.</span>'}</div>
+ openSheet('Ajouter une branche',`<div class="stack"><div class="chips">${L.map(b=>{const PD=dvPond(d,b);return `<button class="chipb" data-act="dv-brpick" data-v="${h(b)}">${h(b)}${PD!=null?` <small class="num">/${fmt(PD)}</small>`:''}</button>`}).join('')||'<span class="muted small">Toutes les branches de la classe sont déjà sur la feuille.</span>'}</div>
   <form id="f-dvbr" class="stack"><div class="field"><label for="dvb-n">Ou écrivez le nom</label><input class="inp" id="dvb-n" name="nom" placeholder="Ex. Calcul mental"></div><button class="btn grad">Ajouter</button></form></div>`)}
 function dvAddBr(name){const n=(name||'').trim();if(!n||!S.dv)return;S.dv.q.push(dvQ('qcm',n));S.dvSel=S.dv.q.length-1;S.dvDirty=true;closeSheet();dvFocusQ(S.dvSel)}
 /* PDF : la feuille du devoir est rendue une seule fois, puis chaque élève reçoit sa copie (photo, nom, classe) */
@@ -3723,7 +3732,7 @@ const A={
   'dva-sem':b=>{S.dvSem=b.dataset.v;render()},
   'dva-open':b=>{S.cid=b.dataset.id;S.view='classe';S.ctab='dev';render();scrollTo(0,0)},
   'dv-t':b=>{S.dvT=b.dataset.v;render()},
-  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:DV_CONS,q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
+  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
   'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.type=dvTy(d);S.dv.q=S.dv.q||[];S.dv.q.forEach(q=>{if(!q.br)q.br=d.branche||''});S.dvT=S.dv.type;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
   'dv-prev':b=>dvPrev(b.dataset.id),
   'dv-prevd':()=>{if(S.dv)dvPrev('',S.dv)},
@@ -3731,6 +3740,9 @@ const A={
   'dv-set':()=>dvSetSheet(),
   'dv-zoom':b=>{const i=DVZ.findIndex(z=>z>=(S.dvZ||1)-.01);S.dvZ=DVZ[Math.min(DVZ.length-1,Math.max(0,(i<0?0:i)+ +b.dataset.v))];dvZoom()},
   'dv-sel':b=>dvSelect(+b.dataset.i),
+  'dv-ajust':b=>{const br=b.dataset.br,PD=dvPond(S.dv,br);if(PD==null)return;const L=S.dv.q.filter(q=>(q.br||'').trim()===br);if(!L.length)return;
+    const w=L.map(q=>Math.max(+q.pts||0,.0001)),W=sum(w);let pts=w.map(x=>Math.max(1,Math.floor(PD*x/W)));let r=PD-sum(pts);let k=0;while(r>0){pts[k%pts.length]++;r--;k++}while(r<0){const j=pts.findIndex(x=>x>1);if(j<0)break;pts[j]--;r++}
+    L.forEach((q,i)=>q.pts=pts[i]);S.dvDirty=true;dvRe();toast(`${br} : ${fmt(PD)} points répartis entre ${L.length} question${L.length>1?'s':''}.`)},
   'dv-addbr':()=>dvBrSheet(),
   'dv-brpick':b=>dvAddBr(b.dataset.v),
   'dv-addq':b=>{const br=b.dataset.br||'';const L=S.dv.q;let at=-1;L.forEach((q,i)=>{if((q.br||'').trim()===br)at=i});const nq=dvQ(b.dataset.v,br);if(at<0)L.push(nq);else L.splice(at+1,0,nq);S.dvSel=at<0?L.length-1:at+1;S.dvDirty=true;dvRe();dvFocusQ(S.dvSel)},
@@ -3749,6 +3761,7 @@ const A={
   'il-del':b=>{const q=S.dv.q[+b.dataset.i];if(q){delete q.img;S.dvDirty=true;dvRe()}},
   'dv-save':async()=>{const d=S.dv;if(!d)return;const T=dvTy(d);let q=(d.q||[]).filter(x=>(x.q||'').trim());if(!q.length){toast('Écrivez au moins une question.');return}
     q=dvGroups({q}).flatMap(g=>g.q);
+    if(T!=='hebdo'){for(const g of dvGroups({q})){const PD=dvPond(d,g.br),P=sum(g.q.map(x=>+x.pts||0));if(PD!=null&&PD!==P){toast(`${g.br} : ${fmt(P)} points au lieu de ${fmt(PD)} (pondération du bulletin). Touchez « Ajuster les points » sur la feuille.`);return}}}
     const bad=q.findIndex(x=>x.t==='qcm'&&dvChs(x).length<2);if(bad>=0){toast('Chaque question à choix doit avoir au moins 2 réponses (texte ou dessin).');const i=d.q.indexOf(q[bad]);if(i>=0){dvSelect(i);dvFocusQ(i)}return}
     const id=d.id||'dv-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.devoirs[id]||{};
     const doc={type:T,classeId:d.classeId,semaine:T==='hebdo'?d.semaine:lundi(d.date||today()),...(T==='hebdo'?{}:{date:d.date||today(),per:d.per||''}),branche:dvBrs({q}).join(', '),titre:(d.titre||'').trim()||DVT[T].ti,consignes:(d.consignes||'').trim(),q:q.map(x=>{const im=x.img&&ILLU.items[x.img.id]?{img:{id:x.img.id,n:x.img.n||1,pos:x.img.pos||'droite'}}:{};const br=(x.br||'').trim()||'Autres questions';if(x.t==='qcm'){const C=dvChs(x);return {t:'qcm',br,q:x.q.trim(),ch:C.map(c=>c.c.trim()),chi:C.map(c=>c.im),bon:C.findIndex(c=>c.j===x.bon),pts:+x.pts||0,...im}}return {t:'txt',br,q:x.q.trim(),lig:+x.lig||3,rep:x.rep==='cadre'?'cadre':'lig',pts:+x.pts||0,...im}}),by:old.by||meId(),nom:old.nom||S.inscr[meId()]?.nom||'',at:old.at||new Date().toISOString(),maj:new Date().toISOString()};

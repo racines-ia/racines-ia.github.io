@@ -2485,7 +2485,7 @@ async function pushSubscribe(ask){if(!pushOk()||S.demo)return false;try{
   if(Notification.permission!=='granted'){if(!ask)return false;const p=await Notification.requestPermission();if(p!=='granted')return false}
   const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
   if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});
-  const api=window.claude?.use?await claude.use('push').catch(()=>null):null;if(api)await api.save(sub.toJSON(),navigator.userAgent.slice(0,180));return true}catch(e){return false}}
+  const api=window.claude?.use?await claude.use('push').catch(()=>null):null;if(!api)throw {message:'service indisponible'};await api.save(sub.toJSON(),navigator.userAgent.slice(0,180));S.pushErr='';return true}catch(e){S.pushErr=String(e?.message||e||'erreur');return false}}
 async function pushOff(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){const api=window.claude?.use?await claude.use('push').catch(()=>null):null;if(api)await api.remove(sub.endpoint).catch(()=>{});await sub.unsubscribe()}}catch(e){}}
 /* quand l'application est ouverte, une notification reçue s'affiche dans la forme de dossier */
 if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',ev=>{const d=ev.data||{};if(d.type==='push')notifShow(d.title||'Notification',d.body||'')});
@@ -4430,8 +4430,8 @@ const A={
    ${app?`<ol><li>Fermez l’application.</li><li>Sur l’écran d’accueil, <b>appuyez longtemps</b> sur l’icône de l’école, puis touchez <b>ⓘ</b> (Infos sur l’application).</li><li>Touchez <b>Notifications</b>, puis activez <b>Autoriser les notifications</b>.</li><li>Rouvrez l’application, Gestion → <b>Notifications</b>.</li></ol><p class="muted small" style="margin:0">Ou : Paramètres du téléphone → Applications → l’icône de l’école (ou Chrome) → Notifications → activer.</p>`
    :`<ol><li>Dans Chrome, touchez <b>⋮</b> en haut à droite, puis <b>Paramètres</b>.</li><li>Touchez <b>Paramètres des sites</b>, puis <b>Notifications</b>.</li><li>Dans la liste <b>Bloqués</b>, touchez <b>racines-ia.github.io</b>, puis <b>Autoriser</b>.</li><li>Revenez ici et touchez de nouveau <b>Notifications</b>.</li></ol>`}
    <p class="muted small" style="margin:0">Sur Samsung, vérifiez aussi : Paramètres → Applications → Chrome → Notifications → activées.</p><button class="btn grad" data-act="close-sheet">J’ai compris</button></div>`);return}
-    if(e==='oui'){const ok=await pushSubscribe(false);notifShow('Notifications activées',ok?'Ce téléphone recevra les paiements, les documents et les communiqués, même application fermée.':'Réessayez dans un instant.',{kicker:'racines.ia'});return}
-    const ok=await pushSubscribe(true);render();notifShow(ok?'Notifications activées':'Notifications non activées',ok?'Ce téléphone sonnera pour les paiements, les documents et les communiqués, même application fermée.':'Autorisez les notifications quand le téléphone vous le demande.',{kicker:'racines.ia'})},
+    if(e==='oui'){const ok=await pushSubscribe(false);notifShow('Notifications activées',ok?'Ce téléphone recevra les paiements, les documents et les communiqués, même application fermée.':'Erreur : '+(S.pushErr||'inconnue')+'. Envoyez-moi une capture.',{kicker:'racines.ia'});return}
+    const ok=await pushSubscribe(true);render();notifShow(ok?'Notifications activées':'Notifications non activées',ok?'Ce téléphone sonnera pour les paiements, les documents et les communiqués, même application fermée.':(Notification.permission==='granted'?'Erreur : '+(S.pushErr||'inconnue')+'. Envoyez-moi une capture.':'Autorisez les notifications quand le téléphone vous le demande.'),{kicker:'racines.ia'})},
   'close-sheet':()=>closeSheet(),
   'an-later':()=>anLater(),
   'an-vu':()=>anVu(),

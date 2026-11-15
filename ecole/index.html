@@ -1323,6 +1323,86 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .intro{cursor:pointer}.intro-skip{position:absolute;left:0;right:0;bottom:calc(28px + env(safe-area-inset-bottom,0px));text-align:center;font-size:12.5px;letter-spacing:.06em;color:rgba(255,255,255,.42);opacity:0;animation:fade .8s ease 2.5s forwards;z-index:1}
 .logo-img{width:100%;height:100%;object-fit:contain;border-radius:50%;background:#fff;padding:7%;display:block;box-shadow:0 0 0 3px rgba(255,255,255,.85)}
 .logo-ini{width:100%;height:100%;border-radius:50%;display:grid;place-items:center;font-family:var(--f-d);font-size:clamp(28px,9vw,64px);color:#fff;border:3px solid rgba(255,255,255,.85)}
+/* ===== Mes documents ===== */
+.fday{display:flex;align-items:center;gap:10px;position:relative}
+.fday label{display:flex;flex-direction:column;gap:2px;position:relative;cursor:pointer}
+.fday .fdin{position:absolute;inset:0;opacity:0;width:100%;cursor:pointer}
+.fgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:760px){.fgrid{grid-template-columns:repeat(4,minmax(0,1fr))}}
+.fcard{position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:8px;border:0;background:var(--surface);color:var(--ink);border-radius:var(--r);box-shadow:var(--shadow-s);padding:16px;text-align:left;cursor:pointer;min-height:168px}
+.fcard b{font-family:var(--f-d);font-weight:400;font-size:19px;text-transform:uppercase;line-height:1.05}
+.fcard .pill{margin-top:auto;white-space:normal}
+.fcard.ok{box-shadow:inset 0 0 0 1.5px var(--good),var(--shadow-s)}
+.fcard.off{opacity:.5;cursor:default}
+.fcard .favis{font-size:12px;color:var(--muted);font-style:italic;line-height:1.3}
+.fnew{position:absolute;top:12px;right:12px;font-style:normal;font-size:11px;font-weight:800;background:var(--bad);color:#fff;border-radius:99px;padding:3px 9px}
+.fslot summary{display:flex;flex-direction:column;gap:2px;cursor:pointer;list-style:none}
+.fslot summary::-webkit-details-marker{display:none}
+.fslot.rec{text-align:center;background:var(--sunk);letter-spacing:.06em}
+.fta{min-height:0;resize:vertical;line-height:1.4}
+.fbar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--bg);padding:8px 0;border-radius:16px}
+.favbox{background:var(--good-soft);color:var(--ink)}
+.favbox b{color:var(--good);display:flex;gap:8px;align-items:center}
+.fpw{width:100%;overflow:hidden;border-radius:10px;box-shadow:var(--shadow-s);background:#fff}
+.fpw>.fp{transform-origin:top left}
+/* papier A4 (pixels à 96 ppp) */
+.fp{--d:#1d0f3d;--m:#2c1660;--v:#533989;--l:#8363c6;--s:#f3effb;--g:#cfc3ea;--k:#1a1330;--mg:#c23b5a;background:#fff;color:var(--k);font-family:"Outfit","Segoe UI",Roboto,Arial,sans-serif;display:flex;flex-direction:column;gap:12px;position:relative;color-scheme:light;line-height:1.3}
+.fp.fp-l{width:1123px;min-height:794px;padding:38px 42px 34px}
+.fp.fp-p{width:794px;min-height:1123px;padding:34px 38px 30px}
+.fp-top{display:flex;align-items:stretch;border-radius:15px;overflow:hidden;background:linear-gradient(110deg,var(--d) 0%,var(--m) 40%,var(--v) 75%,var(--l) 100%);color:#fff;min-height:70px}
+.fp-brand{padding:12px 18px;display:flex;flex-direction:column;justify-content:center;border-right:1px solid rgba(255,255,255,.18);max-width:240px}
+.fp-brand b{font-size:14px;text-transform:uppercase;font-weight:700}
+.fp-brand small{font-size:9px;opacity:.75;letter-spacing:.12em;text-transform:uppercase}
+.fp-ttl{flex:1;padding:10px 22px;display:flex;flex-direction:column;justify-content:center}
+.fp-ttl h1{font-family:inherit;font-size:28px;font-weight:800;letter-spacing:.05em;line-height:1;text-transform:none}
+.fp-p .fp-ttl h1{font-size:23px}
+.fp-ttl span{font-size:11px;opacity:.85;margin-top:4px}
+.fp-info{display:grid;border:1px solid var(--g);border-radius:11px;overflow:hidden;background:var(--s)}
+.fp-info>div{padding:8px 14px;font-size:12.5px;font-weight:700;color:var(--v);border-left:1px solid var(--g)}
+.fp-info>div:first-child{border-left:0}
+.fp-info b{color:var(--k);font-weight:600}
+.fp-t{border-collapse:separate;border-spacing:0;width:100%;table-layout:fixed;border:1px solid var(--g);border-radius:11px;overflow:hidden;flex:1}
+.fp-t th{background:var(--v);color:#fff;font-size:12px;font-weight:700;text-align:left;padding:8px 7px;vertical-align:middle;line-height:1.15}
+.fp-t th:first-child{background:var(--m)}
+.fp-t th small{display:block;font-weight:500;font-size:9.5px;opacity:.8;margin-top:2px}
+.fp-t td{border-top:1px solid var(--g);border-left:1px solid var(--g);vertical-align:top;padding:6px 7px;font-size:11px;height:74px;overflow-wrap:anywhere}
+.fp-t td:first-child{border-left:0}
+.fp-t tr:nth-child(even) td{background:#faf8fe}
+.fp-t td.fp-h{font-weight:800;color:var(--v);font-size:12px;text-align:center;vertical-align:middle;background:var(--s)!important}
+.fp-rec td{height:auto!important;background:#e7def8!important;text-align:center;vertical-align:middle;font-weight:800;color:var(--v);letter-spacing:.5em;font-size:12px;padding:6px}
+.fp-rec td.fp-h{letter-spacing:0;font-size:11px}
+.fpv{white-space:normal}
+.fp-sheet{flex:1;border:1px solid var(--g);border-radius:11px;position:relative;padding:18px 24px 16px 88px;display:flex;flex-direction:column;gap:9px}
+.fp-sheet::before{content:"";position:absolute;left:70px;top:0;bottom:0;border-left:1.6px solid var(--mg);opacity:.75}
+.fp-date{text-align:center;font-size:13px;color:var(--v);font-weight:600}
+.fp-br{display:flex;flex-direction:column;align-items:center;gap:5px;margin-top:4px}
+.fp-br i{width:46%;border-top:1.3px solid var(--v)}
+.fp-br b{font-size:18px;color:var(--v);display:flex;gap:8px;align-items:baseline}
+.fp-br b small{font-size:10px;font-weight:600;color:#9b8cc4}
+.fp-suj{text-align:center;font-size:13.5px;font-weight:700;color:var(--m)}
+.fp-suj b{color:var(--k);font-weight:600}
+.fp-lab{font-size:11.5px;font-weight:800;color:var(--v);text-transform:uppercase;letter-spacing:.06em;display:flex;align-items:center;gap:7px}
+.fp-lab::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--l)}
+.fp-lab.r{color:var(--mg)}.fp-lab.r::before{background:var(--mg)}
+.fp-txt{font-size:13px;line-height:1.55;min-height:22px;padding-left:15px;overflow-wrap:anywhere}
+.fp-mrow{display:flex;gap:16px;font-size:12px;color:var(--v);font-weight:700}
+.fp-mrow span{flex:1;display:flex;gap:6px;align-items:baseline}
+.fp-mrow b{color:var(--k);font-weight:600}
+.fp-mrow i{flex:1;border-bottom:1.2px dotted #9b8cc4;height:1em}
+.fp-sep{border-top:1.4px dashed var(--g);margin:6px -24px 2px -18px}
+.fp-q{position:relative;margin-top:4px}
+.fp-num{position:absolute;left:-74px;top:-4px;width:36px;height:36px;border-radius:50%;background:var(--v);color:#fff;font-weight:800;font-size:13px;display:grid;place-items:center}
+.fp-cote{position:absolute;left:6px;top:16px;width:58px;text-align:center;color:var(--mg);font-weight:800;font-size:11px;display:flex;flex-direction:column;align-items:center;gap:2px}
+.fp-cote b{display:block;min-width:40px;border-bottom:1.6px solid var(--mg);font-size:17px;min-height:24px}
+.fp-foot{display:grid;grid-template-columns:1fr 2fr 1fr;gap:11px;min-height:96px}
+.fp-box{border:1.4px solid var(--v);border-radius:11px;padding:8px 12px;display:flex;flex-direction:column;gap:3px;background:#fff;min-width:0}
+.fp-box.dir{background:var(--s)}
+.fp-box b{font-size:10.5px;color:var(--v);text-transform:uppercase;letter-spacing:.04em}
+.fp-box p{margin:0;font-size:11.5px;line-height:1.4}
+.fp-box small{font-size:9.5px;color:#7a6ea0;margin-top:auto}
+.fp-sg{flex:1;display:flex;align-items:center;justify-content:center;min-height:40px}
+.fp-sg img{max-height:48px;max-width:100%}
+.fp-legal{display:flex;justify-content:space-between;font-size:9px;color:#9a90b8}
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -1343,7 +1423,7 @@ const POSTES_G=[['prefet','Préfet'],['secretaire','Secrétaire'],['etudes','Dir
 const POSTES_E=[['titulaire','Titulaire'],['professeur','Professeur']];
 const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire',etudes:'Directeur des études',discipline:'Directeur de discipline',titulaire:'Titulaire',professeur:'Professeur',directeur:'Directeur'};
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
-const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs','regjour'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs','regjour']};
+const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs','regjour','docs','fiche'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs','regjour']};
 function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
@@ -1389,8 +1469,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels'};
-const S={manuels:{},ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',fiches:'fiches'};
+const S={fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -1627,9 +1707,9 @@ function screen(){
     if(!S.inscr[meId()]){const L=libres();return band({kicker:'Espace enseignant',title:L.length?'Bienvenue':'Créez votre profil'})+page((L.length?`<section class="card pad stack"><div><b>Votre profil a peut-être déjà été préparé par la direction</b><p class="muted small" style="margin:4px 0 0">Touchez votre nom pour l’utiliser.</p></div><div class="list">${L.map(p=>`<button class="li" data-act="claim" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(p.matiere||'')}</span></span><span class="badge-g">C’est moi</span></button>`).join('')}</div></section><h2 class="h2">Sinon, créez votre profil</h2>`:'')+inscription())}
     if(!mesClasses().length)return band({kicker:'Espace enseignant',title:'Demande envoyée'})+page(`<div class="card empty"><div class="av lg g">${h(initials({nom:S.inscr[meId()].nom}))}</div><h3>Bonjour ${h(S.inscr[meId()].nom)}</h3><p class="muted">La direction doit vous attribuer votre classe. Elle apparaîtra ici automatiquement.</p></div>`);
   }
-  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir','manuels'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
+  if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir','manuels','docs','fiche'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,manuels:vManuels})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,manuels:vManuels,docs:vDocs,fiche:vFiche})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -1650,6 +1730,7 @@ function vAccueil(){
     ${isDir()&&canView('sante')?(()=>{const td=today();const L=santeList();const n=L.filter(x=>x.date===td).length,w=L.filter(x=>!x.envoyeAt).length;return `<button class="li actsum" data-act="go" data-v="sante"><span class="ib g">${ic('med',22)}</span><span class="grow"><span class="ttl" style="display:block">Cahier de sortie · santé</span><span class="muted small num">Aujourd’hui : ${n} élève${n>1?'s':''} malade${n>1?'s':''}${w?` · ${w} PDF à envoyer`:''}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()&&canView('perception')?(()=>{const ids=classIds();const st=ids.map(c=>statClasse(c));const du=sum(st.map(x=>x.du)),pa=sum(st.map(x=>x.paye));const td=today();const j=sum(Object.values(S.paiem).filter(p=>p.date===td).map(p=>numM(p.montant)));return `<button class="li actsum" data-act="go" data-v="perception"><span class="ib g">${ic('money',22)}</span><span class="grow"><span class="ttl" style="display:block">Perception des frais</span><span class="muted small num">${du?`Aujourd’hui : ${fmtM(j)}`:'Frais pas encore fixés'}</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${isDir()&&canView('activite')?(()=>{const td=today(),ci=classIds();const a=ci.filter(c=>appelClos(c,td)).length,cc=ci.filter(c=>cotesClos(c,td)).length,nb=unseen();return `<button class="li actsum" data-act="go" data-v="activite"><span class="ib g">${ic('bell',22)}</span><span class="grow"><span class="ttl" style="display:block">Activité du jour</span><span class="muted small num">Appel clôturé : ${a}/${ci.length} classes · Cotes : ${cc}/${ci.length}</span></span>${nb?`<span class="pill acc num">${nb} nouveau${nb>1?'x':''}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
+    ${isDir()&&canView('docs')?(()=>{const td=today();const T=fichesList().filter(f=>f.date===td).length,n=fAttente();return `<button class="li actsum" data-act="go" data-v="docsall"><span class="ib g">${ic('doc',22)}</span><span class="grow"><span class="ttl" style="display:block">Documents des enseignants</span><span class="muted small num">Aujourd’hui : ${T} cahier${T>1?'s':''} rempli${T>1?'s':''}${n?` · ${n} à signer`:''}</span></span>${n?`<span class="pill warn num">${n}</span>`:''}<span class="chev">${ic('chev',18)}</span></button>`})():''}
     ${canPalmSit()&&canView('palmsit')?(()=>{const ids=classIds();const k=S.psKey||'t1';let cl=0,re=0;for(const c of ids){const r=palmData(c,k).ranked;cl+=r.length;re+=r.filter(x=>x.pct>=50).length}return `<button class="li actsum" data-act="psit"><span class="ib g">${ic('chart',22)}</span><span class="grow"><span class="ttl" style="display:block">Situation des palmarès</span><span class="muted small num">${h(keyName(k))} : ${cl} élèves classés · ${cl?Math.round(re/cl*100):0} % de réussite</span></span><span class="chev">${ic('chev',18)}</span></button>`})():''}
    </section>`);
 }
@@ -2210,6 +2291,169 @@ function discAlert(){if(!S.ready||S.demo)return;let seen;try{seen=new Set(JSON.p
  if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(DNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
  if(S.view==='disc'&&!document.hidden)return;const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'} à votre courrier`:`${DK[m.kind]} de la direction`;
  sysNotif(title,(m.objet||m.texte||'').slice(0,140));toast(title+(dir?' · Discipline du personnel':' · ouvrez votre profil'))}
+/* ---------- Mes documents : cahier journal, devoirs journaliers, exercices, résumés ---------- */
+const FT={journal:{t:'Cahier journal',s:'Préparation et déroulement des leçons de la journée',i:'doc',land:1},devoirs:{t:'Cahier de devoirs journalier',s:'Devoirs à domicile donnés chaque jour',i:'check'},exos:{t:'Cahier d’exercices',s:'Questions de l’enseignant et leurs réponses',i:'pen'},resume:{t:'Cahier de résumés',s:'L’essentiel de chaque leçon',i:'book'}};
+const FTK=Object.keys(FT);
+const CJH=[['7h30','8h15'],['8h15','9h00'],['9h00','9h45'],null,['10h15','10h50'],['10h50','11h30'],['11h30','12h15']];
+const CJC=[['br','Branche','Sous-branche'],['suj','Sujet',''],['mat','Matière','Contenu de la leçon'],['rev','Révision','Rappel'],['obj','Objectifs','L’élève sera capable de…'],['ana','Analyse','Déroulement'],['app','Application','Exercice'],['obs','Observation','']];
+const fid=(ens,d,t)=>ens+'__'+d+'__'+t;
+const ficheOf=(ens,d,t)=>{for(const e of ensIdsOf(ens)){const f=S.fiches?.[fid(e,d,t)];if(f)return{id:fid(e,d,t),...f}}return null};
+const fichesList=ens=>{const ids=ens?ensIdsOf(ens):null;return Object.entries(S.fiches||{}).filter(([,f])=>f&&(!ids||ids.includes(f.ens))).map(([id,f])=>({id,...f}))};
+const ficheEmpty=(t,f)=>{const c=f?.c||{};if(t==='journal')return !Object.values(c.rows||{}).some(r=>Object.values(r||{}).some(v=>String(v||'').trim()));if(t==='devoirs')return !(c.items||[]).some(x=>(x.txt||'').trim()||(x.suj||'').trim());if(t==='exos')return !(c.q||[]).some(x=>(x.q||'').trim());return !(c.mat||'').trim()&&!(c.suj||'').trim()};
+const FNK='clr-fiche-vus';
+const fSeen=()=>{try{return new Set(JSON.parse(localStorage.getItem(FNK)||'[]'))}catch(e){return new Set()}};
+const fKey=f=>isDir()?f.id+'|e|'+(f.upd||f.at||''):f.id+'|d|'+(f.dir?.at||'');
+function fMarkSeen(f){if(!f)return;const s=fSeen();s.add(fKey(f));try{localStorage.setItem(FNK,JSON.stringify([...s].slice(-500)))}catch(e){}}
+/* à lire : pour l'enseignant, ses fiches corrigées pas encore vues ; pour la direction, les fiches envoyées et pas encore signées */
+function fUnread(ens){const s=fSeen();if(isDir())return fichesList(ens).filter(f=>!f.dir&&!s.has(fKey(f))).length;return fichesList(meId()).filter(f=>f.dir&&!s.has(fKey(f))).length}
+const fAttente=ens=>fichesList(ens).filter(f=>!f.dir).length;
+let fAlertInit=false;
+function ficheAlert(){
+  if(!S.ready||S.demo)return;const s=fSeen();const KN='clr-fiche-notif';let done;try{done=new Set(JSON.parse(localStorage.getItem(KN)||'[]'))}catch(e){done=new Set()}
+  const N=isDir()?fichesList().filter(f=>!f.dir&&!s.has(fKey(f))&&!done.has(fKey(f))):fichesList(meId()).filter(f=>f.dir&&!s.has(fKey(f))&&!done.has(fKey(f)));
+  if(!N.length)return;N.forEach(f=>done.add(fKey(f)));try{localStorage.setItem(KN,JSON.stringify([...done].slice(-500)))}catch(e){}
+  const f=N[N.length-1];
+  const title=isDir()?`${f.nom||'Un enseignant'} a enregistré son ${FT[f.type]?.t.toLowerCase()||'document'}`:`La direction a corrigé votre ${FT[f.type]?.t.toLowerCase()||'document'}`;
+  const body=isDir()?`${jourLbl(f.date)} · à signer`:`${jourLbl(f.date)} · ${f.dir.nom||'La direction'} a signé et donné son avis.`;
+  sysNotif(title,body);toast(title+(isDir()?' · Documents des enseignants':' · ouvrez « Mes documents »'));
+}
+/* signature de la personne connectée : celle de son profil, sinon celle dessinée une fois sur ce téléphone */
+const MYSIG='clr-ma-signature';
+function myPerson(){return ensList().find(x=>x.id===meId())||ensList().find(x=>myEnsIds().includes(x.id))||null}
+function mySig(){const p=myPerson();let loc=null;try{loc=JSON.parse(localStorage.getItem(MYSIG)||'null')}catch(e){}
+  const img=p?.signature||(isDir()&&dirSig()?.id===p?.id?dirSig()?.img:'')||(loc&&loc.u===meId()?loc.img:'');
+  const fn=isDir()?(posteOf(p)||p?.matiere||chefLbl()):(p?.matiere||'Enseignant');
+  return{img:img||'',nom:p?.nom||(isDir()?'La direction':'L’enseignant'),fn}}
+function padInit(s){const cv=s.querySelector('#sigc');const dpr=Math.min(2,devicePixelRatio||1);const W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.6;c.lineCap='round';c.lineJoin='round';c.strokeStyle='#1a0a10';
+  let draw=false,last=null;cv.dataset.ink='0';const pos=ev=>{const r=cv.getBoundingClientRect();return[ev.clientX-r.left,ev.clientY-r.top]};
+  cv.addEventListener('pointerdown',ev=>{ev.preventDefault();cv.setPointerCapture(ev.pointerId);draw=true;last=pos(ev);c.beginPath();c.arc(last[0],last[1],1.2,0,6.283);c.fillStyle='#1a0a10';c.fill();cv.dataset.ink='1'});
+  cv.addEventListener('pointermove',ev=>{if(!draw)return;const p=pos(ev);c.beginPath();c.moveTo(last[0],last[1]);c.lineTo(p[0],p[1]);c.stroke();last=p});
+  const up=()=>{draw=false};cv.addEventListener('pointerup',up);cv.addEventListener('pointercancel',up)}
+let fSigCb=null;
+function mySigSheet(cb){fSigCb=cb;openSheet('Votre signature',`<div class="stack"><p class="muted small" style="margin:0">Signez une seule fois avec le doigt. Votre signature se placera ensuite toute seule sur vos documents.</p>
+  <div class="sigpad"><canvas id="sigc" aria-label="Zone de signature"></canvas><span class="sigline">Signez ici</span></div>
+  <div class="btns"><button type="button" class="btn sm" data-act="sigclear">Effacer</button></div>
+  <button class="btn grad" data-act="fsig-ok">Enregistrer ma signature</button></div>`,padInit)}
+/* ---------- papier A4 ---------- */
+const fpI=(v,cls='')=>`<span class="fpv ${cls}">${h(v||'').replace(/\n/g,'<br>')}</span>`;
+function fichePaper(f){
+  const t=f.type,c=f.c||{},E=ECO(),cl=S.classes[f.classeId]?.nom||'';const ft=FT[t];const dd=f.date?D(f.date):null;
+  const dateTxt=dd?`${JLONG[dd.getUTCDay()]} ${dd.getUTCDate()} ${MOIS[dd.getUTCMonth()]} ${dd.getUTCFullYear()}`:'';
+  const top=`<div class="fp-top"><div class="fp-brand"><b>${h(E.nom||'')}</b><small>${h(E.devise||'Discipline · Unité · Travail')}</small></div><div class="fp-ttl"><h1>${h(ft.t.toUpperCase())}</h1><span>${h(ft.s)}</span></div></div>`;
+  const info=`<div class="fp-info" style="grid-template-columns:1fr 1fr"><div>Classe : <b>${h(cl)}</b></div><div>Date : <b>${h(dateTxt)}</b></div></div>`;
+  const ens=f.sig?.img?`<img src="${h(f.sig.img)}" alt="">`:'';const dir=f.dir;
+  const foot=`<div class="fp-foot"><div class="fp-box"><b>Signature de l’enseignant</b><div class="fp-sg">${ens}</div><small>${h(f.sig?.nom||f.nom||'')}</small></div>
+   <div class="fp-box dir"><b>Avis de la direction</b><p>${dir?h(dir.avis||'').replace(/\n/g,'<br>'):''}</p></div>
+   <div class="fp-box dir"><b>Visa ${dir?'· '+h(dir.fn||'Direction'):'de la direction'}</b><div class="fp-sg">${dir?.img?`<img src="${h(dir.img)}" alt="">`:''}</div><small>${dir?h(dir.nom||'')+' · '+h(dfr(dir.at.slice(0,10))):'Date : …… / …… / 20……'}</small></div></div>`;
+  const legal=`<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>${h(ft.t)} · ${h(f.nom||'')}</span></div>`;
+  if(t==='journal'){const R=c.rows||{};
+    const rows=CJH.map((hh,i)=>hh?`<tr><td class="fp-h">${hh[0]}<br>${hh[1]}</td>${CJC.map(([k])=>`<td>${fpI(R[i]?.[k])}</td>`).join('')}</tr>`:`<tr class="fp-rec"><td class="fp-h">9h45 – 10h15</td><td colspan="${CJC.length}">RÉCRÉATION</td></tr>`).join('');
+    return `<div class="fp fp-l">${top}${info}<table class="fp-t"><colgroup><col style="width:78px"><col style="width:100px"><col><col><col><col><col><col><col style="width:96px"></colgroup><thead><tr><th>Heure</th>${CJC.map(([,l,s])=>`<th>${l}${s?`<small>${s}</small>`:''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${foot}${legal}</div>`}
+  const head=(lbl,br,suj)=>`<div class="fp-br"><i></i><b><small>${lbl}</small>${h(br||'')}</b><i></i></div><div class="fp-suj">Sujet : <b>${h(suj||'')}</b></div>`;
+  let body='';
+  if(t==='devoirs')body=(c.items||[]).map((x,i)=>`${i?'<div class="fp-sep"></div>':''}${head('Branche',x.br,x.suj)}<div class="fp-lab">Devoir</div><div class="fp-txt">${fpI(x.txt)}</div><div class="fp-mrow"><span>À remettre le : <b>${x.rem?h(dfr(x.rem)):''}</b></span><span>Signature du parent : <i></i></span></div>`).join('');
+  if(t==='exos')body=`${head('Branche',c.br,c.suj)}<div class="fp-cote">Cote<b>${h(c.cote||'')}</b>/ ${h(c.max||'10')}</div>${(c.q||[]).map((x,i)=>`<div class="fp-q"><span class="fp-num">${i+1}</span><div class="fp-lab">Question</div></div><div class="fp-txt">${fpI(x.q)}</div><div class="fp-lab r">Réponse</div><div class="fp-txt">${fpI(x.r)}</div>`).join('')}`;
+  if(t==='resume')body=`${head('Cours',c.br,c.suj)}<div class="fp-lab">Matière</div><div class="fp-txt">${fpI(c.mat)}</div>`;
+  return `<div class="fp fp-p">${top}${info}<div class="fp-sheet"><div class="fp-date">Le ${h(dateTxt)}</div>${body}</div>${foot}${legal}</div>`;
+}
+function fitPapers(){document.querySelectorAll('.fpw').forEach(w=>{const p=w.firstElementChild;if(!p)return;const W=p.classList.contains('fp-l')?1123:794;const sc=Math.min(1,w.clientWidth/W);p.style.transform=`scale(${sc})`;w.style.height=Math.ceil(p.offsetHeight*sc)+'px'})}
+addEventListener('resize',()=>fitPapers());
+async function fichePDF(f){const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+  toast('Préparation du PDF…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+  const land=!!FT[f.type].land,W=land?1123:794;const host=document.createElement('div');host.style.cssText=`position:fixed;left:-10000px;top:0;width:${W}px;background:#fff`;host.innerHTML=fichePaper(f);document.body.appendChild(host);
+  try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+   const node=host.firstElementChild;const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',orientation:land?'landscape':'portrait'});
+   const pw=land?297:210,ph=land?210:297;const r=Math.min(pw/cv.width,ph/cv.height);const w=cv.width*r,hh=cv.height*r;pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',(pw-w)/2,(ph-hh)/2,w,hh);
+   await dl.save({filename:`${FT[f.type].t} - ${f.nom||''} - ${f.date}.pdf`,data:pdf.output('blob'),text:`*${ECO().nom} · ${FT[f.type].t}*\n${f.nom||''} · ${jourLbl(f.date)}`});toast('PDF prêt.')
+  }catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être créé.')}finally{host.remove()}}
+/* ---------- écrans ---------- */
+const fDay=()=>S.fDate||today();
+function fDayNav(){const d=fDay(),td=today();const prev=new Date(D(d));prev.setUTCDate(prev.getUTCDate()-1);const nx=new Date(D(d));nx.setUTCDate(nx.getUTCDate()+1);
+  return `<div class="card pad fday"><button class="x" data-act="fday" data-v="${iso(prev)}" aria-label="Jour précédent">‹</button><label class="grow"><b>${h(jourLbl(d))}</b><small class="muted">${h(dfr(d))} · touchez pour choisir un jour</small><input type="date" class="fdin" data-act="fdayin" value="${d}" max="${td}"></label><button class="x" data-act="fday" data-v="${iso(nx)}" ${d>=td?'disabled':''} aria-label="Jour suivant">›</button></div>`}
+function fDaysArchive(ens){const by={};for(const f of fichesList(ens))(by[f.date]=by[f.date]||[]).push(f);const L=Object.keys(by).sort().reverse();
+  if(!L.length)return '';return `<section class="sec"><h2 class="h2">Classés par jour</h2><div class="card list">${L.slice(0,40).map(d=>{const F=by[d];const sg=F.filter(f=>f.dir).length;return `<button class="li" data-act="fday" data-v="${d}"><span class="ib">${ic('cal',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(jourLbl(d))}</span><span class="muted small">${F.length} document${F.length>1?'s':''}${ens?'':` · ${new Set(F.map(f=>f.nom)).size} enseignant${new Set(F.map(f=>f.nom)).size>1?'s':''}`}</span></span><span class="pill ${sg===F.length?'good':'warn'} num">${sg}/${F.length} signé${sg>1?'s':''}</span></button>`}).join('')}</div></section>`}
+function fCards(ens,d){const s=fSeen();return `<div class="fgrid">${FTK.map(t=>{const f=ficheOf(ens,d,t);const ft=FT[t];const nouv=f&&(isDir()?!f.dir&&!s.has(fKey(f)):f.dir&&!s.has(fKey(f)));
+   const st=!f?['','À remplir']:f.dir?['good','Signé par '+(f.dir.fn||'la direction').toLowerCase()]:['warn',isDir()?'À signer':'Envoyé · en attente'];
+   if(!f&&isDir())return `<div class="fcard off"><span class="ib">${ic(ft.i,22)}</span><b>${ft.t}</b><span class="pill">Pas rempli</span></div>`;
+   return `<button class="fcard${f?.dir?' ok':''}" data-act="fopen" data-e="${h(f?.ens||ens)}" data-d="${d}" data-t="${t}"><span class="ib g">${ic(ft.i,22)}</span><b>${ft.t}</b><small class="muted">${ft.land?'A4 paysage':'A4 vertical'}</small><span class="pill ${st[0]}">${h(st[1])}</span>${nouv?`<em class="fnew">${isDir()?'Nouveau':'Corrigé'}</em>`:''}${f?.dir?.avis?`<small class="favis">« ${h(f.dir.avis.slice(0,70))}${f.dir.avis.length>70?'…':''} »</small>`:''}</button>`}).join('')}</div>`}
+function vDocs(){
+  const dir=isDir();const d=fDay();
+  if(!dir){const p=myPerson();return band({back:'prof',home:true,kicker:'Espace enseignant',title:'Mes documents',sub:'Cahier journal, devoirs, exercices et résumés · chaque jour'})+page(`<div class="stack">
+    ${fDayNav()}
+    <div class="card pad small">Remplissez vos quatre cahiers chaque jour. Quand vous enregistrez, votre signature se place toute seule et le document part à la direction. Vous pouvez le modifier tant que la direction ne l’a pas signé.</div>
+    ${fCards(meId(),d)}
+    ${fDaysArchive(meId())}</div>`)}
+  const ens=S.fEns;
+  if(ens){const p=ensList().find(x=>x.id===ens)||{nom:''};return band({back:'docsall',home:true,kicker:'Documents des enseignants',title:p.nom,sub:'Ses documents classés par jour'})+page(`<div class="stack">${fDayNav()}${fCards(ens,d)}${fDaysArchive(ens)}</div>`)}
+  const L=ensList().filter(p=>!isGest(p)&&!p.prepare||!isGest(p)&&clsOfEns(p.id).length);
+  const att=fichesList().filter(f=>!f.dir);
+  return band({back:'accueil',home:true,kicker:'Direction',title:'Documents des enseignants',sub:'Cahiers du jour à lire, corriger et signer'})+page(`<div class="stack">
+   ${fDayNav()}
+   ${att.length?`<div class="card pad small"><b>${att.length} document${att.length>1?'s':''} à signer</b> au total${att.filter(f=>f.date<d).length?` (dont ${att.filter(f=>f.date<d).length} des jours précédents)`:''}. Votre signature se place automatiquement quand vous enregistrez votre avis.</div>`:''}
+   <div class="card list">${L.map(p=>{const F=FTK.map(t=>ficheOf(p.id,d,t)).filter(Boolean);const sg=F.filter(f=>f.dir).length;const nu=fichesList(p.id).filter(f=>!f.dir).length;const cl=clsOfEns(p.id).filter(c=>S.classes[c]).map(c=>S.classes[c].nom).join(', ');
+     return `<button class="li" data-act="fens" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(cl||'')} · ${F.length}/4 rempli${F.length>1?'s':''} · ${sg} signé${sg>1?'s':''}</span></span>${nu?`<span class="pill warn num">${nu} à signer</span>`:F.length===4&&sg===4?'<span class="pill good">✓</span>':''}<span class="chev">${ic('chev',18)}</span></button>`}).join('')||'<div class="empty"><h3>Aucun enseignant</h3></div>'}</div>
+   ${fDaysArchive('')}</div>`);
+}
+function fBlank(t){if(t==='journal')return{rows:{}};if(t==='devoirs')return{items:[{br:'',suj:'',txt:'',rem:''}]};if(t==='exos')return{br:'',suj:'',cote:'',max:'10',q:[{q:'',r:''},{q:'',r:''},{q:'',r:''}]};return{br:'',suj:'',mat:''}}
+function brList(cid){const c=S.classes[cid];const L=[];for(const x of c?.cours||[]){if(x.branche&&!L.includes(x.branche))L.push(x.branche);if(x.nom&&!L.includes(x.nom))L.push(x.nom)}return L}
+const fta=(k,v,ph,rows=3)=>`<textarea class="inp fta" data-fk="${k}" rows="${rows}" placeholder="${h(ph||'')}">${h(v||'')}</textarea>`;
+const finp=(k,v,ph,list)=>`<input class="inp" data-fk="${k}" value="${h(v||'')}" placeholder="${h(ph||'')}" ${list?'list="fbr"':''}>`;
+function fEditor(f){const t=f.type,c=f.c;let b='';
+  if(t==='journal')b=CJH.map((hh,i)=>hh?`<details class="card pad fslot" ${i===0||Object.values(c.rows[i]||{}).some(Boolean)?'open':''}><summary><b>${hh[0]} à ${hh[1]}</b><small class="muted">${h(c.rows[i]?.br||'')}${c.rows[i]?.suj?' · '+h(c.rows[i].suj):''}</small></summary><div class="stack" style="margin-top:10px">${CJC.map(([k,l,s])=>`<div class="field"><label>${l}${s?` <span class="muted">· ${s}</span>`:''}</label>${k==='br'?finp(`rows.${i}.${k}`,c.rows[i]?.[k],'Choisir ou écrire',1):k==='suj'?finp(`rows.${i}.${k}`,c.rows[i]?.[k],''):fta(`rows.${i}.${k}`,c.rows[i]?.[k],'',2)}</div>`).join('')}</div></details>`:`<div class="card pad small fslot rec"><b>9h45 – 10h15 · Récréation</b></div>`).join('');
+  if(t==='devoirs')b=c.items.map((x,i)=>`<section class="card pad stack"><div class="sec-h"><b>Devoir ${i+1}</b>${c.items.length>1?`<button class="btn sm danger" data-act="fdel-it" data-i="${i}">Retirer</button>`:''}</div><div class="grid2"><div class="field"><label>Branche</label>${finp(`items.${i}.br`,x.br,'Choisir ou écrire',1)}</div><div class="field"><label>Sujet</label>${finp(`items.${i}.suj`,x.suj,'')}</div></div><div class="field"><label>Devoir</label>${fta(`items.${i}.txt`,x.txt,'Consignes et questions du devoir',5)}</div><div class="field"><label>À remettre le</label><input class="inp" type="date" data-fk="items.${i}.rem" value="${h(x.rem||'')}"></div></section>`).join('')+`<button class="btn ghost" data-act="fadd-it">${ic('plus',18)} Ajouter un devoir</button>`;
+  if(t==='exos')b=`<section class="card pad stack"><div class="grid2"><div class="field"><label>Branche</label>${finp('br',c.br,'Choisir ou écrire',1)}</div><div class="field"><label>Sujet</label>${finp('suj',c.suj,'')}</div></div><div class="field"><label>Cote sur</label><input class="inp" data-fk="max" inputmode="numeric" value="${h(c.max||'10')}" style="max-width:120px"></div></section>`+c.q.map((x,i)=>`<section class="card pad stack"><div class="sec-h"><b>Question ${i+1}</b>${c.q.length>1?`<button class="btn sm danger" data-act="fdel-q" data-i="${i}">Retirer</button>`:''}</div><div class="field"><label>Question</label>${fta(`q.${i}.q`,x.q,'Écrivez la question',2)}</div><div class="field"><label>Réponse</label>${fta(`q.${i}.r`,x.r,'Écrivez la réponse',3)}</div></section>`).join('')+`<button class="btn ghost" data-act="fadd-q">${ic('plus',18)} Ajouter une question</button>`;
+  if(t==='resume')b=`<section class="card pad stack"><div class="grid2"><div class="field"><label>Cours</label>${finp('br',c.br,'Choisir ou écrire',1)}</div><div class="field"><label>Sujet</label>${finp('suj',c.suj,'')}</div></div><div class="field"><label>Matière</label>${fta('mat',c.mat,'Le résumé de la leçon',12)}</div></section>`;
+  return `<datalist id="fbr">${brList(f.classeId).map(x=>`<option value="${h(x)}">`).join('')}</datalist><div class="stack" id="fed">${b}</div>`}
+function vFiche(){
+  const k=S.fk;if(!k){S.view='docs';return screen()}
+  const ft=FT[k.t];const dir=isDir();const saved=ficheOf(k.e,k.d,k.t);
+  const back='docs';
+  if(!dir&&(!saved||!saved.dir)){
+    if(!S.fDraft||S.fDraft.key!==k.e+k.d+k.t){const cid=mesClasses()[0]||'';S.fDraft={key:k.e+k.d+k.t,f:saved?JSON.parse(JSON.stringify(saved)):{type:k.t,date:k.d,ens:meId(),classeId:cid,c:fBlank(k.t)}};if(!S.fDraft.f.c)S.fDraft.f.c=fBlank(k.t)}
+    const f=S.fDraft.f;
+    return band({back,home:true,kicker:jourLbl(k.d),title:ft.t,sub:saved?'Enregistré · vous pouvez encore le modifier':'Remplissez puis enregistrez'})+page(`<div class="stack">
+      ${saved?`<div class="card pad small"><b>En attente de la direction.</b> Vous pouvez modifier ce document jusqu’à ce que la direction le signe.</div>`:''}
+      ${fEditor(f)}
+      <div class="btns fbar"><button class="btn grad" data-act="fsave">${ic('check',18)} Enregistrer et signer</button><button class="btn" data-act="fprev">Aperçu A4</button>${saved?`<button class="btn danger" data-act="fdel" data-armtxt="Supprimer ?">Supprimer</button>`:''}</div>
+      <p class="muted small" style="margin:0">À l’enregistrement, votre signature se place automatiquement et la direction reçoit le document.</p></div>`)}
+  if(!saved){S.view='docs';return screen()}
+  setTimeout(()=>{fMarkSeen(saved);fitPapers()},30);
+  const ai=dir&&!saved.dir;
+  return band({back,home:true,kicker:`${h(saved.nom||'')} · ${jourLbl(k.d)}`,title:ft.t,sub:saved.dir?`Signé par ${h(saved.dir.nom||'')} le ${h(dfr(saved.dir.at.slice(0,10)))}`:'Enregistré par l’enseignant · à lire et signer'})+page(`<div class="stack">
+   ${!dir&&saved.dir?`<div class="card pad stack favbox"><b>${ic('check',18)} Corrigé par ${h(saved.dir.fn||'la direction')} · ${h(saved.dir.nom||'')}</b>${saved.dir.avis?`<p style="margin:0">${h(saved.dir.avis).replace(/\n/g,'<br>')}</p>`:''}</div>`:''}
+   <div class="fpw">${fichePaper(saved)}</div>
+   <div class="btns"><button class="btn" data-act="fpdf">${ic('doc',18)} PDF</button></div>
+   ${dir?`<section class="card pad stack"><div class="sec-h"><h2 class="h2">Avis de la direction</h2>${saved.dir?'<span class="pill good">Signé</span>':''}</div>
+     <textarea class="inp" id="f-avis" rows="4" placeholder="Votre avis et vos remarques à l’enseignant">${h(saved.dir?.avis||S.fAvis||'')}</textarea>
+     <div class="aibar"><span class="aitag">${ic('spark',14)} IA</span><button type="button" class="chipb sm" data-act="fai" data-v="rem">Proposer des remarques</button><button type="button" class="chipb sm" data-act="fai" data-v="cor">Corriger mon texte</button></div>
+     <div id="faibox"></div>
+     <button class="btn grad" data-act="fsign">${ic('check',18)} ${saved.dir?'Modifier l’avis':'Signer et enregistrer'}</button>
+     <p class="muted small" style="margin:0">Votre signature se place automatiquement. L’enseignant reçoit une notification.</p></section>`:''}</div>`);
+}
+function fCollect(){const f=S.fDraft?.f;if(!f)return;document.querySelectorAll('#fed [data-fk]').forEach(el=>{const p=el.dataset.fk.split('.');let o=f.c;for(let i=0;i<p.length-1;i++){const k=p[i];if(o[k]==null)o[k]=/^\d+$/.test(p[i+1])&&Array.isArray(o)?{}:{};o=o[k]}o[p[p.length-1]]=el.value})}
+function ficheText(f){const c=f.c||{};if(f.type==='journal')return CJH.map((hh,i)=>hh&&c.rows?.[i]?`${hh[0]}-${hh[1]} : `+CJC.map(([k,l])=>c.rows[i][k]?`${l}: ${c.rows[i][k]}`:'').filter(Boolean).join(' | '):'').filter(Boolean).join('\n');
+  if(f.type==='devoirs')return (c.items||[]).map((x,i)=>`Devoir ${i+1} — ${x.br} / ${x.suj} : ${x.txt}${x.rem?' (à remettre le '+x.rem+')':''}`).join('\n');
+  if(f.type==='exos')return `Branche: ${c.br} | Sujet: ${c.suj}\n`+(c.q||[]).map((x,i)=>`Q${i+1}: ${x.q}\nR${i+1}: ${x.r}`).join('\n');
+  return `Cours: ${c.br} | Sujet: ${c.suj}\nMatière: ${c.mat}`}
+let fAiCtl=null;
+async function ficheAI(mode){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);const box=$('#faibox'),ta=$('#f-avis');if(!f||!box)return;
+  const sample=window.claude?.use?await claude.use('sample').catch(()=>null):null;if(!sample){box.innerHTML='<p class="muted small">L’assistant IA n’est pas disponible ici.</p>';return}
+  const cl=S.classes[f.classeId]?.nom||'';
+  const prompt=mode==='cor'?`Corrige l’orthographe et la grammaire de cet avis d’un directeur d’école primaire à un enseignant, et reformule-le de façon claire, respectueuse et professionnelle, sans changer le sens. Texte : ${ta.value||'(vide)'}\nRéponds uniquement avec un tableau JSON contenant 1 texte, par exemple ["…"].`
+   :`Tu es conseiller pédagogique dans une école primaire en République démocratique du Congo. Le directeur doit donner son avis sur le « ${FT[f.type].t} » rempli par l’enseignant ${f.nom||''} (${cl}) pour le ${jourLbl(f.date)}.\n\nContenu du document :\n${ficheText(f)||'(document presque vide)'}\n\nPropose 3 avis différents que le directeur pourrait écrire à l’enseignant : chacun 2 à 4 phrases, en français simple, au vouvoiement, bienveillant mais exigeant. Relève ce qui est bien fait et donne des remarques concrètes pour améliorer la préparation (objectifs mesurables, clarté des questions, lien entre révision, analyse et application, longueur des devoirs, exactitude des réponses…). Ne invente rien qui ne soit pas dans le document. Si le document est incomplet, dis-le poliment.\nRéponds uniquement avec un tableau JSON de 3 textes (chaînes).`;
+  fAiCtl?.abort();fAiCtl=new AbortController();box.innerHTML='<p class="muted small">L’assistant lit le document…</p>';
+  try{const out=await sample.json(prompt,{signal:fAiCtl.signal,modelTier:'quick'});const list=(Array.isArray(out)?out:[out]).map(String).filter(Boolean).slice(0,3);
+   box.innerHTML=list.map((t,i)=>`<div class="aiprop"><p>${h(t)}</p><button type="button" class="btn sm grad" data-act="faiuse" data-i="${i}">Utiliser ce texte</button></div>`).join('')||'<p class="muted small">Aucune proposition. Réessayez.</p>';box._list=list}
+  catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}}
+async function ficheSave(){fCollect();const f=S.fDraft?.f;if(!f)return;if(ficheEmpty(f.type,f)){toast('Le document est vide : remplissez-le avant d’enregistrer.');return}
+  const sg=mySig();if(!sg.img){mySigSheet(()=>ficheSave());return}
+  const p=myPerson();const old=ficheOf(meId(),f.date,f.type);const id=old?.id||fid(meId(),f.date,f.type);const now=new Date().toISOString();
+  const doc={type:f.type,date:f.date,ens:old?.ens||meId(),nom:p?.nom||'',classeId:f.classeId||mesClasses()[0]||'',c:f.c,sig:{img:sg.img,nom:sg.nom,at:now},at:old?.at||now,upd:now};
+  await put('fiches',id,doc);S.fDraft=null;S.view='fiche';render();scrollTo(0,0);toast('Enregistré et signé. La direction a reçu le document.')}
+async function ficheSign(){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(!f)return;const avis=($('#f-avis')?.value||'').trim();if(!avis){toast('Écrivez votre avis, ou utilisez une proposition de l’IA.');$('#f-avis')?.focus();return}
+  const sg=mySig();if(!sg.img){S.fAvis=avis;mySigSheet(()=>{render();setTimeout(ficheSign,50)});return}
+  const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),nom:sg.nom,fn:sg.fn,img:sg.img,avis,at:new Date().toISOString()}});S.fAvis='';fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}
+
 /* ---------- Devoirs hebdomadaires ---------- */
 const dvSem=()=>S.dvSem||lundi(today());
 const addJ=(d,n)=>{const x=D(d);x.setUTCDate(x.getUTCDate()+n);return iso(x)};
@@ -2553,9 +2797,10 @@ function vProf(){
   const row=(icn,ttl,sub,attrs,right='')=>attrs?`<button class="li actsum" ${attrs}><span class="ib g">${ic(icn,22)}</span><span class="grow"><span class="ttl" style="display:block">${ttl}</span><span class="muted small num">${sub}</span></span>${right}<span class="chev">${ic('chev',18)}</span></button>`:`<div class="li actsum"><span class="ib g">${ic(icn,22)}</span><span class="grow"><span class="ttl" style="display:block">${ttl}</span><span class="muted small num">${sub}</span></span>${right}</div>`;
   const po=v=>`data-act="popen" data-id="${h(cid)}" data-v="${v}"`;
   const presRow=row('users','Cahier de présence',`${sigAuj?`Signé aujourd’hui à ${hm(sigAuj.at)}`:'Pas encore signé aujourd’hui'} · ce mois : ${sig} / ${jm.length} jour${jm.length>1?'s':''}`,isDir()?'data-act="go" data-v="presence"':'');
-  const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
+  const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('doc','Documents des enseignants',(()=>{const n=fAttente();return n?`${n} document${n>1?'s':''} à signer`:'Cahiers du jour, classés par jour'})(),'data-act="go" data-v="docsall"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
    :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : ${tri.map((v,i)=>tShort(TRS()[i])+' '+v+' %').join(' · ')}`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves')),row('book','Manuels',`${Object.keys(S.manuels||{}).length} livre${Object.keys(S.manuels||{}).length>1?'s':''} PDF : programmes, livres, guides`,'data-act="go" data-v="manuels"')]:[presRow];
   if(!isGest(p)){const DL=discItems(isDir()?p.id:'');const du=isDir()?DL.reduce((a,d)=>a+discRep(d.id).filter(r=>!r.luAt).length,0):DL.filter(d=>!d.luAt).length;if(DL.length||isDir())rows.unshift(row('shield',isDir()?'Demandes d’explication et blâmes':'Courriers de la direction',DL.length?`${DL.length} courrier${DL.length>1?'s':''} · dernier : ${h(DK[DL[0].kind].toLowerCase())}, ${h(dfr(DL[0].date||today()))}`:'Aucun courrier',isDir()?`data-act="dnew" data-v="de" data-id="${h(p.id)}"`:'data-act="go" data-v="disc"',du?`<span class="pill bad num">${du} nouveau${du>1?'x':''}</span>`:''))}
+  if(!isGest(p)&&(isDir()||myEnsIds().includes(p.id))){const n=isDir()?fichesList(p.id).filter(f=>!f.dir).length:fUnread();const F=FTK.filter(t=>ficheOf(p.id,today(),t)).length;rows.unshift(row('doc',isDir()?'Ses documents':'Mes documents',`Aujourd’hui : ${F} / 4 cahiers remplis · cahier journal, devoirs, exercices, résumés`,isDir()?`data-act="fens" data-id="${h(p.id)}"`:'data-act="go" data-v="docs"',n?`<span class="pill ${isDir()?'warn':'bad'} num">${n} ${isDir()?'à signer':'corrigé'+(n>1?'s':'')}</span>`:''))}
   if(!isGest(p)){const nu=msgUnread(p.id),L=msgsOf(p.id),last=L[L.length-1];rows.unshift(row('pen',isDir()?'Remarques et suggestions':'Messages de la direction',last?h((last.sens==='dir'?(isDir()?'Vous : ':'Direction : '):(isDir()?'Réponse : ':'Vous : '))+last.texte.slice(0,70)):(isDir()?'Écrire une remarque à cet enseignant':'Aucun message pour le moment'),`data-act="mopen" data-id="${h(p.id)}"`,nu?`<span class="pill bad num">${nu} nouveau${nu>1?'x':''}</span>`:''))}
   return band({back:backV,home:true,title:ECO().nom,sub:`${isGest(p)?'Profil gestionnaire':'Profil enseignant'} · ${ANNEE}`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`<div class="prof">
    <section class="ticket">
@@ -3773,7 +4018,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert()}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -3789,10 +4034,27 @@ function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.a
 function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   if(v==='maclasse'){const c=mesClasses()[0];if(c){S.cid=c;S.view='classe';S.ctab='appel'}render();scrollTo(0,0);return}
   if(v==='msgs'&&isDir())S.mEns='';
+  if(v==='docsall'){S.fEns='';v='docs'}
+  if(v==='docs'){S.fDraft=null;S.fAvis=''}
   if(v==='disc')S.dId='';
   if(v==='activite'){S.seenAt=seenGet();seenSet(new Date().toISOString())}
   S.view=v;render();scrollTo(0,0)}
 const A={
+  fopen:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fAvis='';S.view='fiche';render();scrollTo(0,0)},
+  fens:b=>{S.fEns=b.dataset.id;S.view='docs';render();scrollTo(0,0)},
+  fday:b=>{if(b.dataset.v>today())return;S.fDate=b.dataset.v;render()},
+  fsave:()=>ficheSave(),
+  fprev:()=>{fCollect();const f={...S.fDraft.f,nom:myPerson()?.nom||'',sig:{img:mySig().img,nom:mySig().nom}};openSheet('Aperçu A4',`<div class="fpw">${fichePaper(f)}</div>`,()=>setTimeout(fitPapers,30))},
+  fdel:async b=>{if(!arm(b))return;const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)await del('fiches',f.id);S.fDraft=null;S.view='docs';render();toast('Document supprimé.')},
+  'fadd-it':()=>{fCollect();S.fDraft.f.c.items.push({br:'',suj:'',txt:'',rem:''});render()},
+  'fdel-it':b=>{fCollect();S.fDraft.f.c.items.splice(+b.dataset.i,1);render()},
+  'fadd-q':()=>{fCollect();S.fDraft.f.c.q.push({q:'',r:''});render()},
+  'fdel-q':b=>{fCollect();S.fDraft.f.c.q.splice(+b.dataset.i,1);render()},
+  fpdf:()=>{const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)fichePDF(f)},
+  fai:b=>ficheAI(b.dataset.v),
+  faiuse:b=>{const L=$('#faibox')?._list;const t=L?.[+b.dataset.i];if(t&&$('#f-avis')){$('#f-avis').value=t;S.fAvis=t}},
+  fsign:()=>ficheSign(),
+  'fsig-ok':()=>{const img=sigData();if(!img){toast('Signez d’abord dans le cadre.');return}try{localStorage.setItem(MYSIG,JSON.stringify({u:meId(),img}))}catch(e){}const cb=fSigCb;fSigCb=null;$('#sheet').hidden=true;$('#sheet').innerHTML='';toast('Signature enregistrée.');cb&&cb()},
   go:b=>go(b.dataset.v),
   open:b=>{S.cid=b.dataset.id;S.ctab='appel';S.sel='';S.aReg='';S.view='classe';render();scrollTo(0,0)},
   ctab:b=>{S.ctab=b.dataset.v;render()},
@@ -4034,6 +4296,8 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBul
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi,.dtab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('.dtab')?1:ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='bsel'){S.sel=t.value;refreshBul()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}if(t.id==='rj-date'&&t.value){S.rjDate=t.value;render()}});
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='m-txt')S.mDraft=t.value;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.classList?.contains('fdin')&&t.value){S.fDate=t.value>today()?today():t.value;render()}});
+document.addEventListener('input',ev=>{if(ev.target.closest?.('#fed'))fCollect();if(ev.target.id==='f-avis')S.fAvis=ev.target.value});
 document.addEventListener('submit',async ev=>{
   ev.preventDefault();const f=ev.target;const fd=Object.fromEntries(new FormData(f));
   if(f.id==='f-frais'){const cid=f.dataset.id;const n=+fd.n;const tr=[];for(let i=0;i<n;i++){const m=numM(fd['mt_'+i]);if(m>0)tr.push({nom:(fd['nom_'+i]||'').trim()||`Tranche ${i+1}`,montant:m,echeance:fd['ech_'+i]||''})}
@@ -4100,6 +4364,7 @@ let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(applyFit,80
 function onData(key){
   if(!S.ready)return;
   if(key==='paiem')payAlert();
+  if(key==='fiches'){ficheAlert();if(S.view==='fiche'&&!isDir()&&document.activeElement?.closest?.('#fed'))return}
   if(key==='msgs')discAlert();
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}
   if(FS.open&&(key==='notes'||key==='sigs'))renderFS(false);

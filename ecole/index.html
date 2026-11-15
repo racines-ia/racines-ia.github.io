@@ -9,6 +9,10 @@
 <link rel="icon" href="icon-192-v3.png">
 <link rel="apple-touch-icon" href="icon-180-v3.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="racines.ia">
+<meta name="format-detection" content="telephone=no">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script src="config.js"></script>
 <script src="shim.js"></script>
@@ -1545,6 +1549,23 @@ body.fs-on{overflow:hidden}
 .cm-vus>div{margin-top:6px;line-height:1.6}
 @media (prefers-reduced-motion:reduce){#annonce,.an-wrap,#anban,.an-bg i,.an-ic{animation:none!important;transition:none!important}}
 
+
+/* ===== notification en forme de dossier ===== */
+#nfold{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));z-index:97;width:min(300px,82vw);transform:translate(-50%,-125%) scale(.9);opacity:0;transition:transform .55s cubic-bezier(.2,1.15,.3,1),opacity .35s;pointer-events:none;filter:drop-shadow(0 0 1.5px rgba(255,255,255,.55)) drop-shadow(0 18px 28px rgba(0,0,0,.6))}
+#nfold.go{transform:translate(-50%,0) scale(1);opacity:1;pointer-events:auto}
+.nf-shape{position:relative;aspect-ratio:614/548;background:linear-gradient(165deg,#3a1e72 0%,#533989 55%,#8363c6 100%);color:#fff;padding:20% 34% 10% 9%;display:flex;flex-direction:column;justify-content:center;gap:4px;
+ -webkit-mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 614 548' preserveAspectRatio='none'%3E%3Cpath d='M0 170C0 60 60 0 170 0h70c45 0 70 12 95 35 25 22 40 28 75 28h70c90 0 134 47 134 137v230c0 80-54 118-144 118H144C50 548 0 505 0 420Z'/%3E%3C/svg%3E") center/100% 100% no-repeat;
+ mask:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 614 548' preserveAspectRatio='none'%3E%3Cpath d='M0 170C0 60 60 0 170 0h70c45 0 70 12 95 35 25 22 40 28 75 28h70c90 0 134 47 134 137v230c0 80-54 118-144 118H144C50 548 0 505 0 420Z'/%3E%3C/svg%3E") center/100% 100% no-repeat}
+.nf-shape::before{content:"";position:absolute;inset:0;background:radial-gradient(circle at 85% 90%,rgba(255,107,139,.22),transparent 50%),radial-gradient(circle at 10% 15%,rgba(255,255,255,.08) 0 50px,transparent 51px)}
+.nf-k{position:relative;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.75}
+.nf-t{position:relative;font-size:16px;font-weight:800;line-height:1.2}
+.nf-b{position:relative;margin:0;font-size:12.5px;line-height:1.35;opacity:.9;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.nf-go{position:relative;align-self:flex-start;margin-top:4px;border:0;background:#fff;color:#1d0f3d;font:inherit;font-weight:800;font-size:12px;border-radius:99px;padding:6px 14px;cursor:pointer}
+.nf-ic{position:absolute;right:-6%;top:28%;width:42%;filter:drop-shadow(0 10px 14px rgba(0,0,0,.45));transform:rotate(-10deg);animation:nfShake 2.4s ease-in-out infinite}
+@keyframes nfShake{0%,55%,100%{transform:rotate(-10deg)}62%{transform:rotate(-20deg) scale(1.05)}70%{transform:rotate(0deg) scale(1.05)}78%{transform:rotate(-14deg)}}
+.ios-g ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;line-height:1.45}
+.ios-sh{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--sunk);vertical-align:middle;color:#5aa9ff}
+@media (prefers-reduced-motion:reduce){#nfold,.nf-ic{transition:none!important;animation:none!important}}
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -2353,7 +2374,7 @@ function msgAlert(){
   if(S.view==='msgs'&&!document.hidden)return;
   const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'}`:(N.length>1?`${N.length} nouveaux messages de la direction`:'Nouveau message de la direction');
   if(!S.demo)sysNotif(title,(m.texte||'').slice(0,140));
-  toast(title+' · ouvrez '+(dir?'« Remarques aux enseignants »':'« Messages de la direction »'));
+  notifShow(title,(m.texte||'').slice(0,120),{kicker:dir?'Remarques aux enseignants':'Messages de la direction',act:'go',v:'msgs',lbl:'Ouvrir'});
 }
 /* ---------- Discipline du personnel : accès à l'application, demandes d'explication, blâmes ---------- */
 const ACCM=()=>S.config.acces||{};
@@ -2441,6 +2462,34 @@ function discAlert(){if(!S.ready||S.demo)return;let seen;try{seen=new Set(JSON.p
  if(!N.length)return;N.forEach(([id])=>seen.add(id));try{localStorage.setItem(DNK,JSON.stringify([...seen].slice(-300)))}catch(e){}
  if(S.view==='disc'&&!document.hidden)return;const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'} à votre courrier`:`${DK[m.kind]} de la direction`;
  sysNotif(title,(m.objet||m.texte||'').slice(0,140));toast(title+(dir?' · Discipline du personnel':' · ouvrez votre profil'))}
+
+/* ---------- Notifications dans l'application : forme de dossier, haut-parleur à droite ---------- */
+let nfT=0;
+function notifShow(title,body,o={}){let w=$('#nfold');if(!w){w=document.createElement('div');w.id='nfold';w.setAttribute('role','status');w.setAttribute('aria-live','polite');document.body.appendChild(w)}
+  w.innerHTML=`<div class="nf-shape"><small class="nf-k">${h(o.kicker||ECO().nom||'racines.ia')}</small><b class="nf-t">${h(title)}</b>${body?`<p class="nf-b">${h(body)}</p>`:''}${o.act?`<button class="nf-go" data-act="${o.act}" ${o.v?`data-v="${h(o.v)}"`:''}>${h(o.lbl||'Ouvrir')}</button>`:''}</div><img class="nf-ic" src="${o.icon||IMG_HP}" alt="">`;
+  w.classList.remove('go');void w.offsetWidth;w.classList.add('go');clearTimeout(nfT);nfT=setTimeout(()=>w.classList.remove('go'),o.dur||5500)}
+document.addEventListener('click',ev=>{const w=ev.target.closest?.('#nfold');if(w&&!ev.target.closest('[data-act]'))w.classList.remove('go')});
+/* ---------- Notifications sur le téléphone (navigateur) ---------- */
+const VAPID_PUB='BG2jxQ4LeMeYTYuSE40pjzv617MziwElDub6sgJnOdNOw2xTym7b5C9tCziaB-j01rZM8ndsgoSkzLzKKPxAo3A';
+const isIOS=()=>/iphone|ipad|ipod/i.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigator.standalone===true;
+const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&typeof Notification!=='undefined';
+const b64u=s=>{const p='='.repeat((4-s.length%4)%4);const r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
+function pushEtat(){if(isIOS()&&!isStandalone())return 'ios';if(!pushOk())return 'non';return Notification.permission==='granted'?'oui':Notification.permission==='denied'?'bloque':'a-demander'}
+async function pushSubscribe(ask){if(!pushOk()||S.demo)return false;try{
+  if(Notification.permission!=='granted'){if(!ask)return false;const p=await Notification.requestPermission();if(p!=='granted')return false}
+  const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
+  if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:b64u(VAPID_PUB)});
+  const api=window.claude?.use?await claude.use('push').catch(()=>null):null;if(api)await api.save(sub.toJSON(),navigator.userAgent.slice(0,180));return true}catch(e){return false}}
+async function pushOff(){try{const reg=await navigator.serviceWorker.ready;const sub=await reg.pushManager.getSubscription();if(sub){const api=window.claude?.use?await claude.use('push').catch(()=>null):null;if(api)await api.remove(sub.endpoint).catch(()=>{});await sub.unsubscribe()}}catch(e){}}
+/* quand l'application est ouverte, une notification reçue s'affiche dans la forme de dossier */
+if('serviceWorker' in navigator)navigator.serviceWorker.addEventListener('message',ev=>{const d=ev.data||{};if(d.type==='push')notifShow(d.title||'Notification',d.body||'')});
+/* iPhone : il faut d'abord ajouter l'application à l'écran d'accueil */
+function iosGuide(force){if(!isIOS()||isStandalone())return;let n=0;try{n=+localStorage.getItem('clr-ios-guide')||0}catch(e){}if(!force&&n>=3)return;try{localStorage.setItem('clr-ios-guide',n+1)}catch(e){}
+  openSheet('Installer sur iPhone',`<div class="stack ios-g"><p style="margin:0">Pour utiliser l’application comme une vraie application et recevoir les notifications sur iPhone :</p>
+   <ol><li>Ouvrez ce lien dans <b>Safari</b>.</li><li>Touchez le bouton <b>Partager</b> <span class="ios-sh">${'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="M8 7l4-4 4 4"/><path d="M5 11v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8"/></svg>'}</span> en bas de l’écran.</li><li>Choisissez <b>« Sur l’écran d’accueil »</b>, puis <b>Ajouter</b>.</li><li>Ouvrez l’icône <b>racines.ia</b> sur l’écran d’accueil, connectez-vous, puis activez les notifications dans votre profil.</li></ol>
+   <p class="muted small" style="margin:0">Les notifications fonctionnent à partir d’iOS 16.4.</p><button class="btn grad" data-act="close-sheet">J’ai compris</button></div>`)}
+
 /* ---------- Communiqués de la direction et Pensée du jour ---------- */
 const IMG_HP='haut-parleur.png',IMG_PZ='pensee.png';
 /* texte enrichi : seulement gras, italique, souligné, listes et retours à la ligne */
@@ -2481,7 +2530,7 @@ function anCard(it,stage){const k=it.k;
 function anShow(){let o=$('#annonce');if(!anQ.length){if(o&&!o.hidden){o.classList.add('out');setTimeout(()=>{o.hidden=true;o.classList.remove('out')},280)}anOn=false;return}
   if(!o){o=document.createElement('div');o.id='annonce';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o)}
   o.innerHTML=`<div class="an-bg"><i></i><i></i><i></i></div>${anCard(anQ[0])}`;o.hidden=false;anOn=true}
-function anBanner(txt){let b=$('#anban');if(!b){b=document.createElement('div');b.id='anban';document.body.appendChild(b)}b.innerHTML=`<img src="${IMG_HP}" alt=""><span><b>Communiqué</b><small>${h(txt)}</small></span>`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go');clearTimeout(anBanner.t);anBanner.t=setTimeout(()=>b.classList.remove('go'),5000)}
+function anBanner(txt){notifShow('Communiqué de la direction',txt,{kicker:'Communiqué',act:'',dur:5000})}
 let anDone=false;
 async function annonceAlert(){if(!S.ready||anOn)return;const s=anSeen();
   const C=commList().filter(c=>c.by!==meId()&&cmEtat(c)==='actif'&&!cmVuParMoi(c)&&!anSess.has(cmKey(c))).reverse().map(c=>({k:'comm',...c}));
@@ -2548,7 +2597,7 @@ function ficheAlert(){
   const f=N[N.length-1];
   const title=isDir()?`${f.nom||'Un enseignant'} a enregistré son ${FT[f.type]?.t.toLowerCase()||'document'}`:`La direction a corrigé votre ${FT[f.type]?.t.toLowerCase()||'document'}`;
   const body=isDir()?`${jourLbl(f.date)} · à signer`:`${jourLbl(f.date)} · ${f.dir.nom||'La direction'} a signé et donné son avis.`;
-  sysNotif(title,body);toast(title+(isDir()?' · Documents des enseignants':' · ouvrez « Mes documents »'));
+  sysNotif(title,body);notifShow(title,body,{kicker:isDir()?'Documents des enseignants':'Mes documents',act:'go',v:isDir()?'docsall':'docs',lbl:'Voir'});
 }
 /* signature de la personne connectée : celle de son profil, sinon celle dessinée une fois sur ce téléphone */
 const MYSIG='clr-ma-signature';
@@ -3130,6 +3179,7 @@ function vProf(){
   const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('doc','Documents des enseignants',(()=>{const n=fAttente();return n?`${n} document${n>1?'s':''} à signer`:'Cahiers du jour, classés par jour'})(),'data-act="go" data-v="docsall"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
    :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : ${tri.map((v,i)=>tShort(TRS()[i])+' '+v+' %').join(' · ')}`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves')),row('book','Manuels',`${Object.keys(S.manuels||{}).length} livre${Object.keys(S.manuels||{}).length>1?'s':''} PDF : programmes, livres, guides`,'data-act="go" data-v="manuels"')]:[presRow];
   if(!isGest(p)){const DL=discItems(isDir()?p.id:'');const du=isDir()?DL.reduce((a,d)=>a+discRep(d.id).filter(r=>!r.luAt).length,0):DL.filter(d=>!d.luAt).length;if(DL.length||isDir())rows.unshift(row('shield',isDir()?'Demandes d’explication et blâmes':'Courriers de la direction',DL.length?`${DL.length} courrier${DL.length>1?'s':''} · dernier : ${h(DK[DL[0].kind].toLowerCase())}, ${h(dfr(DL[0].date||today()))}`:'Aucun courrier',isDir()?`data-act="dnew" data-v="de" data-id="${h(p.id)}"`:'data-act="go" data-v="disc"',du?`<span class="pill bad num">${du} nouveau${du>1?'x':''}</span>`:''))}
+  if(p.id===meId()||myEnsIds().includes(p.id)){const e=pushEtat();rows.unshift(row('bell','Notifications sur ce téléphone',{oui:'Activées · paiements, documents, communiqués',ios:'iPhone : ajoutez d’abord l’application à l’écran d’accueil','a-demander':'Touchez pour les activer',bloque:'Bloquées dans les réglages du navigateur',non:'Ce navigateur ne les accepte pas'}[e],'data-act="push-on"',e==='oui'?'<span class="pill good">Activées</span>':'<span class="pill warn">À activer</span>'))}
   if(!isGest(p)&&!isDir()&&myEnsIds().includes(p.id)){const nc=commList().length;rows.unshift(row('bell','Communiqués de la direction',nc?`${nc} communiqué${nc>1?'s':''}`:'Aucun pour l’instant','data-act="go" data-v="comm"'))}
   if(!isGest(p)&&(isDir()||myEnsIds().includes(p.id))){const n=isDir()?fichesList(p.id).filter(f=>!f.dir).length:fUnread();const F=FTK.filter(t=>ficheOf(p.id,today(),t)).length;rows.unshift(row('doc',isDir()?'Ses documents':'Mes documents',`Aujourd’hui : ${F} / ${FTK.length} cahiers remplis · journal, préparation, devoirs, exercices, résumés`,isDir()?`data-act="fens" data-id="${h(p.id)}"`:'data-act="go" data-v="docs"',n?`<span class="pill ${isDir()?'warn':'bad'} num">${n} ${isDir()?'à signer':'corrigé'+(n>1?'s':'')}</span>`:''))}
   if(!isGest(p)){const nu=msgUnread(p.id),L=msgsOf(p.id),last=L[L.length-1];rows.unshift(row('pen',isDir()?'Remarques et suggestions':'Messages de la direction',last?h((last.sens==='dir'?(isDir()?'Vous : ':'Direction : '):(isDir()?'Réponse : ':'Vous : '))+last.texte.slice(0,70)):(isDir()?'Écrire une remarque à cet enseignant':'Aucun message pour le moment'),`data-act="mopen" data-id="${h(p.id)}"`,nu?`<span class="pill bad num">${nu} nouveau${nu>1?'x':''}</span>`:''))}
@@ -4349,7 +4399,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -4372,6 +4422,10 @@ function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   S.view=v;render();scrollTo(0,0)}
 const A={
   'an-ok':()=>anOk(),
+  'push-on':async()=>{const e=pushEtat();if(e==='ios'){iosGuide(true);return}if(e==='non'){toast('Ce navigateur ne peut pas recevoir de notifications. Utilisez Chrome.');return}if(e==='bloque'){toast('Les notifications sont bloquées : ouvrez les réglages du site dans Chrome et autorisez-les.');return}
+    if(e==='oui'){const ok=await pushSubscribe(false);notifShow('Notifications activées',ok?'Ce téléphone recevra les paiements, les documents et les communiqués, même application fermée.':'Réessayez dans un instant.',{kicker:'racines.ia'});return}
+    const ok=await pushSubscribe(true);render();notifShow(ok?'Notifications activées':'Notifications non activées',ok?'Ce téléphone sonnera pour les paiements, les documents et les communiqués, même application fermée.':'Autorisez les notifications quand le téléphone vous le demande.',{kicker:'racines.ia'})},
+  'close-sheet':()=>closeSheet(),
   'an-later':()=>anLater(),
   'an-vu':()=>anVu(),
   'cm-dur':b=>{const v=b.dataset.v;const d0=$('#cm-deb')?.value?new Date($('#cm-deb').value):new Date();let f;if(v==='jour'){f=new Date(d0);f.setHours(23,59,0,0)}else f=new Date(d0.getTime()+(+v)*6e4);$('#cm-fin').value=toLocalInput(f);document.querySelectorAll('.cm-dur .chipb').forEach(x=>x.setAttribute('aria-pressed',x===b))},

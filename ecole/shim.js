@@ -458,7 +458,12 @@
     async remove(path) { const { error } = await sb.storage.from('manuels').remove([path]); if (error) throw { message: error.message }; }
   };
 
-  const API = { db, user, sample, downloads, corbeille, manuels };
+  /* abonnement du téléphone aux notifications (table ecole_push) */
+  const push = {
+    async save(sub, ua) { const { error } = await sb.from('ecole_push').upsert({ endpoint: sub.endpoint, school_id: ME.member.school_id, user_id: ME.uid, sub, ua: ua || '', updated_at: new Date().toISOString() }); if (error) throw { message: error.message }; },
+    async remove(endpoint) { await sb.from('ecole_push').delete().eq('endpoint', endpoint); }
+  };
+  const API = { db, user, sample, downloads, corbeille, manuels, push };
   window.claude = { use: name => API[name] ? ready.then(() => API[name]) : Promise.reject({ code: 'not_available' }) };
 
   /* ---------- Écran de connexion ---------- */

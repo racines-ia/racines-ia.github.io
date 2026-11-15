@@ -51,10 +51,10 @@ Deno.serve(async (req) => {
 
   const { data: subs } = await sb.from("ecole_push").select("endpoint,sub").eq("school_id", school_id).in("user_id", to);
   const payload = JSON.stringify({ ...msg, url: "/ecole/" });
-  let ok = 0;
+  let ok = 0; const errs: string[] = [];
   await Promise.all((subs || []).map(async (s: any) => {
     try { await webpush.sendNotification(s.sub, payload, { TTL: 86400 }); ok++; }
-    catch (e: any) { if (e?.statusCode === 404 || e?.statusCode === 410) await sb.from("ecole_push").delete().eq("endpoint", s.endpoint); }
+    catch (e: any) { errs.push(String(e?.statusCode || '') + ' ' + String(e?.body || e?.message || e).slice(0, 200)); if (e?.statusCode === 404 || e?.statusCode === 410) await sb.from("ecole_push").delete().eq("endpoint", s.endpoint); }
   }));
-  return new Response(JSON.stringify({ envoyes: ok }), { headers: { "Content-Type": "application/json" } });
+  return new Response(JSON.stringify({ envoyes: ok, abonnes: (subs || []).length, errs }), { headers: { "Content-Type": "application/json" } });
 });

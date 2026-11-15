@@ -626,7 +626,7 @@
         box.querySelector('.box').innerHTML = `<img class="lg" src="icon-192-v3.png" alt=""><h1>Accès suspendu</h1>
           <p>L’accès de <b>${(e.nom || 'votre école').replace(/[<>&]/g, '')}</b> est suspendu par racines.ia. Vos données sont conservées. La direction doit régulariser l’abonnement pour rouvrir l’accès.</p>
           <p style="font-size:14px">Contact racines.ia : <a href="https://wa.me/243981475141?text=Bonjour%20racines.ia%2C%20je%20souhaite%20inscrire%20mon%20%C3%A9cole." target="_blank" rel="noopener" style="color:inherit;font-weight:700">WhatsApp 0981 475 141</a> · <a href="mailto:racines.ia@gmail.com" style="color:inherit;font-weight:700">racines.ia@gmail.com</a></p>
-          <button class="go" type="button" id="a-out">Se déconnecter</button><a class="lnk" href="../" style="text-align:center">Retour à racines.ia</a>`;
+          <button class="go" type="button" id="a-out">Se déconnecter</button><a class="lnk" href="../?r=1" style="text-align:center">Retour à racines.ia</a>`;
         box.querySelector('#a-out').onclick = () => window.appLogout();
         return;
       }
@@ -676,7 +676,7 @@
     try { if (channel) await sb.removeChannel(channel); } catch (e) {}
     await IDB.clear();
     try { localStorage.removeItem('racine-membre'); } catch (e) {}
-    try { localStorage.removeItem('racine-ecole'); sessionStorage.removeItem('racine-reload'); } catch (e) {}
+    try { localStorage.removeItem('racine-ecole'); localStorage.removeItem('racine-last'); sessionStorage.removeItem('racine-reload'); } catch (e) {}
     await sb.auth.signOut();
     try { localStorage.removeItem('clr-intro'); } catch (e) {}
     location.reload();
@@ -768,7 +768,7 @@
     d.textContent = t; d.hidden = false; clearTimeout(guardMsg.t); guardMsg.t = setTimeout(() => { d.hidden = true; }, 2500); }
   function onGuard() {
     const now = Date.now();
-    if (now - guardAt < 2500) { location.replace('/'); return; }
+    if (now - guardAt < 2500) { try { localStorage.removeItem('racine-last'); } catch (e) {} location.replace('/?r=1'); return; }
     guardAt = now; guardMsg('Appuyez encore sur Retour pour revenir à racines.ia');
     history.pushState({ racine: (typeof S !== 'undefined') ? snap() : null, g2: 1 }, '');
   }

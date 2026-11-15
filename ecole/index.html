@@ -4397,13 +4397,15 @@ function startSim(sec){if(sec===undefined)sec=ECO().type==='secondaire';sec=!!se
   if(!S.config.ecole)S.config=SIMCFG;S.view='classes';S.sel='';closeSheet();scrollTo(0,0);toast(sec?'Simulation secondaire lancée : bulletins, palmarès et signatures fictifs':'Simulation lancée : rien n’est enregistré')}
 function startPreview(){if(S.preview)return;S.preview=true;startSim();S.demoRole='ens';S.view='prof';S.pid=S.demoEns;render();scrollTo(0,0)}
 function stopSim(){S.demoSec=false;S.demoPoste='';S.preview=false;S.sim=false;S.demo=false;S.demoEns='';for(const [col,key] of Object.entries(COLS))S[key]=REAL[col]||{};S.view='accueil';closeSheet();scrollTo(0,0);toast('Retour aux vraies données de l’école')}
+function lastMark(){if(S.demo||S.sim)return;try{localStorage.setItem('racine-last',JSON.stringify({url:location.pathname,t:Date.now()}))}catch(e){}}
+addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'&&S.ready)try{const L=JSON.parse(localStorage.getItem('racine-last')||'null');if(L)lastMark()}catch(e){}});
 async function boot(){
   render();
   try{if(window.claude?.use)[db,user]=await Promise.all([claude.use('db'),claude.use('user')])}catch(e){}
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;lastMark();setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -4473,7 +4475,7 @@ const A={
   go:b=>go(b.dataset.v),
   open:b=>{S.cid=b.dataset.id;S.ctab='appel';S.sel='';S.aReg='';S.view='classe';render();scrollTo(0,0)},
   ctab:b=>{S.ctab=b.dataset.v;render()},
-  toracine:()=>{try{location.href=new URL('../',location.href).href}catch(e){location.href='/'}},
+  toracine:()=>{try{localStorage.removeItem('racine-last')}catch(e){}try{location.href=new URL('../?r=1',location.href).href}catch(e){location.href='/?r=1'}},
   tri:b=>{S.tri=b.dataset.v;S.cVie=false;render()},
   ckey:b=>{S.cKey=b.dataset.v;S.cVie=false;render()},
   cvie:()=>{S.cVie=true;render()},

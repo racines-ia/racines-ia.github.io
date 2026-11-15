@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
   const payload = JSON.stringify({ ...msg, url: "/ecole/" });
   let ok = 0; const errs: string[] = [];
   await Promise.all((subs || []).map(async (s: any) => {
-    try { await webpush.sendNotification(s.sub, payload, { TTL: 86400 }); ok++; }
+    try { await webpush.sendNotification(s.sub, payload, { TTL: 86400, urgency: "high" }); ok++; }
     catch (e: any) { errs.push(String(e?.statusCode || '') + ' ' + String(e?.body || e?.message || e).slice(0, 200)); if (e?.statusCode === 404 || e?.statusCode === 410) await sb.from("ecole_push").delete().eq("endpoint", s.endpoint); }
   }));
   return new Response(JSON.stringify({ envoyes: ok, abonnes: (subs || []).length, errs }), { headers: { "Content-Type": "application/json" } });

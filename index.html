@@ -4,7 +4,9 @@
 <meta name="description" content="racines.ia — moderniser le système éducatif. Appel, cotes, bulletins officiels, palmarès et rapports aux parents pour toutes vos écoles.">
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.57.4/dist/umd/supabase.min.js"></script>
 <script src="ecole/config.js"></script>
-<script>/* retour direct dans la dernière école utilisée (3 h) */
+<script>/* version de l'application Android (passée dans l'adresse de démarrage) */
+try{var qa=new URLSearchParams(location.search).get('apk');if(qa)localStorage.setItem('racine-apk',qa);else if(/^android-app:\/\/cd\.collegelariviere\.app/.test(document.referrer)&&!localStorage.getItem('racine-apk'))localStorage.setItem('racine-apk','0')}catch(e){}
+/* retour direct dans la dernière école utilisée (3 h) */
 try{var L=JSON.parse(localStorage.getItem('racine-last')||'null');if(L&&L.url&&Date.now()-L.t<3*3600000&&!/[?&]r=1/.test(location.search))location.replace(L.url)}catch(e){}</script>
 <title>racines.ia</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">

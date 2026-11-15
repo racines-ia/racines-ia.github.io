@@ -2486,6 +2486,14 @@ const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigat
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&typeof Notification!=='undefined';
 const b64u=s=>{const p='='.repeat((4-s.length%4)%4);const r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
 function pushEtat(){if(isIOS()&&!isStandalone())return 'ios';if(!pushOk())return 'non';return Notification.permission==='granted'?'oui':Notification.permission==='denied'?'bloque':'a-demander'}
+const APK_LAST=303;
+function apkVer(){try{const q=new URLSearchParams(location.search).get('apk');if(q)localStorage.setItem('racine-apk',q);if(!q&&/^android-app:\/\/cd\.collegelariviere\.app/.test(document.referrer)&&!localStorage.getItem('racine-apk'))localStorage.setItem('racine-apk','0');const v=localStorage.getItem('racine-apk');return v===null?null:+v||0}catch(e){return null}}
+function apkInvite(){if(S.demo||!/Android/i.test(navigator.userAgent))return;const v=apkVer();if(v===null||v>=APK_LAST)return;let n='';try{n=localStorage.getItem('clr-apk-inv')||''}catch(e){}if(n===today())return;
+  const go=()=>{if(anOn||!$('#sheet')?.hidden){setTimeout(go,2500);return}try{localStorage.setItem('clr-apk-inv',today())}catch(e){}
+   openSheet('Nouvelle version disponible',`<div class="stack"><div style="display:flex;gap:12px;align-items:center"><img src="/racine-192.png" alt="" style="width:56px;height:56px;border-radius:14px"><p style="margin:0">Une nouvelle version de l’application <b>racines.ia</b> est prête : notifications au nom de l’école, nouveau logo et améliorations.</p></div>
+    <ol style="margin:0;padding-left:20px;line-height:1.6"><li>Touchez <b>Télécharger la mise à jour</b>.</li><li>Ouvrez le fichier <b>racines.apk</b> téléchargé.</li><li>Touchez <b>Mettre à jour</b>. Vos données et votre connexion sont conservées.</li></ol>
+    <a class="btn grad" href="/racine.apk?v=${APK_LAST}" download="racines.apk">${ic('check',18)} Télécharger la mise à jour</a><button class="btn" data-act="close-sheet">Plus tard</button>
+    <p class="muted small" style="margin:0">Si le téléphone bloque l’installation : touchez <b>Paramètres</b>, activez <b>Autoriser depuis cette source</b>, puis revenez.</p></div>`)};go()}
 function pushInvite(){if(S.demo||pushEtat()!=='a-demander')return;let n={};try{n=JSON.parse(localStorage.getItem('clr-push-inv')||'{}')}catch(e){}const d=today();if(n.d===d||(n.c||0)>=5)return;
   const go=()=>{if(anOn||!$('#sheet')?.hidden){setTimeout(go,2500);return}try{localStorage.setItem('clr-push-inv',JSON.stringify({d,c:(n.c||0)+1}))}catch(e){}
    openSheet('Recevoir les notifications',`<div class="stack"><p style="margin:0">Activez les notifications pour être prévenu sur ce téléphone, même application fermée : ${isDir()?'paiements, documents à signer, communiqués et messages':'communiqués de la direction, documents signés et messages'}.</p><p class="muted small" style="margin:0">À l’écran suivant, touchez <b>Autoriser</b>.</p><button class="btn grad" data-act="push-on">${ic('check',18)} Activer les notifications</button><button class="btn" data-act="close-sheet">Plus tard</button></div>`)};go()}
@@ -4431,7 +4439,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;lastMark();setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide();pushInvite()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;lastMark();setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide();apkInvite();pushInvite()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},

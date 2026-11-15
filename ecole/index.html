@@ -1429,6 +1429,8 @@ body.fs-on{overflow:hidden}
 .fs-bar{display:flex;align-items:center;gap:8px;padding:calc(8px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 8px max(10px,env(safe-area-inset-left,0px));background:var(--surface);box-shadow:0 4px 18px rgba(0,0,0,.35);z-index:2}
 .fs-bar .grow{display:flex;flex-direction:column;min-width:0;line-height:1.2}
 .fs-bar .grow b{font-size:13px;line-height:1.15;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.fs-pct{border:0;background:var(--sunk);color:var(--ink);font:inherit;font-weight:700;font-size:12px;border-radius:99px;padding:8px 9px;min-width:54px;cursor:pointer;font-variant-numeric:tabular-nums}
+.fs-scroll{touch-action:pan-x pan-y}
 .fs-tip{font-size:11.5px;color:var(--muted);text-align:center;padding:5px 10px;background:var(--surface)}
 .fs-bar .grow small{font-size:11.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .fs-bar .btn{white-space:nowrap}
@@ -2410,18 +2412,37 @@ function fichePaper(f,ed){
   return `<div class="fp fp-p${ed?' fp-ed':''}">${top}${info}<div class="fp-sheet">${body}</div>${foot}${legal}</div>`;
 }
 /* ---------- remplir sur la feuille, en plein écran ---------- */
-let fsZoom=0;
+let fsZoom=0;// ancien zoom par crans (plus utilisé)
 const fsOn=()=>{const o=$('#fsed');return !!o&&!o.hidden};
-function fsOpen(){if(!fsOn())fCollect();const f=S.fDraft?.f;if(!f)return;const ft=FT[f.type];const dir=isDir();
+function fsOpen(){if(!fsOn()){fCollect();fsScale=null}const f=S.fDraft?.f;if(!f)return;const ft=FT[f.type];const dir=isDir();
   const d={...f,nom:dir?(ensList().find(x=>x.id===S.fk.e)?.nom||''):(myPerson()?.nom||''),sig:{img:mySig().img,nom:mySig().nom}};
   let o=$('#fsed');if(!o){o=document.createElement('div');o.id='fsed';document.body.appendChild(o)}
-  o.innerHTML=`<div class="fs-bar"><button type="button" class="x" data-act="fs-close" aria-label="Fermer">✕</button><span class="grow"><b>${h(ft.t)}</b></span><button type="button" class="x" data-act="fs-zoom" data-v="-1" aria-label="Réduire">−</button><button type="button" class="x" data-act="fs-zoom" data-v="1" aria-label="Agrandir">+</button><button type="button" class="btn grad sm" data-act="fs-save">${ic('check',16)} Enregistrer</button></div><div class="fs-tip">Touchez une case jaune de la feuille et écrivez. + et − pour agrandir.</div>
+  o.innerHTML=`<div class="fs-bar"><button type="button" class="x" data-act="fs-close" aria-label="Fermer">✕</button><span class="grow"><b>${h(ft.t)}</b></span><button type="button" class="x" data-act="fs-zoom" data-v="-1" aria-label="Réduire">−</button><button type="button" class="fs-pct" data-act="fs-zoom" data-v="fit" aria-label="Voir la feuille entière">100 %</button><button type="button" class="x" data-act="fs-zoom" data-v="1" aria-label="Agrandir">+</button><button type="button" class="btn grad sm" data-act="fs-save">${ic('check',16)} Enregistrer</button></div><div class="fs-tip">Touchez une case jaune : la feuille s’agrandit et vous écrivez. Pincez avec deux doigts pour zoomer.</div>
    <div class="fs-scroll"><div class="fs-wrap">${fichePaper(d,true)}</div></div>`;
   o.hidden=false;document.body.classList.add('fs-on');
   try{const r=document.documentElement;(r.requestFullscreen||r.webkitRequestFullscreen)?.call(r).then?.(()=>{if(ft.land)screen.orientation?.lock?.('landscape').catch(()=>{})}).catch(()=>{})}catch(e){}
   requestAnimationFrame(fsFit)}
-function fsFit(){const o=$('#fsed');if(!o||o.hidden)return;const p=o.querySelector('.fp');const w=o.querySelector('.fs-wrap');if(!p)return;const W=p.classList.contains('fp-l')?1123:794;
-  const fit=Math.min(1,(o.clientWidth-16)/W);const sc=Math.max(.3,Math.min(2,fit*Math.pow(1.25,fsZoom)));p.style.transform=`scale(${sc})`;w.style.width=Math.ceil(W*sc)+'px';w.style.height=Math.ceil(p.offsetHeight*sc)+'px'}
+/* zoom : fsScale = échelle choisie (null = feuille entière à l'écran) */
+let fsScale=null;
+const fsBase=()=>{const o=$('#fsed'),p=o?.querySelector('.fp');if(!p)return 1;const W=p.classList.contains('fp-l')?1123:794;return Math.min(1,(o.clientWidth-16)/W)};
+function fsFit(keep){const o=$('#fsed');if(!o||o.hidden)return;const p=o.querySelector('.fp');const w=o.querySelector('.fs-wrap');if(!p)return;const W=p.classList.contains('fp-l')?1123:794;
+  const sc=Math.max(fsBase(),Math.min(2.5,fsScale||fsBase()));p.style.transform=`scale(${sc})`;w.style.width=Math.ceil(W*sc)+'px';w.style.height=Math.ceil(p.offsetHeight*sc)+'px';
+  const z=o.querySelector('.fs-pct');if(z)z.textContent=Math.round(sc/fsBase()*100)+' %';return sc}
+/* change l'échelle en gardant le point (cx,cy) de l'écran au même endroit */
+function fsZoomTo(ns,cx,cy){const o=$('#fsed');const sc0=fsFit();const box=o.querySelector('.fs-scroll'),w=o.querySelector('.fs-wrap');const r=w.getBoundingClientRect();
+  if(cx==null){const b=box.getBoundingClientRect();cx=b.left+b.width/2;cy=b.top+b.height/2}
+  const px=(cx-r.left)/sc0,py=(cy-r.top)/sc0;fsScale=Math.max(fsBase(),Math.min(2.5,ns));const sc=fsFit();const r2=w.getBoundingClientRect();
+  box.scrollLeft+=r2.left+px*sc-cx;box.scrollTop+=r2.top+py*sc-cy}
+/* toucher une case : agrandir pour que la case soit bien lisible */
+function fsFocusZoom(el){const o=$('#fsed');if(!o)return;const sc=fsFit();const box=o.querySelector('.fs-scroll');const want=Math.min(1.4,Math.max(sc,(box.clientWidth*.92)/Math.max(140,el.offsetWidth)));
+  if(want>sc*1.05){const r=el.getBoundingClientRect();fsZoomTo(want,r.left+r.width/2,r.top)}
+  setTimeout(()=>{const r=el.getBoundingClientRect(),b=box.getBoundingClientRect();box.scrollLeft+=r.left-b.left-(b.width-Math.min(r.width,b.width))/2;box.scrollTop+=r.top-b.top-60},30)}
+document.addEventListener('focusin',ev=>{const el=ev.target.closest?.('#fsed .fpe');if(el)fsFocusZoom(el)});
+/* pincer avec deux doigts */
+(()=>{let d0=0,s0=1,c=null;const dist=t=>Math.hypot(t[0].clientX-t[1].clientX,t[0].clientY-t[1].clientY);
+  document.addEventListener('touchstart',ev=>{if(ev.touches.length===2&&ev.target.closest?.('#fsed .fs-scroll')){d0=dist(ev.touches);s0=fsFit()||1;c=[(ev.touches[0].clientX+ev.touches[1].clientX)/2,(ev.touches[0].clientY+ev.touches[1].clientY)/2]}},{passive:true});
+  document.addEventListener('touchmove',ev=>{if(d0&&ev.touches.length===2){ev.preventDefault();fsZoomTo(s0*dist(ev.touches)/d0,c[0],c[1])}},{passive:false});
+  document.addEventListener('touchend',ev=>{if(ev.touches.length<2)d0=0},{passive:true})})();
 addEventListener('resize',()=>fsFit());
 function fsSync(){const o=$('#fsed');if(!o||!S.fDraft)return;o.querySelectorAll('[data-fk]').forEach(el=>{const p=el.dataset.fk.split('.');let x=S.fDraft.f.c;for(let i=0;i<p.length-1;i++){if(x[p[i]]==null)x[p[i]]={};x=x[p[i]]}x[p[p.length-1]]=el.tagName==='INPUT'?el.value:el.innerText.replace(/ /g,' ').replace(/\n+$/,'')})}
 function fsClose(keep){fsSync();const o=$('#fsed');if(o){o.hidden=true;o.innerHTML=''}document.body.classList.remove('fs-on');try{screen.orientation?.unlock?.()}catch(e){}try{if(document.fullscreenElement)(document.exitFullscreen||document.webkitExitFullscreen)?.call(document).catch?.(()=>{})}catch(e){}if(!keep)render()}
@@ -4123,7 +4144,7 @@ const A={
   fprev:()=>fsOpen(),
   'fs-close':()=>fsClose(),
   'fs-save':()=>{fsClose();ficheSave()},
-  'fs-zoom':b=>{fsZoom=Math.max(-3,Math.min(4,fsZoom+(+b.dataset.v)));fsFit()},
+  'fs-zoom':b=>{const v=b.dataset.v;if(v==='fit'){fsScale=null;fsFit();$('#fsed .fs-scroll').scrollTo(0,0);return}fsZoomTo((fsFit()||1)*(+v>0?1.3:1/1.3))},
   fdel:async b=>{if(!arm(b))return;const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)await del('fiches',f.id);S.fDraft=null;S.view='docs';render();toast('Document supprimé.')},
   'fadd-it':b=>{if(fsOn()){fsSync();S.fDraft.f.c.items.push({br:'',suj:'',txt:'',rem:''});const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.items.push({br:'',suj:'',txt:'',rem:''});render()},
   'fdel-it':b=>{if(fsOn()){fsSync();S.fDraft.f.c.items.splice(+b.dataset.i,1);const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.items.splice(+b.dataset.i,1);render()},

@@ -2486,6 +2486,9 @@ const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||navigat
 const pushOk=()=>'serviceWorker' in navigator&&'PushManager' in window&&typeof Notification!=='undefined';
 const b64u=s=>{const p='='.repeat((4-s.length%4)%4);const r=atob((s+p).replace(/-/g,'+').replace(/_/g,'/'));return Uint8Array.from([...r].map(c=>c.charCodeAt(0)))};
 function pushEtat(){if(isIOS()&&!isStandalone())return 'ios';if(!pushOk())return 'non';return Notification.permission==='granted'?'oui':Notification.permission==='denied'?'bloque':'a-demander'}
+function pushInvite(){if(S.demo||pushEtat()!=='a-demander')return;let n={};try{n=JSON.parse(localStorage.getItem('clr-push-inv')||'{}')}catch(e){}const d=today();if(n.d===d||(n.c||0)>=5)return;
+  const go=()=>{if(anOn||!$('#sheet')?.hidden){setTimeout(go,2500);return}try{localStorage.setItem('clr-push-inv',JSON.stringify({d,c:(n.c||0)+1}))}catch(e){}
+   openSheet('Recevoir les notifications',`<div class="stack"><p style="margin:0">Activez les notifications pour être prévenu sur ce téléphone, même application fermée : ${isDir()?'paiements, documents à signer, communiqués et messages':'communiqués de la direction, documents signés et messages'}.</p><p class="muted small" style="margin:0">À l’écran suivant, touchez <b>Autoriser</b>.</p><button class="btn grad" data-act="push-on">${ic('check',18)} Activer les notifications</button><button class="btn" data-act="close-sheet">Plus tard</button></div>`)};go()}
 async function pushSubscribe(ask){if(!pushOk()||S.demo)return false;try{
   if(Notification.permission!=='granted'){if(!ask)return false;const p=await Notification.requestPermission();if(p!=='granted')return false}
   const reg=await navigator.serviceWorker.ready;let sub=await reg.pushManager.getSubscription();
@@ -4424,7 +4427,7 @@ async function boot(){
   if(!db){demoData();if(location.hash==='#apercu-enseignant')startPreview();return}
   try{S.me.id=await user?.id()??null;S.me.dir=!!(await user?.canEdit())}catch(e){}
   const seen=new Set(),n=Object.keys(COLS).length;
-  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;lastMark();setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
+  const arrive=col=>{seen.add(col);if(!S.ready&&seen.size>=n){S.ready=true;lastMark();setTimeout(()=>{try{msgAlert();payAlert();discAlert();ficheAlert();setTimeout(()=>annonceAlert(),900);setTimeout(()=>{pushSubscribe(false);iosGuide();pushInvite()},3000)}catch(e){}},4000);if(location.hash==='#apercu-enseignant')startPreview();else render();introReady();setTimeout(autoClose,2500)}};
   for(const col of Object.keys(COLS)){
     db.collection(col).onSnapshot(snap=>{const m={};snap.docs.forEach(d=>m[d.id]=d.data());REAL[col]=m;if(S.sim)return;S[COLS[col]]=m;
       if(!S.ready)arrive(col);else onData(COLS[col])},
@@ -4452,7 +4455,7 @@ const A={
    :`<ol><li>Dans Chrome, touchez <b>⋮</b> en haut à droite, puis <b>Paramètres</b>.</li><li>Touchez <b>Paramètres des sites</b>, puis <b>Notifications</b>.</li><li>Dans la liste <b>Bloqués</b>, touchez <b>racines-ia.github.io</b>, puis <b>Autoriser</b>.</li><li>Revenez ici et touchez de nouveau <b>Notifications</b>.</li></ol>`}
    <p class="muted small" style="margin:0">Sur Samsung, vérifiez aussi : Paramètres → Applications → Chrome → Notifications → activées.</p><button class="btn grad" data-act="close-sheet">J’ai compris</button></div>`);return}
     if(e==='oui'){const ok=await pushSubscribe(false);try{const r=await navigator.serviceWorker.ready;await r.showNotification('Essai racines.ia',{body:'Si vous voyez ceci, les notifications fonctionnent sur ce téléphone.',icon:'/racine-192.png',badge:'/racine-badge-96.png',tag:'essai-local'})}catch(x){S.pushErr='affichage : '+(x&&x.message||x)}notifShow('Notifications activées',ok?'Ce téléphone recevra les paiements, les documents et les communiqués, même application fermée.':'Erreur : '+(S.pushErr||'inconnue')+'. Envoyez-moi une capture.',{kicker:'racines.ia'});return}
-    const ok=await pushSubscribe(true);render();notifShow(ok?'Notifications activées':'Notifications non activées',ok?'Ce téléphone sonnera pour les paiements, les documents et les communiqués, même application fermée.':(Notification.permission==='granted'?'Erreur : '+(S.pushErr||'inconnue')+'. Envoyez-moi une capture.':'Autorisez les notifications quand le téléphone vous le demande.'),{kicker:'racines.ia'})},
+    try{if(!$('#sheet').hidden)closeSheet()}catch(x){}const ok=await pushSubscribe(true);render();if(ok)try{const r=await navigator.serviceWorker.ready;r.showNotification('Essai racines.ia',{body:'Les notifications fonctionnent sur ce téléphone.',icon:'/racine-192.png',badge:'/racine-badge-96.png',tag:'essai-local'})}catch(x){}notifShow(ok?'Notifications activées':'Notifications non activées',ok?'Ce téléphone sonnera pour les paiements, les documents et les communiqués, même application fermée.':(Notification.permission==='granted'?'Erreur : '+(S.pushErr||'inconnue')+'. Envoyez-moi une capture.':'Autorisez les notifications quand le téléphone vous le demande.'),{kicker:'racines.ia'})},
   'close-sheet':()=>closeSheet(),
   'an-later':()=>anLater(),
   'an-vu':()=>anVu(),

@@ -2,7 +2,7 @@ plugins { id 'com.android.application' }
 android {
   namespace 'cd.collegelariviere.app'
   compileSdk 34
-  defaultConfig { applicationId 'cd.collegelariviere.app'; minSdk 21; targetSdk 34; versionCode 1002; versionName '3.0.2' }
+  defaultConfig { applicationId 'cd.collegelariviere.app'; minSdk 21; targetSdk 34; versionCode 1003; versionName '3.0.3' }
   buildTypes { release { minifyEnabled false } }
   compileOptions { sourceCompatibility JavaVersion.VERSION_17; targetCompatibility JavaVersion.VERSION_17 }
 }

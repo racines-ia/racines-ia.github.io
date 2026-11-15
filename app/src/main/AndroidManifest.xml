@@ -5,7 +5,7 @@
   <application android:label="@string/app_name" android:icon="@mipmap/ic_launcher" android:roundIcon="@mipmap/ic_launcher" android:allowBackup="true" android:supportsRtl="true" android:theme="@android:style/Theme.Translucent.NoTitleBar">
     <meta-data android:name="asset_statements" android:resource="@string/asset_statements"/>
     <activity android:name=".LauncherActivity" android:exported="true" android:label="@string/app_name" android:theme="@android:style/Theme.Translucent.NoTitleBar">
-      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://racines-ia.github.io/"/>
+      <meta-data android:name="android.support.customtabs.trusted.DEFAULT_URL" android:value="https://racines-ia.github.io/?apk=303"/>
       <meta-data android:name="android.support.customtabs.trusted.STATUS_BAR_COLOR" android:resource="@color/sb"/>
       <meta-data android:name="android.support.customtabs.trusted.NAVIGATION_BAR_COLOR" android:resource="@color/sb"/>
       <intent-filter>

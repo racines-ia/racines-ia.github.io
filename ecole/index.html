@@ -1502,45 +1502,63 @@ body.fs-on{overflow:hidden}
 .dv-pbm b{color:#fff;font-size:12px;font-weight:800;letter-spacing:.04em}
 
 /* ===== communiqués et pensée du jour ===== */
-#annonce{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px 16px;background:radial-gradient(ellipse at 50% 30%,rgba(83,57,137,.55),rgba(10,5,22,.86));backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);overflow:auto;animation:anIn .35s ease both}
+#annonce{position:fixed;inset:0;z-index:95;display:grid;place-items:center;padding:24px 18px;background:rgba(10,5,22,.55);backdrop-filter:blur(14px) saturate(1.2);-webkit-backdrop-filter:blur(14px) saturate(1.2);overflow:auto;animation:anIn .35s ease both}
 #annonce[hidden]{display:none}
 #annonce.out{animation:anOut .28s ease both}
 @keyframes anIn{from{opacity:0}to{opacity:1}}@keyframes anOut{to{opacity:0}}
-.an-wrap{width:100%;max-width:440px;padding-top:56px}
-.an-card{position:relative;background:var(--grad);color:#fff;border-radius:34px;padding:66px 24px 20px;text-align:center;box-shadow:0 16px 0 -7px rgba(255,255,255,.92),0 34px 70px rgba(0,0,0,.55);animation:anPop .55s cubic-bezier(.2,1.2,.3,1) both}
-@keyframes anPop{from{opacity:0;transform:translateY(30px) scale(.94)}to{opacity:1;transform:none}}
-.an-ic{position:absolute;left:50%;top:-52px;transform:translateX(-50%);width:104px;height:104px;border-radius:50%;background:linear-gradient(160deg,#fff,#efe8ff);box-shadow:0 0 0 8px rgba(255,255,255,.18),0 12px 30px rgba(0,0,0,.35);display:grid;place-items:center;border:5px solid var(--accent)}
-.an-ic img{width:76%;height:76%;object-fit:contain}
-.an-ic svg{width:70%;height:70%}
-.an-k{display:block;font-size:11.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;opacity:.8}
-.an-card h2{font-family:var(--f-d);font-weight:400;font-size:clamp(30px,8.5vw,40px);line-height:1.05;text-transform:uppercase;margin:6px 0 0;letter-spacing:.01em;overflow-wrap:anywhere}
-.an-line{display:block;width:72%;height:2px;margin:12px auto 14px;background:linear-gradient(90deg,transparent,var(--accent),#ff6b8b,var(--accent),transparent)}
-.an-body{font-size:15.5px;line-height:1.55;font-weight:400;text-align:center;max-height:46vh;overflow:auto;padding:0 2px}
+.an-bg{position:fixed;inset:0;pointer-events:none;overflow:hidden}
+.an-bg i{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(60px);opacity:.45;background:radial-gradient(circle,var(--accent),transparent 65%);animation:anBlob 14s ease-in-out infinite alternate}
+.an-bg i:nth-child(1){left:-20vmax;top:-20vmax}.an-bg i:nth-child(2){right:-25vmax;bottom:-25vmax;background:radial-gradient(circle,#ff6b8b,transparent 65%);animation-duration:17s}.an-bg i:nth-child(3){left:30%;top:40%;width:40vmax;height:40vmax;opacity:.25;animation-duration:11s}
+@keyframes anBlob{to{transform:translate(8vmax,6vmax) scale(1.15)}}
+.an-wrap{position:relative;width:100%;max-width:340px;padding-top:50px;margin:0 auto;animation:anPop .6s cubic-bezier(.2,1.2,.3,1) both}
+@keyframes anPop{from{opacity:0;transform:translateY(34px) scale(.92)}to{opacity:1;transform:none}}
+/* la carte, avec l'encoche ronde en haut comme le modèle */
+.an-card{position:relative;z-index:1;background:linear-gradient(160deg,#2c1660 0%,#3a1e72 45%,#533989 100%);color:#fff;border-radius:30px;padding:56px 20px 16px;text-align:center;
+ -webkit-mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%);mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%)}
+.an-plate{position:absolute;left:12px;right:12px;top:50px;bottom:-12px;z-index:0;background:#fff;border-radius:30px;box-shadow:0 30px 60px rgba(0,0,0,.45);-webkit-mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%);mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%)}
+.an-ic{position:absolute;left:50%;top:50px;transform:translate(-50%,-50%);z-index:2;width:92px;height:92px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px var(--accent),0 10px 26px rgba(0,0,0,.35);display:grid;place-items:center}
+.an-ic img{position:relative;z-index:1;width:74%;height:74%;object-fit:contain}
+.an-pl{position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);animation:anPulse 2.4s ease-out infinite}
+.an-pl.b{animation-delay:1.2s}
+@keyframes anPulse{from{transform:scale(1);opacity:.7}to{transform:scale(1.45);opacity:0}}
+.an-wrap.comm .an-ic img{animation:anShake 2.6s ease-in-out infinite;transform-origin:30% 70%}
+@keyframes anShake{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(-12deg) scale(1.06)}72%{transform:rotate(9deg) scale(1.06)}78%{transform:rotate(-6deg)}84%{transform:rotate(3deg)}}
+.an-wrap.pensee .an-ic img{animation:anFloat 3.2s ease-in-out infinite}
+@keyframes anFloat{0%,100%{transform:translateY(2px) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
+.an-card h2{font-family:var(--f-d);font-weight:400;font-size:clamp(28px,8vw,34px);line-height:1;text-transform:uppercase;margin:0;letter-spacing:.02em}
+.an-line{display:block;width:70%;height:2px;margin:10px auto 12px;background:linear-gradient(90deg,transparent,#ff6b8b,var(--accent),#ff6b8b,transparent)}
+.an-ti{display:block;font-size:16px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.an-body{font-size:14.5px;line-height:1.55;font-weight:400;text-align:center;max-height:42vh;overflow:auto;padding:0 2px}
 .an-body p,.an-body div{margin:0 0 6px}.an-body ul,.an-body ol{text-align:left;margin:6px 0;padding-left:22px}
 .an-body b,.an-body strong{font-weight:800}
-.an-q{margin:0;font-size:19px;line-height:1.45;font-style:italic;font-weight:500;position:relative;padding:4px 10px}
-.an-q::before{content:"“";font-family:Georgia,serif;font-size:64px;line-height:0;position:relative;top:24px;margin-right:4px;opacity:.5}
-.an-ft{display:flex;align-items:center;gap:10px;justify-content:center;margin-top:16px;padding-top:12px;border-top:1px solid rgba(255,255,255,.18)}
-.an-ft img{width:34px;height:34px;border-radius:50%;background:#fff}
+.an-q{margin:0;font-size:17px;line-height:1.45;font-style:italic;font-weight:500;padding:2px 6px}
+.an-q::before{content:"“";font-family:Georgia,serif;font-size:56px;line-height:0;position:relative;top:22px;margin-right:4px;opacity:.5}
+.an-ft{display:flex;align-items:center;gap:9px;justify-content:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16)}
+.an-ft img{width:30px;height:30px;border-radius:50%;background:#fff}
 .an-ft span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;text-align:left}
-.an-ft b{font-size:13px;font-weight:700}.an-ft small{font-size:11.5px;opacity:.8}
-.an-bt{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:16px;position:relative;z-index:1}
-.an-bt span{font-size:12px;opacity:.8}
-.an-bt .btn{background:#fff;color:#1d0f3d;box-shadow:0 8px 20px rgba(0,0,0,.25)}
-.an-stage{padding:62px 4px 18px}.an-stage .an-card{animation:none}
-#anban{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));z-index:96;display:flex;align-items:center;gap:10px;max-width:calc(100% - 24px);width:420px;background:var(--surface);color:var(--ink);border-radius:20px;padding:10px 14px;box-shadow:0 16px 40px rgba(0,0,0,.5);border:1px solid var(--line);transform:translate(-50%,-140%);opacity:0;transition:transform .5s cubic-bezier(.2,1.1,.3,1),opacity .4s}
+.an-ft b{font-size:12.5px;font-weight:700}.an-ft small{font-size:11px;opacity:.8}
+.an-bt{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px}
+.an-bt .btn{background:#fff;color:#1d0f3d;box-shadow:0 8px 20px rgba(0,0,0,.25);min-width:160px}
+.an-vu{border:0;background:none;color:rgba(255,255,255,.85);font:inherit;font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 8px}
+.an-more{display:block;margin-top:6px;font-size:11px;opacity:.7}
+.an-stage{padding:8px 0 20px}.an-stage .an-wrap{animation:none}
+#anban{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));z-index:96;display:flex;align-items:center;gap:10px;max-width:calc(100% - 24px);width:400px;background:var(--surface);color:var(--ink);border-radius:20px;padding:10px 14px;box-shadow:0 16px 40px rgba(0,0,0,.5);border:1px solid var(--line);transform:translate(-50%,-140%);opacity:0;transition:transform .5s cubic-bezier(.2,1.1,.3,1),opacity .4s}
 #anban.go{transform:translate(-50%,0);opacity:1}
-#anban img{width:40px;height:40px;object-fit:contain;flex:none}
+#anban img{width:38px;height:38px;object-fit:contain;flex:none}
 #anban span{display:flex;flex-direction:column;min-width:0}#anban b{font-size:14px}#anban small{font-size:12.5px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .cm-tools{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:6px}
 .cm-tools button{border:0;background:var(--sunk);color:var(--ink);border-radius:10px;min-width:42px;height:38px;padding:0 10px;font:inherit;font-size:15px;cursor:pointer}
 .cm-tools small{flex-basis:100%}
-.cm-ed{min-height:160px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
+.cm-ed{min-height:150px;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;cursor:text}
 .cm-ed:empty::before{content:attr(data-ph);color:var(--muted)}
-.cm-ti{font-family:var(--f-d);font-size:22px;text-transform:uppercase;letter-spacing:.01em}
+.cm-ti{font-family:var(--f-d);font-size:20px;text-transform:uppercase;letter-spacing:.01em}
 .cm-t{font-family:var(--f-d);font-weight:400;font-size:20px;text-transform:uppercase}
 .cm-body{font-size:14.5px;line-height:1.5}
-@media (prefers-reduced-motion:reduce){#annonce,.an-card,#anban{animation:none!important;transition:none!important}}
+.cm-dur{flex-wrap:wrap}
+.cm-vus summary{cursor:pointer;font-weight:700;font-size:13.5px;display:flex;gap:6px;align-items:center;color:var(--accent)}
+.cm-vus>div{margin-top:6px;line-height:1.6}
+@media (prefers-reduced-motion:reduce){#annonce,.an-wrap,#anban,.an-bg i,.an-pl,.an-ic img{animation:none!important;transition:none!important}}
+
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -1607,8 +1625,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',fiches:'fiches',communiques:'communiques',pensees:'pensees'};
-const S={communiques:{},pensees:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',fiches:'fiches',communiques:'communiques',pensees:'pensees',comvus:'comvus'};
+const S={communiques:{},pensees:{},comvus:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -2439,20 +2457,23 @@ function discAlert(){if(!S.ready||S.demo)return;let seen;try{seen=new Set(JSON.p
  if(S.view==='disc'&&!document.hidden)return;const m=N[N.length-1][1];const title=dir?`Réponse de ${m.nom||'un enseignant'} à votre courrier`:`${DK[m.kind]} de la direction`;
  sysNotif(title,(m.objet||m.texte||'').slice(0,140));toast(title+(dir?' · Discipline du personnel':' · ouvrez votre profil'))}
 /* ---------- Communiqués de la direction et Pensée du jour ---------- */
-const IC_PENSEE=`<svg viewBox="0 0 64 64" aria-hidden="true"><defs><linearGradient id="pgh" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#d9c9ff"/><stop offset=".55" stop-color="#8363c6"/><stop offset="1" stop-color="#3a1e72"/></linearGradient><radialGradient id="pgb" cx=".4" cy=".35" r=".7"><stop offset="0" stop-color="#fff7c2"/><stop offset=".6" stop-color="#ffd23f"/><stop offset="1" stop-color="#f29a1a"/></radialGradient></defs>
- <path d="M21 58v-9c-6.5-3.6-10.5-10-10.5-17.6C10.5 19.5 20 10 32 10c10.8 0 19.6 7.6 21 18l4.6 8.6c.7 1.3-.2 2.9-1.7 2.9H53v6.6c0 3.2-2.6 5.8-5.8 5.8H42V58z" fill="url(#pgh)"/>
- <path d="M21 58v-9c-6.5-3.6-10.5-10-10.5-17.6C10.5 19.5 20 10 32 10" fill="none" stroke="#fff" stroke-opacity=".35" stroke-width="2" stroke-linecap="round"/>
- <circle cx="32" cy="28" r="9" fill="url(#pgb)"/><path d="M28.6 37.5h6.8v3.2a1.6 1.6 0 0 1-1.6 1.6h-3.6a1.6 1.6 0 0 1-1.6-1.6z" fill="#fff"/><path d="M30 28.5l2 3 2-3" fill="none" stroke="#c46a00" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
- <g stroke="#ffd23f" stroke-width="2.2" stroke-linecap="round"><path d="M32 13.5v-3"/><path d="M42.5 18l2-2"/><path d="M21.5 18l-2-2"/></g>
- <circle cx="55" cy="13" r="2.4" fill="#fff" opacity=".85"/><circle cx="59.5" cy="6.5" r="3.4" fill="#fff" opacity=".7"/></svg>`;
-const IMG_HP='haut-parleur.webp';
-/* texte enrichi : seulement gras, italique, souligné et retours à la ligne */
+const IMG_HP='haut-parleur.png',IMG_PZ='pensee.png';
+/* texte enrichi : seulement gras, italique, souligné, listes et retours à la ligne */
 function cleanHTML(html){const t=document.createElement('template');t.innerHTML=String(html||'');const OK=new Set(['B','STRONG','I','EM','U','BR','DIV','P','UL','OL','LI']);
   const walk=n=>{[...n.childNodes].forEach(c=>{if(c.nodeType===1){walk(c);if(!OK.has(c.tagName)){c.replaceWith(...c.childNodes)}else{[...c.attributes].forEach(a=>c.removeAttribute(a.name))}}else if(c.nodeType!==3)c.remove()})};walk(t.content);return t.innerHTML}
 const commList=()=>Object.entries(S.communiques||{}).filter(([,c])=>c&&c.titre).map(([id,c])=>({id,...c})).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+/* période d'affichage choisie par la direction */
+const cmEtat=c=>{const n=Date.now(),d=c.deb?Date.parse(c.deb):0,f=c.fin?Date.parse(c.fin):Infinity;return n<d?'prog':n>f?'fini':'actif'};
+const dtLbl=iso=>{if(!iso)return '';const d=new Date(iso);return `${d.getDate()} ${MOIS[d.getMonth()]} à ${String(d.getHours()).padStart(2,'0')}h${String(d.getMinutes()).padStart(2,'0')}`};
+const toLocalInput=d=>{const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`};
 const ANK='clr-annonces-vues';
 const anSeen=()=>{try{return new Set(JSON.parse(localStorage.getItem(ANK)||'[]'))}catch(e){return new Set()}};
 function anMark(k){const s=anSeen();s.add(k);try{localStorage.setItem(ANK,JSON.stringify([...s].slice(-300)))}catch(e){}}
+const cmKey=c=>'c:'+c.id+':'+(c.maj||c.at);
+const cmVus=id=>Object.values(S.comvus||{}).filter(v=>v&&v.com===id);
+const cmVuParMoi=c=>anSeen().has(cmKey(c))||cmVus(c.id).some(v=>myEnsIds().includes(v.ens)&&(v.at||'')>=(c.maj||c.at||''));
+/* fermés pendant cette visite seulement : ils reviennent à la prochaine ouverture */
+const anSess=new Set();
 /* ---- pensée du jour : une par jour pour toute l'école, écrite par l'IA ---- */
 const PENSEES_SECOURS=['Enseigner, ce n’est pas remplir un vase, c’est allumer un feu qui éclairera toute une vie.','Chaque enfant qui entre en classe apporte une promesse : notre travail est de l’aider à la tenir.','La patience de l’enseignant est la première leçon que l’élève apprend sans le savoir.','Un mot d’encouragement donné ce matin peut changer toute l’année d’un élève.','L’école forme des têtes bien pleines, mais surtout des cœurs bien faits.','Préparer sa leçon, c’est respecter le temps et l’avenir de ses élèves.','La discipline n’est pas la peur : c’est l’ordre qui permet à chacun d’apprendre.','Un enfant qui a confiance en lui apprend deux fois plus vite.','Le meilleur exemple qu’un enseignant puisse donner, c’est sa propre envie d’apprendre.','Ensemble, maîtres et parents, nous bâtissons le Congo de demain, une leçon à la fois.','L’erreur n’est pas une faute : c’est une marche vers la bonne réponse.','On n’oublie jamais le maître qui a cru en nous.','Une classe bien tenue commence par un enseignant bien préparé.','Chaque jour d’école est une graine : soignons-la, elle portera du fruit.','Former un élève, c’est former une famille et toute une communauté.'];
 const penseeSecours=d=>{const n=Math.floor(D(d)/864e5);return PENSEES_SECOURS[n%PENSEES_SECOURS.length]};
@@ -2467,43 +2488,56 @@ async function penseeDuJour(){const d=today();const P=S.pensees?.[d];if(P?.txt)r
    return S.pensees?.[d]||doc}finally{penseeBusy=false}}
 /* ---- carte affichée à l'ouverture ---- */
 let anQ=[],anOn=false;
-function anCard(it){const E=ECO();const k=it.k;
-  const ic=k==='comm'?`<img src="${IMG_HP}" alt="">`:IC_PENSEE;
-  const titre=k==='comm'?h(it.titre||'Communiqué'):'Pensée du jour';
-  const body=k==='comm'?`<div class="an-body">${cleanHTML(it.html||'')}</div>`:`<blockquote class="an-body an-q">${h(it.txt||'')}</blockquote>`;
-  const pied=k==='comm'?`${h(it.nom||'La direction')}${it.fn?' · '+h(it.fn):''} · ${h(dfr((it.at||'').slice(0,10)))}`:`${h(jourLbl(today()))}${it.ia?' · proposée par l’IA':''}`;
-  return `<div class="an-card ${k}"><span class="an-ic">${ic}</span><small class="an-k">${k==='comm'?'La direction tient à vous informer':'Pour bien commencer la journée'}</small><h2>${titre}</h2><i class="an-line"></i>${body}
-   <div class="an-ft"><img src="${eLogo()}" alt=""><span><b>${h(E.nom||'')}</b><small>${pied}</small></span></div>
-   <div class="an-bt">${anQ.length>1?`<span class="num">${anQ.length-1} autre${anQ.length>2?'s':''} ensuite</span>`:'<span></span>'}<button class="btn grad" data-act="an-ok">${k==='comm'?'J’ai lu':'Merci, bonne journée'}</button></div></div>`}
-function anShow(){let o=$('#annonce');if(!anQ.length){if(o){o.classList.add('out');setTimeout(()=>{o.hidden=true;o.classList.remove('out')},280)}anOn=false;return}
+function anCard(it,stage){const E=ECO();const k=it.k;
+  const titre=k==='comm'?'Communiqué':'Pensée du jour';
+  const body=k==='comm'?`${it.titre?`<b class="an-ti">${h(it.titre)}</b>`:''}<div class="an-body">${cleanHTML(it.html||'')}</div>`:`<blockquote class="an-body an-q">${h(it.txt||'')}</blockquote>`;
+  const pied=k==='comm'?`${h(it.nom||'La direction')}${it.fn?' · '+h(it.fn):''}`:`${h(jourLbl(today()))}${it.ia?' · proposée par l’IA':''}`;
+  const bt=stage?'':k==='comm'?`<div class="an-bt"><button class="btn" data-act="an-later">Fermer</button><button class="an-vu" data-act="an-vu">✓ J’ai vu ce communiqué</button></div>`:`<div class="an-bt one"><button class="btn" data-act="an-ok">Merci, bonne journée</button></div>`;
+  return `<div class="an-wrap ${k}"><span class="an-ic"><i class="an-pl"></i><i class="an-pl b"></i><img src="${k==='comm'?IMG_HP:IMG_PZ}" alt=""></span><div class="an-plate"></div>
+   <div class="an-card"><h2>${titre}</h2><i class="an-line"></i>${body}
+   <div class="an-ft"><img src="${eLogo()}" alt=""><span><b>${h(E.nom||'')}</b><small>${pied}</small></span></div>${bt}
+   ${!stage&&anQ.length>1?`<small class="an-more num">${anQ.length-1} autre${anQ.length>2?'s':''} ensuite</small>`:''}</div></div>`}
+function anShow(){let o=$('#annonce');if(!anQ.length){if(o&&!o.hidden){o.classList.add('out');setTimeout(()=>{o.hidden=true;o.classList.remove('out')},280)}anOn=false;return}
   if(!o){o=document.createElement('div');o.id='annonce';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o)}
-  o.innerHTML=`<div class="an-wrap">${anCard(anQ[0])}</div>`;o.hidden=false;anOn=true}
-function anBanner(txt){let b=$('#anban');if(!b){b=document.createElement('div');b.id='anban';document.body.appendChild(b)}b.innerHTML=`<img src="${IMG_HP}" alt=""><span><b>La direction tient à vous informer</b><small>${h(txt)}</small></span>`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go');clearTimeout(anBanner.t);anBanner.t=setTimeout(()=>b.classList.remove('go'),5000)}
+  o.innerHTML=`<div class="an-bg"><i></i><i></i><i></i></div>${anCard(anQ[0])}`;o.hidden=false;anOn=true}
+function anBanner(txt){let b=$('#anban');if(!b){b=document.createElement('div');b.id='anban';document.body.appendChild(b)}b.innerHTML=`<img src="${IMG_HP}" alt=""><span><b>Communiqué</b><small>${h(txt)}</small></span>`;b.classList.remove('go');void b.offsetWidth;b.classList.add('go');clearTimeout(anBanner.t);anBanner.t=setTimeout(()=>b.classList.remove('go'),5000)}
 let anDone=false;
-async function annonceAlert(force){if(!S.ready||(anOn&&!force))return;const s=anSeen();
-  const C=commList().filter(c=>c.by!==meId()&&!s.has('c:'+c.id+':'+(c.maj||c.at))).reverse().map(c=>({k:'comm',...c}));
-  const pk='p:'+today();const wantP=!s.has(pk)&&!anDone;
+async function annonceAlert(){if(!S.ready||anOn)return;const s=anSeen();
+  const C=commList().filter(c=>c.by!==meId()&&cmEtat(c)==='actif'&&!cmVuParMoi(c)&&!anSess.has(cmKey(c))).reverse().map(c=>({k:'comm',...c}));
+  const wantP=!s.has('p:'+today())&&!anDone;
   if(!C.length&&!wantP)return;
-  if(C.length){sysNotif('Communiqué de la direction',C[C.length-1].titre||'');anBanner(C.length>1?`${C.length} nouveaux communiqués`:C[0].titre)}
+  if(C.length){const nk='clr-cm-notif-'+C.map(cmKey).join('|');if(!sessionStorage.getItem(nk)){try{sessionStorage.setItem(nk,'1')}catch(e){}sysNotif('Communiqué de la direction',C[C.length-1].titre||'')}anBanner(C.length>1?`${C.length} communiqués de la direction`:C[0].titre)}
   anQ=C;if(wantP){anDone=true;const P=await penseeDuJour();if(P)anQ.push({k:'pensee',...P})}
   if(anQ.length&&!anOn)anShow()}
-function anOk(){const it=anQ.shift();if(it){anMark(it.k==='comm'?'c:'+it.id+':'+(it.maj||it.at):'p:'+today())}anShow()}
+/* « Fermer » : il reviendra à la prochaine ouverture ; « J'ai vu » : il ne revient plus */
+function anNext(){anQ.shift();anShow()}
+function anLater(){const it=anQ[0];if(it?.k==='comm'&&it.id!=='apercu')anSess.add(cmKey(it));anNext()}
+async function anVu(){const it=anQ[0];if(it?.k==='comm'&&it.id!=='apercu'){anMark(cmKey(it));if(!S.demo){try{await put('comvus',it.id+'__'+meId(),{com:it.id,ens:meId(),nom:myPerson()?.nom||'',at:new Date().toISOString()})}catch(e){}}else{S.comvus=S.comvus||{};S.comvus[it.id+'__'+meId()]={com:it.id,ens:meId(),nom:myPerson()?.nom||'',at:new Date().toISOString()}}toast('Merci : ce communiqué ne s’affichera plus.')}anNext()}
+function anOk(){const it=anQ[0];if(it?.k==='pensee')anMark('p:'+today());anNext()}
+/* à chaque retour dans l'application, les communiqués non vus reviennent ; et un communiqué programmé apparaît à son heure */
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible'){anSess.clear();setTimeout(annonceAlert,600)}});
+setInterval(()=>annonceAlert(),60000);
 /* ---- écrans ---- */
+function cmEtatPill(c){const e=cmEtat(c);return e==='actif'?`<span class="pill good">En cours${c.fin?' · jusqu’au '+h(dtLbl(c.fin)):''}</span>`:e==='prog'?`<span class="pill warn">Programmé · ${h(dtLbl(c.deb))}</span>`:'<span class="pill">Terminé</span>'}
 function vComm(){const dir=isDir();const L=commList();const ed=S.commEd;
-  const list=`<section class="sec"><h2 class="h2">${dir?'Communiqués publiés':'Communiqués de la direction'}</h2>${L.length?`<div class="stack">${L.map(c=>`<article class="card pad stack cm-it"><div class="sec-h"><span><b class="cm-t">${h(c.titre)}</b><br><small class="muted">${h(c.nom||'La direction')}${c.fn?' · '+h(c.fn):''} · ${h(dfr((c.at||'').slice(0,10)))}</small></span>${dir?`<span class="btns"><button class="btn sm" data-act="cm-edit" data-id="${h(c.id)}">Modifier</button><button class="btn sm danger" data-act="cm-del" data-id="${h(c.id)}" data-armtxt="Supprimer ?">Supprimer</button></span>`:''}</div><div class="cm-body">${cleanHTML(c.html)}</div><button class="btn sm" data-act="cm-voir" data-id="${h(c.id)}">Voir comme l’enseignant</button></article>`).join('')}</div>`:'<div class="card empty"><h3>Aucun communiqué</h3></div>'}</section>`;
-  if(!dir)return band({back:'prof',home:true,kicker:'Direction',title:'Communiqués',sub:'Les informations de la direction'})+page(`<div class="stack">${list}</div>`);
-  const c=ed&&S.communiques?.[ed]||{};
+  const list=`<section class="sec"><h2 class="h2">${dir?'Tous les communiqués':'Communiqués de la direction'}</h2>${L.length?`<div class="stack">${L.map(c=>{const V=cmVus(c.id);return `<article class="card pad stack cm-it"><div class="sec-h"><span><b class="cm-t">${h(c.titre)}</b><br><small class="muted">${h(c.nom||'La direction')}${c.fn?' · '+h(c.fn):''} · publié le ${h(dtLbl(c.at))}</small></span>${cmEtatPill(c)}</div><div class="cm-body">${cleanHTML(c.html)}</div>
+   ${dir?`<details class="cm-vus"><summary>${ic('eye',16)} Vu par ${V.length} personne${V.length>1?'s':''}</summary>${V.length?`<div class="small muted">${V.map(v=>h(v.nom||'—')+' · '+h(dtLbl(v.at))).join('<br>')}</div>`:'<div class="small muted">Personne n’a encore touché « J’ai vu ».</div>'}</details>`:''}
+   <div class="btns"><button class="btn sm" data-act="cm-voir" data-id="${h(c.id)}">${dir?'Voir comme l’enseignant':'Ouvrir'}</button>${dir?`<button class="btn sm" data-act="cm-edit" data-id="${h(c.id)}">Modifier</button><button class="btn sm danger" data-act="cm-del" data-id="${h(c.id)}" data-armtxt="Supprimer ?">Supprimer</button>`:''}</div></article>`}).join('')}</div>`:'<div class="card empty"><h3>Aucun communiqué</h3></div>'}</section>`;
+  if(!dir)return band({back:'prof',home:true,kicker:'Direction',title:'Communiqués',sub:'Les notes de service de la direction'})+page(`<div class="stack">${list}</div>`);
+  const c=ed&&S.communiques?.[ed]||{};const now=new Date();const deb=c.deb?new Date(c.deb):now;const fin=c.fin?new Date(c.fin):new Date(now.getTime()+864e5);
   return band({back:'gestion',home:true,kicker:'Direction',title:'Communiqués',sub:'Ils s’affichent aux enseignants dès qu’ils ouvrent l’école'})+page(`<div class="stack">
    <section class="card pad stack"><h2 class="h2">${ed?'Modifier le communiqué':'Nouveau communiqué'}</h2>
-    <div class="field"><label for="cm-t">Titre (en grand)</label><input class="inp cm-ti" id="cm-t" value="${h(c.titre||'')}" placeholder="Ex. Réunion des enseignants"></div>
+    <div class="field"><label for="cm-t">Titre de la note</label><input class="inp cm-ti" id="cm-t" value="${h(c.titre||'')}" placeholder="Ex. Réunion des enseignants"></div>
     <div class="field"><label>Texte</label><div class="cm-tools" role="toolbar" aria-label="Mise en forme"><button type="button" data-act="cm-fmt" data-v="bold" aria-label="Gras"><b>G</b></button><button type="button" data-act="cm-fmt" data-v="italic" aria-label="Italique"><i>I</i></button><button type="button" data-act="cm-fmt" data-v="underline" aria-label="Souligné"><u>S</u></button><button type="button" data-act="cm-fmt" data-v="insertUnorderedList" aria-label="Liste">• Liste</button><small class="muted">Sélectionnez un mot, puis touchez G (gras) ou I (italique).</small></div>
-     <div class="inp cm-ed" id="cm-h" contenteditable="true" data-ph="Écrivez le communiqué…">${cleanHTML(c.html||'')}</div></div>
+     <div class="inp cm-ed" id="cm-h" contenteditable="true" data-ph="Écrivez la note de service…">${cleanHTML(c.html||'')}</div></div>
+    <div class="field"><label>Durée d’affichage</label><div class="chips cm-dur">${[['30 min',30],['1 heure',60],['3 heures',180],['Toute la journée','jour'],['1 jour',1440],['1 semaine',10080]].map(([l,v])=>`<button type="button" class="chipb" data-act="cm-dur" data-v="${v}">${l}</button>`).join('')}</div></div>
+    <div class="grid2"><div class="field"><label for="cm-deb">S’affiche à partir de</label><input class="inp" type="datetime-local" id="cm-deb" value="${toLocalInput(deb)}"></div><div class="field"><label for="cm-fin">S’éteint le</label><input class="inp" type="datetime-local" id="cm-fin" value="${toLocalInput(fin)}"></div></div>
     <div class="btns"><button class="btn grad" data-act="cm-pub">${ic('check',18)} ${ed?'Enregistrer':'Publier le communiqué'}</button><button class="btn" data-act="cm-apercu">Aperçu</button>${ed?'<button class="btn" data-act="cm-new">Annuler</button>':''}</div>
-    <p class="muted small" style="margin:0">Dès la publication, chaque enseignant le voit en grand à l’ouverture de l’école, avec une notification. Le directeur et le surécole voient aussi les communiqués l’un de l’autre.</p></section>${list}</div>`)}
+    <p class="muted small" style="margin:0">Pendant la durée choisie, le communiqué s’affiche en grand chaque fois qu’un enseignant ouvre l’école, jusqu’à ce qu’il touche « J’ai vu ce communiqué ». Le directeur et le surécole voient aussi les communiqués l’un de l’autre. Tous les communiqués restent enregistrés ci-dessous.</p></section>${list}</div>`)}
 function vPensee(){const d=today();const P=S.pensees?.[d];if(!P&&!penseeBusy)setTimeout(async()=>{await penseeDuJour();if(S.view==='pensee')render()},50);
   const H=Object.entries(S.pensees||{}).filter(([k,x])=>x?.txt&&k!==d).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
   return band({back:isDir()?'gestion':'prof',home:true,kicker:'Chaque jour',title:'Pensée du jour',sub:'Une nouvelle pensée chaque jour, écrite par l’IA'})+page(`<div class="stack">
-   <div class="an-stage">${P?anCard({k:'pensee',...P}).replace(/<div class="an-bt">[\s\S]*<\/div><\/div>$/,'</div>'):'<div class="card pad">L’IA écrit la pensée du jour…</div>'}</div>
+   <div class="an-stage">${P?anCard({k:'pensee',...P},true):'<div class="card pad">L’IA écrit la pensée du jour…</div>'}</div>
    ${isDir()?`<div class="btns"><button class="btn grad" data-act="pz-new">${ic('spark',16)} Nouvelle pensée (IA)</button><button class="btn" data-act="pz-edit">Écrire moi-même</button></div>`:''}
    ${H.length?`<section class="sec"><h2 class="h2">Les jours précédents</h2><div class="card list">${H.map(([k,x])=>`<div class="li" style="cursor:default"><span class="ib">${ic('spark',18)}</span><span class="grow"><span class="ttl" style="display:block;white-space:normal">« ${h(x.txt)} »</span><span class="muted small">${h(jourLbl(k))}</span></span></div>`).join('')}</div></section>`:''}</div>`)}
 
@@ -4357,15 +4391,19 @@ function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
   S.view=v;render();scrollTo(0,0)}
 const A={
   'an-ok':()=>anOk(),
+  'an-later':()=>anLater(),
+  'an-vu':()=>anVu(),
+  'cm-dur':b=>{const v=b.dataset.v;const d0=$('#cm-deb')?.value?new Date($('#cm-deb').value):new Date();let f;if(v==='jour'){f=new Date(d0);f.setHours(23,59,0,0)}else f=new Date(d0.getTime()+(+v)*6e4);$('#cm-fin').value=toLocalInput(f);document.querySelectorAll('.cm-dur .chipb').forEach(x=>x.setAttribute('aria-pressed',x===b))},
   'cm-fmt':b=>{const ed=$('#cm-h');if(!ed)return;ed.focus();document.execCommand(b.dataset.v,false,null)},
   'cm-new':()=>{S.commEd=null;render()},
   'cm-edit':b=>{S.commEd=b.dataset.id;render();scrollTo({top:0,behavior:'smooth'})},
   'cm-del':async b=>{if(!arm(b))return;await del('communiques',b.dataset.id);if(S.commEd===b.dataset.id)S.commEd=null;render();toast('Communiqué supprimé.')},
   'cm-pub':async()=>{const t=($('#cm-t')?.value||'').trim();const html=cleanHTML($('#cm-h')?.innerHTML||'');const txt=($('#cm-h')?.innerText||'').trim();if(!t){toast('Écrivez le titre du communiqué.');$('#cm-t')?.focus();return}if(!txt){toast('Écrivez le texte du communiqué.');return}
     const id=S.commEd||'cm-'+Date.now().toString(36);const old=S.communiques?.[id]||{};const now=new Date().toISOString();const sg=mySig();
-    await put('communiques',id,{titre:t,html,by:old.by||meId(),nom:old.nom||sg.nom,fn:old.fn||sg.fn,at:old.at||now,maj:now});anMark('c:'+id+':'+now);S.commEd=null;render();toast(old.at?'Communiqué modifié : les enseignants le reverront.':'Communiqué publié : les enseignants le verront à l’ouverture.')},
+    const dv=$('#cm-deb')?.value,fv=$('#cm-fin')?.value;const deb=dv?new Date(dv).toISOString():now,fin=fv?new Date(fv).toISOString():'';if(fin&&fin<=deb){toast('L’heure de fin doit être après l’heure de début.');return}
+    await put('communiques',id,{titre:t,html,deb,fin,by:old.by||meId(),nom:old.nom||sg.nom,fn:old.fn||sg.fn,at:old.at||now,maj:now});anMark('c:'+id+':'+now);S.commEd=null;render();toast(old.at?'Communiqué modifié : les enseignants le reverront.':'Communiqué publié : les enseignants le verront à l’ouverture.')},
   'cm-apercu':()=>{const sg=mySig();anQ=[{k:'comm',id:'apercu',titre:($('#cm-t')?.value||'').trim()||'Titre du communiqué',html:$('#cm-h')?.innerHTML||'',nom:sg.nom,fn:sg.fn,at:new Date().toISOString()}];anShow()},
-  'cm-voir':b=>{const c=S.communiques?.[b.dataset.id];if(!c)return;anQ=[{k:'comm',id:'apercu',...c}];anShow()},
+  'cm-voir':b=>{const c=S.communiques?.[b.dataset.id];if(!c)return;anQ=[{k:'comm',...c,id:isDir()?'apercu':b.dataset.id}];anShow()},
   'pz-new':async b=>{b.disabled=true;b.textContent='L’IA écrit…';const d=today();if(S.pensees)delete S.pensees[d];await penseeDuJour();render();toast('Nouvelle pensée du jour enregistrée.')},
   'pz-edit':()=>openSheet('Pensée du jour',`<div class="stack"><div class="field"><label for="pz-t">Votre pensée pour aujourd’hui</label><textarea class="inp" id="pz-t" rows="4">${h(S.pensees?.[today()]?.txt||'')}</textarea></div><button class="btn grad" data-act="pz-save">Enregistrer</button></div>`),
   'pz-save':async()=>{const t=($('#pz-t')?.value||'').trim();if(!t){toast('Écrivez la pensée.');return}const doc={txt:t,ia:false,at:new Date().toISOString(),by:meId()};if(S.demo){S.pensees[today()]=doc}else await put('pensees',today(),doc);closeSheet();render();toast('Pensée du jour enregistrée.')},
@@ -4705,7 +4743,7 @@ let rT;addEventListener('resize',()=>{clearTimeout(rT);rT=setTimeout(applyFit,80
 function onData(key){
   if(!S.ready)return;
   if(key==='paiem')payAlert();
-  if(key==='communiques'||key==='pensees')setTimeout(()=>annonceAlert(),300);
+  if(key==='communiques'||key==='pensees'||key==='comvus')setTimeout(()=>annonceAlert(),300);
   if(key==='fiches'){ficheAlert();if(S.view==='fiche'&&!isDir()&&document.activeElement?.closest?.('#fed'))return}
   if(key==='msgs')discAlert();
   if(key==='msgs'){msgAlert();if(S.view==='msgs'&&document.activeElement?.id==='m-txt'){const th=$('#mthread');if(th){S.mDraft=$('#m-txt').value;const sel=[$('#m-txt').selectionStart,$('#m-txt').selectionEnd];const ai=$('#mia'),keep=ai?.innerHTML,kl=ai?._list;render();const t=$('#m-txt');if(t){t.focus();try{t.setSelectionRange(sel[0],sel[1])}catch(e){}}if($('#mia')&&keep){$('#mia').innerHTML=keep;$('#mia')._list=kl}return}}}

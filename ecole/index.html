@@ -1510,37 +1510,23 @@ body.fs-on{overflow:hidden}
 .an-bg i{position:absolute;width:60vmax;height:60vmax;border-radius:50%;filter:blur(60px);opacity:.45;background:radial-gradient(circle,var(--accent),transparent 65%);animation:anBlob 14s ease-in-out infinite alternate}
 .an-bg i:nth-child(1){left:-20vmax;top:-20vmax}.an-bg i:nth-child(2){right:-25vmax;bottom:-25vmax;background:radial-gradient(circle,#ff6b8b,transparent 65%);animation-duration:17s}.an-bg i:nth-child(3){left:30%;top:40%;width:40vmax;height:40vmax;opacity:.25;animation-duration:11s}
 @keyframes anBlob{to{transform:translate(8vmax,6vmax) scale(1.15)}}
-.an-wrap{position:relative;width:100%;max-width:340px;padding-top:50px;margin:0 auto;animation:anPop .6s cubic-bezier(.2,1.2,.3,1) both}
+.an-wrap{position:relative;width:100%;max-width:320px;padding-top:58px;margin:0 auto;animation:anPop .6s cubic-bezier(.2,1.2,.3,1) both}
 @keyframes anPop{from{opacity:0;transform:translateY(34px) scale(.92)}to{opacity:1;transform:none}}
-/* la carte, avec l'encoche ronde en haut comme le modèle */
-.an-card{position:relative;z-index:1;background:linear-gradient(160deg,#2c1660 0%,#3a1e72 45%,#533989 100%);color:#fff;border-radius:30px;padding:56px 20px 16px;text-align:center;
- -webkit-mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%);mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%)}
-.an-plate{position:absolute;left:12px;right:12px;top:50px;bottom:-12px;z-index:0;background:#fff;border-radius:30px;box-shadow:0 30px 60px rgba(0,0,0,.45);-webkit-mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%);mask:radial-gradient(circle 58px at 50% 0,#0000 97%,#000 100%)}
-.an-ic{position:absolute;left:50%;top:50px;transform:translate(-50%,-50%);z-index:2;width:92px;height:92px;border-radius:50%;background:#fff;box-shadow:0 0 0 5px var(--accent),0 10px 26px rgba(0,0,0,.35);display:grid;place-items:center}
-.an-ic img{position:relative;z-index:1;width:74%;height:74%;object-fit:contain}
-.an-pl{position:absolute;inset:-5px;border-radius:50%;border:2px solid var(--accent);animation:anPulse 2.4s ease-out infinite}
-.an-pl.b{animation-delay:1.2s}
-@keyframes anPulse{from{transform:scale(1);opacity:.7}to{transform:scale(1.45);opacity:0}}
-.an-wrap.comm .an-ic img{animation:anShake 2.6s ease-in-out infinite;transform-origin:30% 70%}
-@keyframes anShake{0%,62%,100%{transform:rotate(0)}66%{transform:rotate(-12deg) scale(1.06)}72%{transform:rotate(9deg) scale(1.06)}78%{transform:rotate(-6deg)}84%{transform:rotate(3deg)}}
-.an-wrap.pensee .an-ic img{animation:anFloat 3.2s ease-in-out infinite}
-@keyframes anFloat{0%,100%{transform:translateY(2px) rotate(-3deg)}50%{transform:translateY(-4px) rotate(3deg)}}
-.an-card h2{font-family:var(--f-d);font-weight:400;font-size:clamp(28px,8vw,34px);line-height:1;text-transform:uppercase;margin:0;letter-spacing:.02em}
-.an-line{display:block;width:70%;height:2px;margin:10px auto 12px;background:linear-gradient(90deg,transparent,#ff6b8b,var(--accent),#ff6b8b,transparent)}
-.an-ti{display:block;font-size:16px;font-weight:700;margin-bottom:6px;line-height:1.3}
-.an-body{font-size:14.5px;line-height:1.55;font-weight:400;text-align:center;max-height:42vh;overflow:auto;padding:0 2px}
+.an-card{position:relative;z-index:1;background:linear-gradient(180deg,#3a1e72 0%,#3a1e72 12%,#4d2d8c 40%,#7b59c0 100%);color:#fff;border-radius:46px 0 52px 52px;padding:34px 22px 16px;text-align:center;box-shadow:0 26px 60px rgba(0,0,0,.5)}
+.an-bump{position:absolute;left:26%;right:0;top:28px;height:120px;border-radius:150px 46px 0 0/62px 46px 0 0;background:#3a1e72;z-index:0}
+.an-card::before,.an-bump::before{content:"";position:absolute;inset:0;border-radius:inherit;background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .55 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");opacity:.10;mix-blend-mode:overlay;pointer-events:none}
+.an-deco{position:absolute;inset:0;border-radius:inherit;overflow:hidden;pointer-events:none;background:radial-gradient(circle at 12% 88%,rgba(255,255,255,.07) 0 60px,transparent 61px),radial-gradient(circle at 94% 66%,rgba(255,255,255,.05) 0 90px,transparent 91px),radial-gradient(circle at 70% 100%,rgba(255,107,139,.18),transparent 50%)}
+.an-ic{position:absolute;z-index:3;left:50%;top:-8px;width:120px;height:120px;object-fit:contain;transform:translateX(-22%) rotate(-8deg);filter:drop-shadow(0 14px 16px rgba(0,0,0,.45));animation:anShake 2.8s ease-in-out infinite;transform-origin:40% 70%}
+@keyframes anShake{0%,60%,100%{transform:translateX(-22%) rotate(-8deg)}65%{transform:translateX(-22%) rotate(-18deg) scale(1.05)}71%{transform:translateX(-22%) rotate(2deg) scale(1.05)}77%{transform:translateX(-22%) rotate(-13deg)}83%{transform:translateX(-22%) rotate(-5deg)}}
+.an-card h2{position:relative;font-family:var(--f-b);font-weight:800;font-size:clamp(30px,8.6vw,38px);line-height:1;margin:18px 0 10px;letter-spacing:-.01em;background:linear-gradient(180deg,#fff 35%,#d9cdfa);-webkit-background-clip:text;background-clip:text;color:transparent}
+.an-ti{position:relative;display:block;font-size:16px;font-weight:700;margin-bottom:6px;line-height:1.3}
+.an-body{position:relative;font-size:14.5px;line-height:1.5;font-weight:400;text-align:center;max-height:40vh;overflow:auto;padding:0 2px}
 .an-body p,.an-body div{margin:0 0 6px}.an-body ul,.an-body ol{text-align:left;margin:6px 0;padding-left:22px}
 .an-body b,.an-body strong{font-weight:800}
-.an-q{margin:0;font-size:17px;line-height:1.45;font-style:italic;font-weight:500;padding:2px 6px}
-.an-q::before{content:"“";font-family:Georgia,serif;font-size:56px;line-height:0;position:relative;top:22px;margin-right:4px;opacity:.5}
-.an-ft{display:flex;align-items:center;gap:9px;justify-content:center;margin-top:14px;padding-top:10px;border-top:1px solid rgba(255,255,255,.16)}
-.an-ft img{width:30px;height:30px;border-radius:50%;background:#fff}
-.an-ft span{display:flex;flex-direction:column;align-items:flex-start;line-height:1.2;text-align:left}
-.an-ft b{font-size:12.5px;font-weight:700}.an-ft small{font-size:11px;opacity:.8}
-.an-bt{display:flex;flex-direction:column;align-items:center;gap:8px;margin-top:14px}
-.an-bt .btn{background:#fff;color:#1d0f3d;box-shadow:0 8px 20px rgba(0,0,0,.25);min-width:160px}
-.an-vu{border:0;background:none;color:rgba(255,255,255,.85);font:inherit;font-size:12px;font-weight:600;text-decoration:underline;text-underline-offset:3px;cursor:pointer;padding:4px 8px}
-.an-more{display:block;margin-top:6px;font-size:11px;opacity:.7}
+.an-q{margin:0;font-size:17px;font-style:italic;font-weight:500}
+.an-bt{position:relative;display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+.an-vubtn{display:inline-flex;align-items:center;gap:6px;border:0;cursor:pointer;background:#fff;color:#1d0f3d;font:inherit;font-weight:800;font-size:14px;border-radius:99px;padding:9px 18px;box-shadow:0 8px 18px rgba(0,0,0,.25)}
+.an-more{font-size:11.5px;opacity:.75}
 .an-stage{padding:8px 0 20px}.an-stage .an-wrap{animation:none}
 #anban{position:fixed;left:50%;top:calc(10px + env(safe-area-inset-top,0px));z-index:96;display:flex;align-items:center;gap:10px;max-width:calc(100% - 24px);width:400px;background:var(--surface);color:var(--ink);border-radius:20px;padding:10px 14px;box-shadow:0 16px 40px rgba(0,0,0,.5);border:1px solid var(--line);transform:translate(-50%,-140%);opacity:0;transition:transform .5s cubic-bezier(.2,1.1,.3,1),opacity .4s}
 #anban.go{transform:translate(-50%,0);opacity:1}
@@ -1557,7 +1543,7 @@ body.fs-on{overflow:hidden}
 .cm-dur{flex-wrap:wrap}
 .cm-vus summary{cursor:pointer;font-weight:700;font-size:13.5px;display:flex;gap:6px;align-items:center;color:var(--accent)}
 .cm-vus>div{margin-top:6px;line-height:1.6}
-@media (prefers-reduced-motion:reduce){#annonce,.an-wrap,#anban,.an-bg i,.an-pl,.an-ic img{animation:none!important;transition:none!important}}
+@media (prefers-reduced-motion:reduce){#annonce,.an-wrap,#anban,.an-bg i,.an-ic{animation:none!important;transition:none!important}}
 
 </style>
 <script>window.applyTheme&&applyTheme()</script>
@@ -1872,7 +1858,7 @@ function screen(){
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir','manuels','docs','fiche','comm','pensee'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,manuels:vManuels,docs:vDocs,fiche:vFiche,comm:vComm,pensee:vPensee})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,manuels:vManuels,docs:vDocs,fiche:vFiche,comm:vComm})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -2139,7 +2125,6 @@ function vGestion(){
   ${sec?`<div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('shield',20)}</span><span>${promo?'<b>Vous êtes le promoteur</b> : vous voyez tout ce qui se passe à l’école. Créez le profil du <b>préfet</b> et donnez-lui son code ; c’est lui qui crée les accès de tout le personnel.':'<b>Vous êtes le préfet</b> : vous créez les accès de tout le personnel (secrétaire, directeurs, titulaires, professeurs) et vous leur donnez leur code personnel.'}</span></div>`:''}
   <button class="gcta" data-act="go" data-v="manuels"><span><b>Manuels</b><small>Programmes nationaux, livres par classe, guides et fiches en PDF, lus dans l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="comm"><span><b>Communiqués</b><small>Écrivez un communiqué : il s’affiche en grand chez chaque enseignant dès qu’il ouvre l’école.</small></span><i>${ic('chev',20)}</i></button>
-  <button class="gcta" data-act="go" data-v="pensee"><span><b>Pensée du jour</b><small>Chaque jour, l’IA écrit une nouvelle pensée sur l’éducation, montrée à l’ouverture de l’application.</small></span><i>${ic('chev',20)}</i></button>
   <button class="gcta" data-act="go" data-v="devall"><span><b>Composition</b><small>Devoirs hebdomadaires, interrogations et examens de chaque classe, avec les copies de toute l’école à imprimer.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
@@ -2488,15 +2473,11 @@ async function penseeDuJour(){const d=today();const P=S.pensees?.[d];if(P?.txt)r
    return S.pensees?.[d]||doc}finally{penseeBusy=false}}
 /* ---- carte affichée à l'ouverture ---- */
 let anQ=[],anOn=false;
-function anCard(it,stage){const E=ECO();const k=it.k;
-  const titre=k==='comm'?'Communiqué':'Pensée du jour';
+function anCard(it,stage){const k=it.k;
   const body=k==='comm'?`${it.titre?`<b class="an-ti">${h(it.titre)}</b>`:''}<div class="an-body">${cleanHTML(it.html||'')}</div>`:`<blockquote class="an-body an-q">${h(it.txt||'')}</blockquote>`;
-  const pied=k==='comm'?`${h(it.nom||'La direction')}${it.fn?' · '+h(it.fn):''}`:`${h(jourLbl(today()))}${it.ia?' · proposée par l’IA':''}`;
-  const bt=stage?'':k==='comm'?`<div class="an-bt"><button class="btn" data-act="an-later">Fermer</button><button class="an-vu" data-act="an-vu">✓ J’ai vu ce communiqué</button></div>`:`<div class="an-bt one"><button class="btn" data-act="an-ok">Merci, bonne journée</button></div>`;
-  return `<div class="an-wrap ${k}"><span class="an-ic"><i class="an-pl"></i><i class="an-pl b"></i><img src="${k==='comm'?IMG_HP:IMG_PZ}" alt=""></span><div class="an-plate"></div>
-   <div class="an-card"><h2>${titre}</h2><i class="an-line"></i>${body}
-   <div class="an-ft"><img src="${eLogo()}" alt=""><span><b>${h(E.nom||'')}</b><small>${pied}</small></span></div>${bt}
-   ${!stage&&anQ.length>1?`<small class="an-more num">${anQ.length-1} autre${anQ.length>2?'s':''} ensuite</small>`:''}</div></div>`}
+  return `<div class="an-wrap ${k}"><img class="an-ic" src="${k==='comm'?IMG_HP:IMG_PZ}" alt="">
+   <i class="an-bump"></i><div class="an-card"><i class="an-deco"></i><h2>${k==='comm'?'Communiqué':'Pensée du jour'}</h2>${body}
+   ${stage?'':`<div class="an-bt">${anQ.length>1?`<small class="an-more num">${anQ.length-1} autre${anQ.length>2?'s':''}</small>`:'<span></span>'}<button class="an-vubtn" data-act="${k==='comm'?'an-vu':'an-ok'}">${ic('check',16)} Vu</button></div>`}</div></div>`}
 function anShow(){let o=$('#annonce');if(!anQ.length){if(o&&!o.hidden){o.classList.add('out');setTimeout(()=>{o.hidden=true;o.classList.remove('out')},280)}anOn=false;return}
   if(!o){o=document.createElement('div');o.id='annonce';o.setAttribute('role','dialog');o.setAttribute('aria-modal','true');document.body.appendChild(o)}
   o.innerHTML=`<div class="an-bg"><i></i><i></i><i></i></div>${anCard(anQ[0])}`;o.hidden=false;anOn=true}
@@ -2504,7 +2485,7 @@ function anBanner(txt){let b=$('#anban');if(!b){b=document.createElement('div');
 let anDone=false;
 async function annonceAlert(){if(!S.ready||anOn)return;const s=anSeen();
   const C=commList().filter(c=>c.by!==meId()&&cmEtat(c)==='actif'&&!cmVuParMoi(c)&&!anSess.has(cmKey(c))).reverse().map(c=>({k:'comm',...c}));
-  const wantP=!s.has('p:'+today())&&!anDone;
+  const wantP=false;
   if(!C.length&&!wantP)return;
   if(C.length){const nk='clr-cm-notif-'+C.map(cmKey).join('|');if(!sessionStorage.getItem(nk)){try{sessionStorage.setItem(nk,'1')}catch(e){}sysNotif('Communiqué de la direction',C[C.length-1].titre||'')}anBanner(C.length>1?`${C.length} communiqués de la direction`:C[0].titre)}
   anQ=C;if(wantP){anDone=true;const P=await penseeDuJour();if(P)anQ.push({k:'pensee',...P})}
@@ -2521,7 +2502,7 @@ setInterval(()=>annonceAlert(),60000);
 function cmEtatPill(c){const e=cmEtat(c);return e==='actif'?`<span class="pill good">En cours${c.fin?' · jusqu’au '+h(dtLbl(c.fin)):''}</span>`:e==='prog'?`<span class="pill warn">Programmé · ${h(dtLbl(c.deb))}</span>`:'<span class="pill">Terminé</span>'}
 function vComm(){const dir=isDir();const L=commList();const ed=S.commEd;
   const list=`<section class="sec"><h2 class="h2">${dir?'Tous les communiqués':'Communiqués de la direction'}</h2>${L.length?`<div class="stack">${L.map(c=>{const V=cmVus(c.id);return `<article class="card pad stack cm-it"><div class="sec-h"><span><b class="cm-t">${h(c.titre)}</b><br><small class="muted">${h(c.nom||'La direction')}${c.fn?' · '+h(c.fn):''} · publié le ${h(dtLbl(c.at))}</small></span>${cmEtatPill(c)}</div><div class="cm-body">${cleanHTML(c.html)}</div>
-   ${dir?`<details class="cm-vus"><summary>${ic('eye',16)} Vu par ${V.length} personne${V.length>1?'s':''}</summary>${V.length?`<div class="small muted">${V.map(v=>h(v.nom||'—')+' · '+h(dtLbl(v.at))).join('<br>')}</div>`:'<div class="small muted">Personne n’a encore touché « J’ai vu ».</div>'}</details>`:''}
+   ${dir?`<details class="cm-vus"><summary>${ic('eye',16)} Vu par ${V.length} personne${V.length>1?'s':''}</summary>${V.length?`<div class="small muted">${V.map(v=>h(v.nom||'—')+' · '+h(dtLbl(v.at))).join('<br>')}</div>`:'<div class="small muted">Personne n’a encore touché « Vu ».</div>'}</details>`:''}
    <div class="btns"><button class="btn sm" data-act="cm-voir" data-id="${h(c.id)}">${dir?'Voir comme l’enseignant':'Ouvrir'}</button>${dir?`<button class="btn sm" data-act="cm-edit" data-id="${h(c.id)}">Modifier</button><button class="btn sm danger" data-act="cm-del" data-id="${h(c.id)}" data-armtxt="Supprimer ?">Supprimer</button>`:''}</div></article>`}).join('')}</div>`:'<div class="card empty"><h3>Aucun communiqué</h3></div>'}</section>`;
   if(!dir)return band({back:'prof',home:true,kicker:'Direction',title:'Communiqués',sub:'Les notes de service de la direction'})+page(`<div class="stack">${list}</div>`);
   const c=ed&&S.communiques?.[ed]||{};const now=new Date();const deb=c.deb?new Date(c.deb):now;const fin=c.fin?new Date(c.fin):new Date(now.getTime()+864e5);
@@ -2533,7 +2514,7 @@ function vComm(){const dir=isDir();const L=commList();const ed=S.commEd;
     <div class="field"><label>Durée d’affichage</label><div class="chips cm-dur">${[['30 min',30],['1 heure',60],['3 heures',180],['Toute la journée','jour'],['1 jour',1440],['1 semaine',10080]].map(([l,v])=>`<button type="button" class="chipb" data-act="cm-dur" data-v="${v}">${l}</button>`).join('')}</div></div>
     <div class="grid2"><div class="field"><label for="cm-deb">S’affiche à partir de</label><input class="inp" type="datetime-local" id="cm-deb" value="${toLocalInput(deb)}"></div><div class="field"><label for="cm-fin">S’éteint le</label><input class="inp" type="datetime-local" id="cm-fin" value="${toLocalInput(fin)}"></div></div>
     <div class="btns"><button class="btn grad" data-act="cm-pub">${ic('check',18)} ${ed?'Enregistrer':'Publier le communiqué'}</button><button class="btn" data-act="cm-apercu">Aperçu</button>${ed?'<button class="btn" data-act="cm-new">Annuler</button>':''}</div>
-    <p class="muted small" style="margin:0">Pendant la durée choisie, le communiqué s’affiche en grand chaque fois qu’un enseignant ouvre l’école, jusqu’à ce qu’il touche « J’ai vu ce communiqué ». Le directeur et le surécole voient aussi les communiqués l’un de l’autre. Tous les communiqués restent enregistrés ci-dessous.</p></section>${list}</div>`)}
+    <p class="muted small" style="margin:0">Pendant la durée choisie, le communiqué s’affiche en grand chaque fois qu’un enseignant ouvre l’école, jusqu’à ce qu’il touche « Vu ». Le directeur et le surécole voient aussi les communiqués l’un de l’autre. Tous les communiqués restent enregistrés ci-dessous.</p></section>${list}</div>`)}
 function vPensee(){const d=today();const P=S.pensees?.[d];if(!P&&!penseeBusy)setTimeout(async()=>{await penseeDuJour();if(S.view==='pensee')render()},50);
   const H=Object.entries(S.pensees||{}).filter(([k,x])=>x?.txt&&k!==d).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,30);
   return band({back:isDir()?'gestion':'prof',home:true,kicker:'Chaque jour',title:'Pensée du jour',sub:'Une nouvelle pensée chaque jour, écrite par l’IA'})+page(`<div class="stack">
@@ -3149,7 +3130,7 @@ function vProf(){
   const rows=isGest(p)?[row('grid','Toutes les classes',`${classIds().length} classes · registres, cotes et bulletins`,'data-act="go" data-v="classes"'),presRow,row('bell','Activité du jour','Appels et cotes clôturés, classe par classe','data-act="go" data-v="activite"'),row('doc','Documents des enseignants',(()=>{const n=fAttente();return n?`${n} document${n>1?'s':''} à signer`:'Cahiers du jour, classés par jour'})(),'data-act="go" data-v="docsall"'),row('admin','Administration','Classes, personnel, calendrier, sauvegarde','data-act="go" data-v="gestion"')]
    :c?[row('chalk','Sa classe',`${h(c.nom)} · ${h(degLabel(c))}`,`data-act="open" data-id="${h(cid)}"`),row('check','Registre d’appel',`Cette semaine : ${faits} / 5 jours clôturés`,po('appel'),appelClos(cid,td)?'<span class="pill good">Clôturé</span>':''),presRow,row('book','Cahier de cotes',`Points encodés : ${tri.map((v,i)=>tShort(TRS()[i])+' '+v+' %').join(' · ')}`,po('cotes')),row('doc','Bulletins',`${es.length} bulletin${es.length>1?'s':''} officiels`,po('bul')),row('chart','Palmarès','Classement par période et signatures des parents',po('palm')),row('users','Élèves',`${es.length} élève${es.length>1?'s':''} · ${es.length-f} G, ${f} F`,po('eleves')),row('book','Manuels',`${Object.keys(S.manuels||{}).length} livre${Object.keys(S.manuels||{}).length>1?'s':''} PDF : programmes, livres, guides`,'data-act="go" data-v="manuels"')]:[presRow];
   if(!isGest(p)){const DL=discItems(isDir()?p.id:'');const du=isDir()?DL.reduce((a,d)=>a+discRep(d.id).filter(r=>!r.luAt).length,0):DL.filter(d=>!d.luAt).length;if(DL.length||isDir())rows.unshift(row('shield',isDir()?'Demandes d’explication et blâmes':'Courriers de la direction',DL.length?`${DL.length} courrier${DL.length>1?'s':''} · dernier : ${h(DK[DL[0].kind].toLowerCase())}, ${h(dfr(DL[0].date||today()))}`:'Aucun courrier',isDir()?`data-act="dnew" data-v="de" data-id="${h(p.id)}"`:'data-act="go" data-v="disc"',du?`<span class="pill bad num">${du} nouveau${du>1?'x':''}</span>`:''))}
-  if(!isGest(p)&&!isDir()&&myEnsIds().includes(p.id)){rows.unshift(row('spark','Pensée du jour','Une nouvelle pensée chaque jour','data-act="go" data-v="pensee"'));const nc=commList().length;rows.unshift(row('bell','Communiqués de la direction',nc?`${nc} communiqué${nc>1?'s':''}`:'Aucun pour l’instant','data-act="go" data-v="comm"'))}
+  if(!isGest(p)&&!isDir()&&myEnsIds().includes(p.id)){const nc=commList().length;rows.unshift(row('bell','Communiqués de la direction',nc?`${nc} communiqué${nc>1?'s':''}`:'Aucun pour l’instant','data-act="go" data-v="comm"'))}
   if(!isGest(p)&&(isDir()||myEnsIds().includes(p.id))){const n=isDir()?fichesList(p.id).filter(f=>!f.dir).length:fUnread();const F=FTK.filter(t=>ficheOf(p.id,today(),t)).length;rows.unshift(row('doc',isDir()?'Ses documents':'Mes documents',`Aujourd’hui : ${F} / ${FTK.length} cahiers remplis · journal, préparation, devoirs, exercices, résumés`,isDir()?`data-act="fens" data-id="${h(p.id)}"`:'data-act="go" data-v="docs"',n?`<span class="pill ${isDir()?'warn':'bad'} num">${n} ${isDir()?'à signer':'corrigé'+(n>1?'s':'')}</span>`:''))}
   if(!isGest(p)){const nu=msgUnread(p.id),L=msgsOf(p.id),last=L[L.length-1];rows.unshift(row('pen',isDir()?'Remarques et suggestions':'Messages de la direction',last?h((last.sens==='dir'?(isDir()?'Vous : ':'Direction : '):(isDir()?'Réponse : ':'Vous : '))+last.texte.slice(0,70)):(isDir()?'Écrire une remarque à cet enseignant':'Aucun message pour le moment'),`data-act="mopen" data-id="${h(p.id)}"`,nu?`<span class="pill bad num">${nu} nouveau${nu>1?'x':''}</span>`:''))}
   return band({back:backV,home:true,title:ECO().nom,sub:`${isGest(p)?'Profil gestionnaire':'Profil enseignant'} · ${ANNEE}`,side:`<div class="band-anim">${eAnim()}</div>`})+page(`<div class="prof">

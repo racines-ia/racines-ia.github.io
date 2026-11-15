@@ -640,33 +640,16 @@ tr.isblk td.name span:last-child::after{content:" · désactivé";color:var(--ba
 .dv-ui{border:1.5px dashed #9b7be6;background:#faf7ff;color:#5b34c4;border-radius:10px;padding:8px 14px;font:600 14px/1.2 'Outfit',system-ui,sans-serif;cursor:pointer}
 .dv-ui.on{background:#6d3fe0;color:#fff;border-style:solid}.dv-ui.sm{padding:4px 8px;font-size:12px}
 .dv-add{display:flex;gap:8px;flex-wrap:wrap;padding:10px 0 4px 36px}.dv-add.big{padding:18px 0 6px;justify-content:center}
-.compz{--lime:#b9d56f;--lime2:#cfe39a;--pale:#eef6d9;--ink2:#141414;background:var(--pale);color:var(--ink2);border-radius:30px;padding:16px 14px 18px;display:flex;flex-direction:column;gap:14px;box-shadow:inset 0 0 0 6px var(--lime2)}
-.cz-top{display:flex;align-items:baseline;justify-content:space-between;gap:10px;padding:4px 6px 0}
-.cz-top b{font-size:17px;font-weight:700}.cz-top span{font-size:13px;color:#4d5a2a;font-weight:600}
-.cz-pills{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-.cz-pill{border:0;background:#fff;color:var(--ink2);border-radius:999px;padding:12px 6px;font:600 13px/1.15 inherit;font-family:inherit;cursor:pointer;box-shadow:0 2px 6px rgba(60,80,10,.08)}
-.cz-pill[aria-pressed="true"]{background:var(--lime);font-weight:800}
-.cz-hero{position:relative;background:var(--ink2);color:#fff;border-radius:26px;padding:18px 18px 16px;min-height:132px;overflow:hidden}
-.cz-hero-t{max-width:66%;display:flex;flex-direction:column;gap:6px}
-.cz-hero-t b{font-size:21px;font-weight:800;line-height:1.1}.cz-hero-t span{font-size:13px;color:#cfd3c4;line-height:1.35}
-.cz-badge{position:absolute;top:14px;right:14px;background:var(--lime);color:var(--ink2);font-weight:800;font-size:13px;padding:7px 12px;border-radius:999px}
-.cz-art{position:absolute;right:16px;bottom:12px;width:64px;height:64px;border-radius:50%;background:rgba(185,213,111,.16);display:grid;place-items:center;color:var(--lime)}
-.cz-nav{display:flex;align-items:center;gap:8px;margin-top:6px}
-.cz-nav button{width:30px;height:30px;border-radius:50%;border:0;background:#2a2a2a;color:#fff;display:grid;place-items:center;cursor:pointer}.cz-nav button:disabled{opacity:.35}
-.cz-dots{display:flex;gap:5px}.cz-dots i{width:6px;height:6px;border-radius:50%;background:#d8e8b0}.cz-dots i.on{width:14px;height:14px;background:none;border:2px solid var(--lime)}
-.cz-list{display:flex;flex-direction:column;gap:12px}
-.cz-it{position:relative;display:block;width:100%;text-align:left;border:0;cursor:pointer;background:var(--lime);border-radius:22px;padding:10px 10px 10px 10px;font-family:inherit;color:var(--ink2)}
-.cz-in{display:flex;flex-direction:column;gap:2px;background:#fff;border-radius:16px;padding:10px 14px;margin-right:84px}
-.cz-it.alt .cz-in{margin-right:0;margin-left:84px}
-.cz-in b{font-size:15px;line-height:1.25}.cz-in small{font-size:12.5px;color:#55604a;line-height:1.3}
-.cz-pts{position:absolute;top:50%;right:10px;translate:0 -50%;background:var(--ink2);color:#fff;font-weight:800;font-size:14px;padding:9px 12px;border-radius:999px;min-width:64px;text-align:center}
-.cz-it.alt .cz-pts{right:auto;left:10px}
-.cz-it:active{transform:scale(.985)}
-.cz-empty{background:#fff;border-radius:20px;padding:18px;text-align:center;font-weight:700;font-size:15px}.cz-empty small{font-weight:500;color:#55604a;font-size:13px}
-.cz-sec{align-self:center;border:0;background:#fff;color:var(--ink2);border-radius:999px;padding:10px 16px;font:700 14px/1 inherit;font-family:inherit;display:inline-flex;align-items:center;gap:8px;cursor:pointer}
-.cz-add{border:0;background:var(--ink2);color:#fff;border-radius:22px;min-height:68px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-family:inherit}
-.cz-add span{font-size:34px;line-height:1;font-weight:300}.cz-add small{font-size:12.5px;color:#d8e8b0;font-weight:600}
-.cz-add:active{transform:scale(.985)}
+.czf{display:flex;flex-direction:column;gap:10px}
+.czf-it{position:relative;display:block;width:100%;border:0;cursor:pointer;text-align:left;font-family:inherit;color:var(--ink);background:var(--soft,rgba(131,99,198,.18));border-radius:24px;padding:9px;transition:transform .15s}
+.czf-in{display:flex;flex-direction:column;gap:2px;background:var(--surface);border-radius:17px;padding:11px 16px;margin-right:104px}
+.czf-it.alt .czf-in{margin-right:0;margin-left:104px}
+.czf-in b{font-size:15.5px;line-height:1.2}.czf-in small{font-size:12.5px;color:var(--muted)}
+.czf-b{position:absolute;top:50%;right:12px;translate:0 -50%;min-width:84px;text-align:center;padding:10px 12px;border-radius:999px;background:#120a26;color:#fff;font-weight:800;font-size:13.5px}
+.czf-it.alt .czf-b{right:auto;left:12px}
+.czf-it[aria-pressed="true"]{background:linear-gradient(135deg,#6a4bb0,#9b7fe0 60%,#c2adf0);box-shadow:0 10px 26px rgba(83,57,137,.45)}
+.czf-it[aria-pressed="true"] .czf-in{background:rgba(255,255,255,.96);color:#1b1035}.czf-it[aria-pressed="true"] .czf-in small{color:#5b4d7a}
+.czf-it:active{transform:scale(.985)}
 .mbooks{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .mbook{display:flex;flex-direction:column;gap:8px}
 .mb-open{border:0;padding:0;background:none;cursor:pointer}
@@ -2251,17 +2234,16 @@ const dvList=(cid,t)=>Object.entries(S.devoirs||{}).filter(([,d])=>d&&d.classeId
 function tabDev(){
   const cid=S.cid,T=DVT[S.dvT]?S.dvT:'hebdo',es=elevesOf(cid);const sem=dvSem();
   const L=T==='hebdo'?dvOf(cid,sem):dvList(cid,T);
-  const pills=`<div class="cz-pills" role="group" aria-label="Type de composition">${Object.entries(DVT).map(([k,x])=>`<button class="cz-pill" data-act="dv-t" data-v="${k}" aria-pressed="${k===T}">${k==='hebdo'?'Devoir hebdo':x.t}</button>`).join('')}</div>`;
-  const sub={hebdo:'Semaine '+semLbl(sem),interro:'Points selon la pondération du bulletin (période)',examen:'Points selon la pondération du bulletin (examen)'}[T];
-  const td=lundi(today());
-  const hero=`<div class="cz-hero"><div class="cz-hero-t"><b>${DVT[T].t}</b><span>${h(sub)}</span>
-     ${T==='hebdo'?`<div class="cz-nav"><button data-act="dv-sem" data-v="${addJ(sem,-7)}" aria-label="Semaine précédente">${ic('left',16)}</button><span class="cz-dots">${[-3,-2,-1,0,1,2,3].map(k=>`<i class="${k===0?'on':''}"></i>`).join('')}</span><button data-act="dv-sem" data-v="${addJ(sem,7)}" ${sem>td?'disabled':''} aria-label="Semaine suivante">${ic('chev',16)}</button></div>`:''}</div>
-    <span class="cz-badge num">${L.length} ${T==='hebdo'?'devoir':T==='interro'?'interro':'examen'}${L.length>1?'s':''}</span><span class="cz-art">${ic(DVT[T].ic,44)}</span></div>`;
-  const it=(d,k)=>`<button class="cz-it${k%2?' alt':''}" data-act="dv-prev" data-id="${h(d.id)}"><span class="cz-in"><b>${h(d.titre||DVT[T].ti)}</b><small>${h(T==='hebdo'?(dvBrs(d).join(' · ')||'—'):dvWhen(d)+' · '+(dvBrs(d).join(' · ')||'—'))}</small><small>${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${h(d.nom||'')}</small></span><span class="cz-pts num">${fmt(dvTot(d))} pts</span></button>`;
-  return `<section class="compz"><div class="cz-top"><b>Cahier de composition</b><span>${h(S.classes[cid]?.nom||'')}</span></div>${pills}${hero}
-   ${L.length?`<div class="cz-list">${L.map(it).join('')}</div>`:`<div class="cz-empty">${T==='hebdo'?'Aucun devoir hebdomadaire cette semaine.':T==='interro'?'Aucune interrogation pour le moment.':'Aucun examen pour le moment.'}<br><small>Touchez le bouton noir pour ouvrir une feuille A4 et écrire vos questions.</small></div>`}
-   ${isDir()&&T==='hebdo'&&L.length?`<button class="cz-sec" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}
-   <button class="cz-add" data-act="dv-new" aria-label="Composer"><span>+</span><small>${T==='hebdo'?'Composer le devoir hebdomadaire':T==='interro'?'Composer une interrogation':'Composer un examen'}</small></button></section>`;
+  const CNT={hebdo:dvOf(cid,sem).length,interro:dvList(cid,'interro').length,examen:dvList(cid,'examen').length};
+  const SUBT={hebdo:'Résumé de la semaine',interro:'Pondération de la période',examen:'Pondération de l’examen'};
+  const UN={hebdo:['devoir','devoirs'],interro:['interro','interros'],examen:['examen','examens']};
+  const seg=`<div class="czf" role="group" aria-label="Type de composition">${Object.keys(DVT).map((k,n)=>`<button class="czf-it${n%2?' alt':''}" data-act="dv-t" data-v="${k}" aria-pressed="${k===T}"><span class="czf-in"><b>${DVT[k].t}</b><small>${SUBT[k]}</small></span><span class="czf-b num">${CNT[k]} ${UN[k][CNT[k]>1?1:0]}</span></button>`).join('')}</div>`;
+  const li=d=>`<div class="li dv-li"><button class="elmain" data-act="dv-edit" data-id="${h(d.id)}"><span class="ib acc">${ic(DVT[T].ic,20)}</span><span class="grow"><span class="ttl" style="display:block">${h(d.titre||DVT[T].ti)}</span><span class="muted small" style="display:block">${h(T==='hebdo'?dvBrs(d).join(' · ')||'—':dvWhen(d)+' · '+(dvBrs(d).join(' · ')||'—'))}</span><span class="muted small num">${(d.q||[]).length} question${(d.q||[]).length>1?'s':''} · ${fmt(dvTot(d))} points · ${h(d.nom||'')}</span></span></button><button class="btn sm" data-act="dv-prev" data-id="${h(d.id)}">Aperçu</button></div>`;
+  const txt={hebdo:'Un devoir par semaine qui résume les leçons de plusieurs branches.',interro:'Les points de chaque branche suivent la pondération du bulletin pour une période.',examen:'Les points de chaque branche suivent la pondération de l’examen dans le bulletin.'}[T];
+  return `<div class="card pad stack"><h2 class="h2">Cahier de composition</h2>${seg}${T==='hebdo'?dvSemNav(sem,'dv-sem'):''}
+   <div class="btns"><button class="btn grad sm" data-act="dv-new">${ic('plus',16)} Composer ${T==='hebdo'?'le devoir hebdomadaire':T==='interro'?'une interrogation':'un examen'}</button>${isDir()&&T==='hebdo'&&L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls">${ic('doc',16)} PDF de la classe · ${es.length} copie${es.length>1?'s':''}</button>`:''}</div>
+   <p class="muted small" style="margin:0">${txt} Vous écrivez directement sur la feuille A4, comme sur papier. ${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe.':'La direction imprime une copie par élève, avec son nom et sa photo.'}</p></div>
+   ${L.length?`<div class="card list">${L.map(li).join('')}</div>`:`<div class="card empty"><h3>${T==='hebdo'?'Aucun devoir hebdomadaire cette semaine':T==='interro'?'Aucune interrogation pour le moment':'Aucun examen pour le moment'}</h3><p class="muted small">Touchez « Composer » pour ouvrir une feuille A4 et écrire vos questions.</p></div>`}`;
 }
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};

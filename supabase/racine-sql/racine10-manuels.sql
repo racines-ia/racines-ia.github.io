@@ -1,0 +1,1 @@
+-- Manuels : lecture enseignants (col manuels), écriture de leurs propres livres, bucket privé 'manuels' (PDF, 50 Mo) et règles de stockage. Appliqué le 15/11/2026 (migration racine10_manuels).

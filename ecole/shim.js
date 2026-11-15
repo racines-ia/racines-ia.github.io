@@ -446,7 +446,19 @@
     async forget(tid) { const { error } = await sb.rpc('ecole_trash_forget', { p_tid: tid }); if (error) throw { message: error.message }; }
   };
 
-  const API = { db, user, sample, downloads, corbeille };
+  /* ---------- Manuels (fichiers PDF dans le stockage Supabase) ---------- */
+  const manuels = {
+    async upload(id, file) {
+      const path = ME.member.school_id + '/' + id + '.pdf';
+      const { error } = await sb.storage.from('manuels').upload(path, file, { contentType: 'application/pdf', upsert: true });
+      if (error) throw { message: error.message };
+      return path;
+    },
+    async url(path) { const { data, error } = await sb.storage.from('manuels').createSignedUrl(path, 3600); if (error) throw { message: error.message }; return data.signedUrl; },
+    async remove(path) { const { error } = await sb.storage.from('manuels').remove([path]); if (error) throw { message: error.message }; }
+  };
+
+  const API = { db, user, sample, downloads, corbeille, manuels };
   window.claude = { use: name => API[name] ? ready.then(() => API[name]) : Promise.reject({ code: 'not_available' }) };
 
   /* ---------- Écran de connexion ---------- */

@@ -1450,6 +1450,44 @@ body.fs-on{overflow:hidden}
 .fp-add{align-self:center;border:1.5px dashed var(--l);background:#f8f5ff;color:var(--v);font:inherit;font-weight:700;font-size:13px;border-radius:99px;padding:7px 16px;cursor:pointer;margin-top:6px}
 .fp-del{margin-left:auto;border:0;background:#fde8ec;color:#b3264a;font:inherit;font-size:10px;font-weight:700;border-radius:99px;padding:3px 9px;cursor:pointer;text-transform:none;letter-spacing:0}
 .fsgo{min-height:84px}
+
+/* ===== animations de navigation ===== */
+@keyframes pgFw{from{opacity:0;transform:translate3d(36px,0,0) scale(.985)}to{opacity:1;transform:none}}
+@keyframes pgBk{from{opacity:0;transform:translate3d(-36px,0,0) scale(.985)}to{opacity:1;transform:none}}
+@keyframes pgTab{from{opacity:0;transform:translate3d(0,18px,0) scale(.97)}to{opacity:1;transform:none}}
+@keyframes pgFade{from{opacity:0}to{opacity:1}}
+@keyframes pgRise{from{opacity:0;transform:translate3d(0,16px,0)}to{opacity:1;transform:none}}
+#view.pg-fw>*:not(.dved){animation:pgFw .46s cubic-bezier(.2,.85,.25,1) both}
+#view.pg-bk>*:not(.dved){animation:pgBk .46s cubic-bezier(.2,.85,.25,1) both}
+#view.pg-tab>*:not(.dved){animation:pgTab .5s cubic-bezier(.2,.85,.25,1) both}
+#view:is(.pg-fw,.pg-bk,.pg-tab)>.dved{animation:pgFade .3s ease both}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .band h1{animation:pgRise .55s .05s cubic-bezier(.2,.85,.25,1) both}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*{animation:pgRise .5s cubic-bezier(.2,.85,.25,1) both}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*:nth-child(1){animation-delay:.06s}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*:nth-child(2){animation-delay:.11s}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*:nth-child(3){animation-delay:.16s}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*:nth-child(4){animation-delay:.21s}
+#view:is(.pg-fw,.pg-bk,.pg-tab) .page-in>*:nth-child(n+5){animation-delay:.26s}
+.navb{transition:color .25s ease,transform .25s cubic-bezier(.2,.85,.25,1)}
+.navb:active{transform:scale(.9)}
+.btn,.li,.gcta,.ccard,.fcard,.czf-it,.chipb{transition:transform .18s ease,box-shadow .25s ease,background-color .25s ease}
+.btn:active,.gcta:active,.ccard:active,.fcard:active,.czf-it:active{transform:scale(.97)}
+@media (prefers-reduced-motion: reduce){#view *{animation:none!important}}
+/* choix des leçons */
+.lc-dom{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+.lc-dom>small{font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);padding:0 2px}
+.lc-list{display:flex;flex-direction:column;gap:6px}
+.lc{display:flex;align-items:center;gap:10px;border:0;background:var(--surface);color:var(--ink);border-radius:14px;padding:10px 12px;text-align:left;cursor:pointer;font:inherit;box-shadow:var(--shadow-s)}
+.lc.br .lc-n{font-weight:700}
+.lc.sub{margin-left:22px;background:var(--sunk);box-shadow:none}
+.lc-ck{width:22px;height:22px;border-radius:7px;flex:none;display:grid;place-items:center;font-weight:800;font-size:13px;box-shadow:inset 0 0 0 1.6px var(--line)}
+.lc[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--accent)}
+.lc[aria-pressed="true"] .lc-ck{background:var(--grad);color:#fff;box-shadow:none}
+.lc-n{flex:1;min-width:0}
+.lc-p{font-weight:800;color:var(--accent);white-space:nowrap;font-size:14px}
+.lc-p small{font-weight:600;font-size:11px;color:var(--muted)}
+.fcdel{position:absolute;right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--bad-soft);color:var(--bad);cursor:pointer;font-size:10px;font-weight:800}
+.fcdel.armed{width:auto;padding:0 12px;border-radius:99px;background:var(--bad);color:#fff}
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -1717,11 +1755,17 @@ function keepSelected(prev,key){
 let LOGO_DONE=false;function calmLogos(){document.querySelectorAll('#view .band-anim svg.logo-anim').forEach(sv=>{if(sv.dataset.calm)return;sv.dataset.calm=1;const stop=()=>{try{sv.setCurrentTime(2.2);sv.pauseAnimations()}catch(e){}};if(LOGO_DONE)stop();else setTimeout(()=>{LOGO_DONE=true;stop()},6500)})}
 document.addEventListener('visibilitychange',()=>{document.querySelectorAll('svg.logo-anim').forEach(sv=>{try{document.hidden||sv.dataset.calm?sv.pauseAnimations():sv.unpauseAnimations()}catch(e){}})});
 let renderQ=0;function renderSoon(){if(renderQ)return;renderQ=requestAnimationFrame(()=>{renderQ=0;render()})}
+
+/* animations de passage d'une page à l'autre */
+let pgKey=null,pgDir='fw';
+document.addEventListener('click',ev=>{const t=ev.target.closest?.('button,[data-act]');if(!t)return;pgDir=t.matches('[aria-label="Retour"],.rootbtn,[data-act=dv-back],[data-act=fs-close]')?'bk':t.closest('#nav')?'tab':'fw'},true);
+function pgAnim(){const k=S.view+'|'+(S.view==='classe'?S.ctab+'|'+S.cid:'')+'|'+(S.fEns||'')+'|'+(S.view==='fiche'?S.fk?.t:'');if(pgKey===null){pgKey=k;return}if(k===pgKey)return;pgKey=k;
+ if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;const v=$('#view');v.classList.remove('pg-fw','pg-bk','pg-tab');void v.offsetWidth;v.classList.add('pg-'+pgDir);clearTimeout(pgAnim.t);pgAnim.t=setTimeout(()=>v.classList.remove('pg-fw','pg-bk','pg-tab'),900);pgDir='fw'}
 function render(){if(S.detFS&&!(S.view==='classe'&&((S.ctab==='palm'&&S.pVue==='det')||(S.ctab==='cotes'&&!S.cVie)))){S.detFS=false;document.documentElement.classList.remove('dfs-lock')}if(renderQ){cancelAnimationFrame(renderQ);renderQ=0}
   const key=S.view+'|'+S.ctab+'|'+S.cid;const prevSc={key:lastKey,pos:[...document.querySelectorAll('#view :is('+SCR+')')].map(el=>[el.scrollLeft,el.scrollTop])};
   const keep={};['regwrap','egridw'].forEach(id=>{const el=document.getElementById(id);if(el)keep[id]=el.scrollLeft});
   const ae=document.activeElement,aid=ae&&ae.id&&$('#view').contains(ae)?ae.id:null,selS=ae&&ae.selectionStart;
-  $('#view').innerHTML=screen();
+  $('#view').innerHTML=screen();pgAnim();
   $('#nav').innerHTML=navHtml();
   for(const id in keep){const el=document.getElementById(id);if(el)el.scrollLeft=keep[id]}
   keepSelected(prevSc,key);lastKey=key;
@@ -2023,7 +2067,7 @@ function vGestion(){
   return band({back:'accueil',kicker:sec?h(POSTE_LBL[mp]||'Direction'):'Direction',title:'Gestion de l’école',sub:sec?'Secondaire · salles, personnel et accès':'Classes, branches, enseignants et informations du bulletin'})+page(`
   ${sec?`<div class="card pad small" style="display:flex;gap:12px;align-items:flex-start"><span class="ib g">${ic('shield',20)}</span><span>${promo?'<b>Vous êtes le promoteur</b> : vous voyez tout ce qui se passe à l’école. Créez le profil du <b>préfet</b> et donnez-lui son code ; c’est lui qui crée les accès de tout le personnel.':'<b>Vous êtes le préfet</b> : vous créez les accès de tout le personnel (secrétaire, directeurs, titulaires, professeurs) et vous leur donnez leur code personnel.'}</span></div>`:''}
   <button class="gcta" data-act="go" data-v="manuels"><span><b>Manuels</b><small>Programmes nationaux, livres par classe, guides et fiches en PDF, lus dans l’application.</small></span><i>${ic('chev',22)}</i></button>
-  <button class="gcta" data-act="go" data-v="devall"><span><b>Devoirs hebdomadaires</b><small>Voir les devoirs de chaque classe et imprimer les copies de toute l’école, avec le nom et la photo de chaque élève.</small></span><i>${ic('chev',22)}</i></button>
+  <button class="gcta" data-act="go" data-v="devall"><span><b>Composition</b><small>Devoirs hebdomadaires, interrogations et examens de chaque classe, avec les copies de toute l’école à imprimer.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
   <section class="sec"><div class="sec-h"><h2 class="h2">Informations du bulletin</h2><span class="btns"><button class="btn sm" data-act="cal">Calendrier des périodes</button><button class="btn sm" data-act="ecole">Modifier</button></span></div>
@@ -2467,7 +2511,7 @@ function fDaysArchive(ens){const by={};for(const f of fichesList(ens))(by[f.date
 function fCards(ens,d){const s=fSeen();return `<div class="fgrid">${FTK.map(t=>{const f=ficheOf(ens,d,t);const ft=FT[t];const nouv=f&&(isDir()?!f.dir&&!s.has(fKey(f)):f.dir&&!s.has(fKey(f)));
    const st=!f?['','À remplir']:f.dir?['good','Signé par '+(f.dir.fn||'la direction').toLowerCase()]:['warn',isDir()?'À signer':'Envoyé · en attente'];
    if(!f&&isDir())return `<button class="fcard prep" data-act="fprep" data-e="${h(ens)}" data-d="${d}" data-t="${t}"><span class="ib">${ic(ft.i,22)}</span><b>${ft.t}</b><small class="muted">Pas rempli par l’enseignant</small><span class="pill acc">${ic('pen',14)} Préparer à sa place</span></button>`;
-   return `<button class="fcard${f?.dir?' ok':''}" data-act="fopen" data-e="${h(f?.ens||ens)}" data-d="${d}" data-t="${t}"><span class="ib g">${ic(ft.i,22)}</span><b>${ft.t}</b><small class="muted">${ft.land?'A4 paysage':'A4 vertical'}</small><span class="pill ${st[0]}">${h(st[1])}</span>${nouv?`<em class="fnew">${isDir()?'Nouveau':'Corrigé'}</em>`:''}${f?.par?`<small class="muted">Préparé par ${h(f.par.nom)}</small>`:''}${f?.dir?.avis?`<small class="favis">« ${h(f.dir.avis.slice(0,70))}${f.dir.avis.length>70?'…':''} »</small>`:''}</button>`}).join('')}</div>`}
+   return `<button class="fcard${f?.dir?' ok':''}" data-act="fopen" data-e="${h(f?.ens||ens)}" data-d="${d}" data-t="${t}"><span class="ib g">${ic(ft.i,22)}</span><b>${ft.t}</b><small class="muted">${ft.land?'A4 paysage':'A4 vertical'}</small><span class="pill ${st[0]}">${h(st[1])}</span>${nouv?`<em class="fnew">${isDir()?'Nouveau':'Corrigé'}</em>`:''}${f?.par?`<small class="muted">Préparé par ${h(f.par.nom)}</small>`:''}${f&&(isDir()||!f.dir)?`<span class="fcdel" role="button" tabindex="0" data-act="fdelc" data-id="${h(f.id)}" data-armtxt="Supprimer ?" aria-label="Supprimer ce document">✕</span>`:''}${f?.dir?.avis?`<small class="favis">« ${h(f.dir.avis.slice(0,70))}${f.dir.avis.length>70?'…':''} »</small>`:''}</button>`}).join('')}</div>`}
 function vDocs(){
   const dir=isDir();const d=fDay();
   if(!dir){const p=myPerson();return band({back:'prof',home:true,kicker:'Espace enseignant',title:'Mes documents',sub:'Cahier journal, devoirs, exercices et résumés · chaque jour'})+page(`<div class="stack">
@@ -2518,7 +2562,7 @@ function vFiche(){
   return band({back,home:true,kicker:`${h(saved.nom||'')} · ${jourLbl(k.d)}`,title:ft.t,sub:saved.dir?`Signé par ${h(saved.dir.nom||'')} le ${h(dfr(saved.dir.at.slice(0,10)))}`:saved.par?`Préparé par ${h(saved.par.nom||'la direction')} · à signer`:'Enregistré par l’enseignant · à lire et signer'})+page(`<div class="stack">
    ${!dir&&saved.dir?`<div class="card pad stack favbox"><b>${ic('check',18)} Corrigé par ${h(saved.dir.fn||'la direction')} · ${h(saved.dir.nom||'')}</b>${saved.dir.avis?`<p style="margin:0">${h(saved.dir.avis).replace(/\n/g,'<br>')}</p>`:''}</div>`:''}
    <div class="fpw">${fichePaper(saved)}</div>
-   <div class="btns"><button class="btn" data-act="fpdf">${ic('doc',18)} PDF</button>${dir&&!saved.dir?`<button class="btn" data-act="fprep" data-e="${h(k.e)}" data-d="${k.d}" data-t="${k.t}">${ic('pen',18)} Modifier le document</button>`:''}</div>
+   <div class="btns"><button class="btn" data-act="fpdf">${ic('doc',18)} PDF</button>${dir||!saved.dir?`<button class="btn danger" data-act="fdel" data-armtxt="Touchez encore pour supprimer">${ic('trash',16)} Supprimer</button>`:''}${dir&&!saved.dir?`<button class="btn" data-act="fprep" data-e="${h(k.e)}" data-d="${k.d}" data-t="${k.t}">${ic('pen',18)} Modifier le document</button>`:''}</div>
    ${dir?`<section class="card pad stack"><div class="sec-h"><h2 class="h2">Avis de la direction</h2>${saved.dir?'<span class="pill good">Signé</span>':''}</div>
      <textarea class="inp" id="f-avis" rows="4" placeholder="Votre avis et vos remarques à l’enseignant">${h(saved.dir?.avis||S.fAvis||'')}</textarea>
      <div class="aibar"><span class="aitag">${ic('spark',14)} IA</span><button type="button" class="chipb sm" data-act="fai" data-v="rem">Proposer des remarques</button><button type="button" class="chipb sm" data-act="fai" data-v="cor">Corriger mon texte</button></div>
@@ -2674,7 +2718,7 @@ function dvPaper(d,e,ed){const E=ECO();const cls=S.classes[d.classeId];const tot
   <div class="dvp-meta"><span><small>Titre</small><b>${ce('titre',d.titre||(ed?'':T.ti),T.ti)}</b></span><span><small>Classe</small><b>${h(cls?.nom||'')}</b></span><span><small>${B.length>1?'Branches':'Branche'}</small><b>${h(B.join(' · ')||'—')}</b></span></div>
   ${d.consignes||ed?`<div class="dvp-cons"><svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="#111" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20l1-5L16 4l4 4L9 19z"/><path d="M14 6l4 4"/></svg><p><b>Consignes.</b> ${ed?ce('consignes',d.consignes,'Écrivez les consignes…'):h(d.consignes).replace(/\n/g,'<br>')}</p></div>`:''}
   <div class="dvp-q">${G.map(g=>{const P=sum(g.it.map(x=>+x.q.pts||0));const PD=dvPond(d,g.br);return `<div class="dvp-br${ed&&PD!=null&&PD!==P?' off':''}"><b>${ed?`<span class="dve" contenteditable="plaintext-only" spellcheck="false" data-e="br" data-br="${h(g.br)}" data-ph="Branche">${h(g.br)}</span>`:h(g.br)}</b><i></i><span>${PD!=null&&ed?`${fmt(P)} / ${fmt(PD)} pts`:`${fmt(P)} pt${P>1?'s':''}`}</span></div>${ed&&PD!=null&&PD!==P?`<div class="dv-pd">Pondération du bulletin : <b>${fmt(PD)} points</b> (${fmt(P)} pour l’instant). <button class="dv-ui sm on" data-act="dv-ajust" data-br="${h(g.br)}">Ajuster les points</button></div>`:''}${g.it.map(x=>qh(x.q,x.i)).join('')}${ed?`<div class="dv-add"><button class="dv-ui" data-act="dv-addq" data-v="qcm" data-br="${h(g.br)}">+ Question à choix</button><button class="dv-ui" data-act="dv-addq" data-v="txt" data-br="${h(g.br)}">+ Question à écrire</button></div>`:''}`}).join('')}
-   ${ed?`<div class="dv-add big">${G.length?'':`<button class="dv-ui on" data-act="dv-modele">Commencer avec le modèle de l’école</button>`}<button class="dv-ui" data-act="dv-addbr">+ Ajouter une branche</button></div>`:''}</div>
+   ${ed?`<div class="dv-add big">${G.length?'':`<button class="dv-ui on" data-act="dv-modele">Choisir mes leçons · modèle de l’école</button>`}<button class="dv-ui" data-act="dv-addbr">+ Ajouter une leçon</button></div>`:''}</div>
   <div class="dvp-ft${dvTy(d)==='hebdo'?'':' two'}"><div><small>Cote obtenue</small><b>………… / ${fmt(tot)}</b></div><div><small>Signature de l’enseignant</small></div>${dvTy(d)==='hebdo'?'<div><small>Signature du parent</small></div>':''}</div></div>`}
 function dvPrev(id,dd){const d=dd||S.devoirs[id];if(!d)return;const e=elevesOf(d.classeId)[0];
  openSheet('Aperçu · '+DVT[dvTy(d)].t,`<div class="stack"><p class="muted small" style="margin:0">Exemple de copie${e?' pour '+h(nomComplet(e)):''}. Chaque élève aura la sienne. <span class="pill num" id="dv-a4">Format A4</span></p><div class="cert-prev dv-prev"><div class="cert-zoom dv-zoom">${dvPaper({id,...d},e)}</div></div>
@@ -2696,7 +2740,7 @@ function dvBar(){const d=S.dv;const q=d?.q[S.dvSel];
   ${k==='qcm'?`<p class="muted small" style="margin:0">Touchez la petite case d’une réponse pour marquer la bonne (elle n’est pas imprimée).</p>`:''}`}
 function vDevoir(){const d=S.dv;if(!d){S.view='classe';return screen()}const cls=S.classes[d.classeId];const T=DVT[dvTy(d)];
  requestAnimationFrame(()=>{dvZoom();const sc=$('#dvsc');if(sc&&S.dvScr){sc.scrollTop=S.dvScr[0];sc.scrollLeft=S.dvScr[1]}});
- return `<div class="dved" id="dved"><header class="dved-top"><button class="iconbtn" data-act="dv-back" data-armtxt="Quitter sans enregistrer ?" aria-label="Retour">${ic('back',20)}</button>
+ return `<div class="dved" id="dved"><header class="dved-top"><button class="iconbtn" data-act="dv-back" aria-label="Retour">${ic('back',20)}</button>
   <div class="grow dved-t"><small>Cahier de composition</small><b>${T.t} · ${h(cls?.nom||'')}</b></div>
   ${dvTy(d)!=='hebdo'?`<button class="iconbtn" data-act="dv-set" aria-label="Date et période">${ic('cal',18)}</button>`:''}<button class="btn sm" data-act="dv-prevd">Aperçu</button><button class="btn grad sm" data-act="dv-save">Enregistrer</button></header>
   <div class="dved-sc" id="dvsc"><div class="dved-pg" id="dvpg">${dvPaper(d,null,true)}</div></div>
@@ -2729,9 +2773,29 @@ function dvSetSheet(){const d=S.dv;if(!d)return;const t=dvTy(d);const ks=pkeys()
  openSheet(DVT[t].t+' · date et période',`<form id="f-dvset" class="stack"><div class="field"><label for="dvs-d">Date</label><input class="inp" type="date" id="dvs-d" name="date" value="${h(d.date||today())}"></div>
   <div class="field"><label for="dvs-p">Période</label><select class="inp" id="dvs-p" name="per">${ks.map(([k])=>`<option value="${k}" ${k===d.per?'selected':''}>${h(keyName(k))}</option>`).join('')}</select></div>
   <button class="btn grad">Valider</button></form>`)}
-function dvBrSheet(){const d=S.dv;if(!d)return;const used=dvBrs(d);const L=dvBranches(d.classeId).filter(b=>!used.includes(b));
- openSheet('Ajouter une branche',`<div class="stack"><div class="chips">${L.map(b=>{const PD=dvPond(d,b);return `<button class="chipb" data-act="dv-brpick" data-v="${h(b)}">${h(b)}${PD!=null?` <small class="num">/${fmt(PD)}</small>`:''}</button>`}).join('')||'<span class="muted small">Toutes les branches de la classe sont déjà sur la feuille.</span>'}</div>
-  <form id="f-dvbr" class="stack"><div class="field"><label for="dvb-n">Ou écrivez le nom</label><input class="inp" id="dvb-n" name="nom" placeholder="Ex. Calcul mental"></div><button class="btn grad">Ajouter</button></form></div>`)}
+/* brouillon de composition gardé quand on quitte sans enregistrer */
+const DVK='clr-dv-brouillons';
+const dvKAll=()=>{try{return JSON.parse(localStorage.getItem(DVK)||'{}')}catch(e){return {}}};
+const dvKKey=(id,cid,t)=>id?'id:'+id:'new:'+cid+':'+t;
+function dvKeep(d){const A=dvKAll();A[dvKKey(d.id,d.classeId,dvTy(d))]=d;try{localStorage.setItem(DVK,JSON.stringify(A))}catch(e){}}
+function dvKept(id,cid,t){const A=dvKAll();const d=A[dvKKey(id,cid,t)];return d?JSON.parse(JSON.stringify(d)):null}
+function dvForget(id,cid,t){const A=dvKAll();delete A[dvKKey(id,cid,t)];if(cid)delete A[dvKKey('',cid,t)];try{localStorage.setItem(DVK,JSON.stringify(A))}catch(e){}}
+/* leçons du bulletin : domaines, branches, sous-branches, avec la pondération */
+function dvBrTree(cid){const out=[];let dom=null,inBr=false;for(const r of grilleOf(S.classes[cid]||{})){if(r.t==='dom'){dom={nom:r.nom||'',it:[]};out.push(dom);inBr=false}else if(r.t==='st'){inBr=false}else if(r.t==='br'&&r.nom){if(!dom){dom={nom:'',it:[]};out.push(dom)}dom.it.push({nom:r.nom,lvl:0,br:1});inBr=true}else if((r.t==='c'||r.t==='cb')&&r.nom){if(!dom){dom={nom:'',it:[]};out.push(dom)}dom.it.push({nom:r.nom,lvl:inBr&&r.t==='c'?1:0})}}return out.filter(d=>d.it.length)}
+const dvPondLbl=d=>({interro:'pts · période',examen:'pts · examen'})[dvTy(d)]||'';
+function dvLecons(d,mode,used){const T=dvBrTree(d.classeId);const lb=dvPondLbl(d);
+ return T.map(g=>`<div class="lc-dom">${g.nom?`<small>${h(g.nom)}</small>`:''}<div class="lc-list">${g.it.map(x=>{const PD=dvPond(d,x.nom);const on=used.includes(x.nom);return `<button type="button" class="lc${x.lvl?' sub':''}${x.br?' br':''}" data-act="${mode}" data-v="${h(x.nom)}" aria-pressed="${on}"><span class="lc-ck">${on?'✓':''}</span><span class="lc-n">${h(x.nom)}</span>${PD!=null?`<span class="lc-p num">${fmt(PD)} <small>${lb}</small></span>`:''}</button>`}).join('')}</div></div>`).join('')}
+function dvPickSheet(){const d=S.dv;if(!d)return;S.dvPick=S.dvPick||[];
+ openSheet('Choisissez vos leçons',`<div class="stack"><p class="muted small" style="margin:0">Touchez les branches ou sous-branches de votre composition (par exemple Géographie, Histoire…).${dvTy(d)!=='hebdo'?' La pondération du bulletin s’affiche à côté : les points de chaque leçon devront la respecter.':''}</p>
+  <div id="lcbox">${dvLecons(d,'dv-pk',S.dvPick)}</div>
+  <div class="field"><label for="dvpk-n">Autre leçon, pas dans le bulletin</label><input class="inp" id="dvpk-n" placeholder="Ex. Calcul mental" enterkeyhint="done"></div>
+  <button class="btn grad" data-act="dv-pk-ok">Créer la feuille avec ces leçons</button></div>`)}
+function dvModeleWith(B){const petit=/^[12]\s*(re|e|ère|ème)?\b/i.test(S.classes[S.dv.classeId]?.nom||'');
+  if(petit&&B.length){const P=[{t:'qcm',q:'Coche la bonne réponse.',ch:['','',''],chi:['soleil','main','mangue'],bon:0,pts:1},{t:'txt',q:'Écris ta réponse.',lig:2,rep:'lig',pts:2}];S.dv.q=B.flatMap(b=>P.map(x=>({...JSON.parse(JSON.stringify(x)),br:b})))}
+  else S.dv.q=B.flatMap(b=>[dvQ('qcm',b),dvQ('txt',b)]);if(!S.dv.consignes)S.dv.consignes=DV_CONS;S.dvSel=-1;S.dvDirty=true;dvRe()}
+function dvBrSheet(){const d=S.dv;if(!d)return;const used=dvBrs(d);
+ openSheet('Ajouter une leçon',`<div class="stack"><p class="muted small" style="margin:0">Choisissez la branche ou la sous-branche.${dvTy(d)!=='hebdo'?' Sa pondération du bulletin est à côté.':''}</p><div>${dvLecons(d,'dv-brpick',used)}</div>
+  <form id="f-dvbr" class="stack"><div class="field"><label for="dvb-n">Autre leçon, pas dans le bulletin</label><input class="inp" id="dvb-n" name="nom" placeholder="Ex. Calcul mental"></div><button class="btn grad">Ajouter</button></form></div>`)}
 function dvAddBr(name){const n=(name||'').trim();if(!n||!S.dv)return;S.dv.q.push(dvQ('qcm',n));S.dvSel=S.dv.q.length-1;S.dvDirty=true;closeSheet();dvFocusQ(S.dvSel)}
 /* PDF : la feuille du devoir est rendue une seule fois, puis chaque élève reçoit sa copie (photo, nom, classe) */
 async function dvPhoto(e){const cv=document.createElement('canvas');cv.width=cv.height=160;const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,160,160);g.save();g.beginPath();g.arc(80,80,78,0,Math.PI*2);g.clip();
@@ -2762,11 +2826,20 @@ async function dvPDF(groups,filename,text){
      else{pdf.setFontSize(8);pdf.setTextColor(90,96,120);pdf.text(pdfTxt(nomComplet(e)+' - '+(g.cls?.nom||'')+' (suite, page '+(i+1)+')'),A4W-12,7,{align:'right'})}})}}
   try{await dl.save({filename,data:pdf.output('blob'),text});toast('PDF prêt. Enregistrez-le ou envoyez-le sur WhatsApp pour l’impression.')}catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être partagé.')}
  }catch(err){toast('Impossible de créer le PDF.')}finally{host.remove()}}
-function vDevAll(){if(!isDir()){S.view='prof';return screen()}const sem=dvSem();const ids=classIds();const rows=ids.map(c=>({c,L:dvOf(c,sem),n:elevesOf(c).length}));const done=rows.filter(r=>r.L.length).length;const cop=sum(rows.map(r=>r.L.length*r.n));
- return band({back:'gestion',home:true,kicker:'Direction',title:'Devoirs hebdomadaires',sub:'Toute l’école'})+page(`<div class="stack">
-  <div class="card pad stack">${dvSemNav(sem,'dva-sem')}<div class="pc-day3 num"><div><b>${done} / ${ids.length}</b><span>classes ont composé</span></div><div><b>${sum(rows.map(r=>r.L.length))}</b><span>devoirs</span></div><div><b>${cop}</b><span>copies à imprimer</span></div></div>
+function vDevAll(){if(!isDir()){S.view='prof';return screen()}const T=DVT[S.dvaT]?S.dvaT:'hebdo';const sem=dvSem();const ids=classIds();
+ const CNT={hebdo:sum(ids.map(c=>dvOf(c,sem).length)),interro:sum(ids.map(c=>dvList(c,'interro').length)),examen:sum(ids.map(c=>dvList(c,'examen').length))};
+ const SUBT={hebdo:'Toute l’école · par semaine',interro:'Toute l’école · par période',examen:'Toute l’école · par session'};const UN={hebdo:['devoir','devoirs'],interro:['interro','interros'],examen:['examen','examens']};
+ const seg=`<div class="czf" role="group" aria-label="Type de composition">${Object.keys(DVT).map((k,n)=>`<button class="czf-it${n%2?' alt':''}" data-act="dva-t" data-v="${k}" aria-pressed="${k===T}"><span class="czf-in"><b>${DVT[k].t}</b><small>${SUBT[k]}</small></span><span class="czf-b num">${CNT[k]} ${UN[k][CNT[k]>1?1:0]}</span></button>`).join('')}</div>`;
+ let body='';
+ if(T==='hebdo'){const rows=ids.map(c=>({c,L:dvOf(c,sem),n:elevesOf(c).length}));const done=rows.filter(r=>r.L.length).length;const cop=sum(rows.map(r=>r.L.length*r.n));
+  body=`<div class="card pad stack">${dvSemNav(sem,'dva-sem')}<div class="pc-day3 num"><div><b>${done} / ${ids.length}</b><span>classes ont composé</span></div><div><b>${sum(rows.map(r=>r.L.length))}</b><span>devoirs</span></div><div><b>${cop}</b><span>copies à imprimer</span></div></div>
    ${cop?`<button class="btn grad" data-act="dv-pdf" data-v="all">${ic('doc',16)} PDF de toute l’école · ${cop} copies</button>`:''}</div>
-  <div class="card list">${rows.map(r=>`<div class="li dv-li"><button class="elmain" data-act="dva-open" data-id="${h(r.c)}"><span class="grow"><span class="ttl" style="display:block">${h(S.classes[r.c].nom)}</span><span class="muted small">${r.L.length?r.L.map(d=>h(d.branche||'Devoir')).join(', ')+` · ${r.n} élèves`:'Pas encore de devoir cette semaine'}</span></span></button>${r.L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls" data-id="${h(r.c)}">PDF</button>`:'<span class="pill warn">À faire</span>'}</div>`).join('')}</div></div>`)}
+  <div class="card list">${rows.map(r=>`<div class="li dv-li"><button class="elmain" data-act="dva-open" data-id="${h(r.c)}"><span class="grow"><span class="ttl" style="display:block">${h(S.classes[r.c].nom)}</span><span class="muted small">${r.L.length?r.L.map(d=>h(d.branche||'Devoir')).join(', ')+` · ${r.n} élèves`:'Pas encore de devoir cette semaine'}</span></span></button>${r.L.length?`<button class="btn sm" data-act="dv-pdf" data-v="cls" data-id="${h(r.c)}">PDF</button>`:'<span class="pill warn">À faire</span>'}</div>`).join('')}</div>`}
+ else{const rows=ids.map(c=>({c,L:dvList(c,T)}));const done=rows.filter(r=>r.L.length).length;
+  body=`<div class="card pad"><div class="pc-day3 num"><div><b>${done} / ${ids.length}</b><span>classes ont composé</span></div><div><b>${CNT[T]}</b><span>${UN[T][1]}</span></div><div><b>${sum(rows.map(r=>r.L.length*elevesOf(r.c).length))}</b><span>copies</span></div></div></div>
+  ${rows.map(r=>`<section class="card pad stack dva-c"><div class="sec-h"><button class="elmain" data-act="dva-open" data-id="${h(r.c)}" style="text-align:left"><b class="h2" style="font-size:20px">${h(S.classes[r.c].nom)}</b></button>${r.L.length?`<span class="pill acc num">${r.L.length} ${UN[T][r.L.length>1?1:0]}</span>`:'<span class="pill warn">Aucun</span>'}</div>
+   ${r.L.length?`<div class="list">${r.L.map(d=>`<div class="li dv-li" style="padding:8px 4px"><span class="grow"><span class="ttl" style="display:block">${h(d.titre||DVT[T].ti)}</span><span class="muted small">${h(dvWhen(d))} · ${h(d.branche||'')}</span></span><button class="btn sm" data-act="dva-prev" data-id="${h(d.id)}">Aperçu</button><button class="btn sm" data-act="dv-pdf" data-v="one" data-id="${h(d.id)}">PDF</button></div>`).join('')}</div>`:`<p class="muted small" style="margin:0">Pas encore ${T==='interro'?'d’interrogation':'d’examen'} pour cette classe.</p>`}</section>`).join('')}`}
+ return band({back:'gestion',home:true,kicker:'Direction',title:'Composition',sub:'Devoirs hebdomadaires, interrogations et examens · toute l’école'})+page(`<div class="stack">${seg}${body}</div>`)}
 function formEleve(id){
   const e=id?S.eleves[id]:{classeId:S.view==='classe'?S.cid:(S.fCls||mesClasses()[0]),nationalite:'Congolaise',sexe:'M'};
   const f=(n,l,o={})=>`<div class="field"><label for="e-${n}">${l}</label><input class="inp" id="e-${n}" name="${n}" value="${h(e[n]||'')}" ${o.req?'required':''} ${o.type?`type="${o.type}"`:''} ${o.im?`inputmode="${o.im}"`:''}></div>`;
@@ -4148,7 +4221,8 @@ const A={
   'fs-close':()=>fsClose(),
   'fs-save':()=>{fsClose();ficheSave()},
   'fs-zoom':b=>{const v=b.dataset.v;if(v==='fit'){fsScale=null;fsFit();$('#fsed .fs-scroll').scrollTo(0,0);return}fsZoomTo((fsFit()||1)*(+v>0?1.3:1/1.3))},
-  fdel:async b=>{if(!arm(b))return;const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)await del('fiches',f.id);S.fDraft=null;S.view='docs';render();toast('Document supprimé.')},
+  fdel:async b=>{if(!arm(b))return;const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)await del('fiches',f.id);S.fDraft=null;S.fPrep=false;S.view='docs';render();toast('Document supprimé.')},
+  fdelc:async b=>{if(!arm(b))return;const f=S.fiches?.[b.dataset.id];if(f)await del('fiches',b.dataset.id);render();toast('Document supprimé.')},
   'fadd-it':b=>{if(fsOn()){fsSync();S.fDraft.f.c.items.push({br:'',suj:'',txt:'',rem:''});const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.items.push({br:'',suj:'',txt:'',rem:''});render()},
   'fdel-it':b=>{if(fsOn()){fsSync();S.fDraft.f.c.items.splice(+b.dataset.i,1);const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.items.splice(+b.dataset.i,1);render()},
   'fadd-q':b=>{if(fsOn()){fsSync();S.fDraft.f.c.q.push({q:'',r:''});const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.q.push({q:'',r:''});render()},
@@ -4173,6 +4247,8 @@ const A={
   dia:b=>discIA(b.dataset.ctx),
   'dv-sem':b=>{S.dvSem=b.dataset.v;render()},
   'dva-sem':b=>{S.dvSem=b.dataset.v;render()},
+  'dva-t':b=>{S.dvaT=b.dataset.v;render()},
+  'dva-prev':b=>dvPrev(b.dataset.id),
   'dva-open':b=>{S.cid=b.dataset.id;S.view='classe';S.ctab='dev';render();scrollTo(0,0)},
   'dv-t':b=>{S.dvT=b.dataset.v;render()},
   'man-add':()=>manSheet(),
@@ -4181,11 +4257,11 @@ const A={
   'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo)await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
   'pv-close':()=>pvClose(),
   'pv-zoom':b=>{PV.z=Math.min(3,Math.max(1,PV.z+(+b.dataset.v)*.5));pvLayout()},
-  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
-  'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.type=dvTy(d);S.dv.q=S.dv.q||[];S.dv.q.forEach(q=>{if(!q.br)q.br=d.branche||''});S.dvT=S.dv.type;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
+  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';const kd=dvKept('',S.cid,T);if(kd){S.dv=kd;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Votre brouillon a été repris.');return}S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
+  'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();const kd=dvKept(b.dataset.id);if(kd){S.dv=kd;S.dvT=dvTy(kd);S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Vos modifications non enregistrées ont été reprises.');return}S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.type=dvTy(d);S.dv.q=S.dv.q||[];S.dv.q.forEach(q=>{if(!q.br)q.br=d.branche||''});S.dvT=S.dv.type;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
   'dv-prev':b=>dvPrev(b.dataset.id),
   'dv-prevd':()=>{if(S.dv)dvPrev('',S.dv)},
-  'dv-back':b=>{if(S.dvDirty&&!arm(b))return;S.dv=null;S.view='classe';S.ctab='dev';render()},
+  'dv-back':()=>{if(S.dvDirty&&S.dv){dvKeep(S.dv)}S.dv=null;S.dvDirty=false;S.view='classe';S.ctab='dev';render()},
   'dv-set':()=>dvSetSheet(),
   'dv-zoom':b=>{const i=DVZ.findIndex(z=>z>=(S.dvZ||1)-.01);S.dvZ=DVZ[Math.min(DVZ.length-1,Math.max(0,(i<0?0:i)+ +b.dataset.v))];dvZoom()},
   'dv-sel':b=>dvSelect(+b.dataset.i),
@@ -4193,7 +4269,9 @@ const A={
     const w=L.map(q=>Math.max(+q.pts||0,.0001)),W=sum(w);let pts=w.map(x=>Math.max(1,Math.floor(PD*x/W)));let r=PD-sum(pts);let k=0;while(r>0){pts[k%pts.length]++;r--;k++}while(r<0){const j=pts.findIndex(x=>x>1);if(j<0)break;pts[j]--;r++}
     L.forEach((q,i)=>q.pts=pts[i]);S.dvDirty=true;dvRe();toast(`${br} : ${fmt(PD)} points répartis entre ${L.length} question${L.length>1?'s':''}.`)},
   'dv-addbr':()=>dvBrSheet(),
-  'dv-brpick':b=>dvAddBr(b.dataset.v),
+  'dv-brpick':b=>{if(b.getAttribute('aria-pressed')==='true'){toast('Cette leçon est déjà sur la feuille.');return}dvAddBr(b.dataset.v)},
+  'dv-pk':b=>{const v=b.dataset.v;const L=S.dvPick||(S.dvPick=[]);const i=L.indexOf(v);if(i>=0)L.splice(i,1);else L.push(v);b.setAttribute('aria-pressed',i<0);b.querySelector('.lc-ck').textContent=i<0?'✓':''},
+  'dv-pk-ok':()=>{const L=[...(S.dvPick||[])];const o=($('#dvpk-n')?.value||'').trim();if(o&&!L.includes(o))L.push(o);if(!L.length){toast('Choisissez au moins une leçon.');return}S.dvPick=[];closeSheet();dvModeleWith(L)},
   'dv-addq':b=>{const br=b.dataset.br||'';const L=S.dv.q;let at=-1;L.forEach((q,i)=>{if((q.br||'').trim()===br)at=i});const nq=dvQ(b.dataset.v,br);if(at<0)L.push(nq);else L.splice(at+1,0,nq);S.dvSel=at<0?L.length-1:at+1;S.dvDirty=true;dvRe();dvFocusQ(S.dvSel)},
   'dv-delq':b=>{if(!arm(b))return;S.dv.q.splice(+b.dataset.i,1);S.dvSel=-1;S.dvDirty=true;dvRe()},
   'dv-up':b=>{const i=+b.dataset.i,L=S.dv.q,br=(L[i]?.br||'').trim(),dir=+b.dataset.v;let j=i+dir;while(j>=0&&j<L.length&&(L[j].br||'').trim()!==br)j+=dir;if(j<0||j>=L.length)return;[L[i],L[j]]=[L[j],L[i]];S.dvSel=j;S.dvDirty=true;dvRe()},
@@ -4214,15 +4292,16 @@ const A={
     const bad=q.findIndex(x=>x.t==='qcm'&&dvChs(x).length<2);if(bad>=0){toast('Chaque question à choix doit avoir au moins 2 réponses (texte ou dessin).');const i=d.q.indexOf(q[bad]);if(i>=0){dvSelect(i);dvFocusQ(i)}return}
     const id=d.id||'dv-'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);const old=S.devoirs[id]||{};
     const doc={type:T,classeId:d.classeId,semaine:T==='hebdo'?d.semaine:lundi(d.date||today()),...(T==='hebdo'?{}:{date:d.date||today(),per:d.per||''}),branche:dvBrs({q}).join(', '),titre:(d.titre||'').trim()||DVT[T].ti,consignes:(d.consignes||'').trim(),q:q.map(x=>{const im=x.img&&ILLU.items[x.img.id]?{img:{id:x.img.id,n:x.img.n||1,pos:x.img.pos||'droite'}}:{};const br=(x.br||'').trim()||'Autres questions';if(x.t==='qcm'){const C=dvChs(x);return {t:'qcm',br,q:x.q.trim(),ch:C.map(c=>c.c.trim()),chi:C.map(c=>c.im),bon:C.findIndex(c=>c.j===x.bon),pts:+x.pts||0,...im}}return {t:'txt',br,q:x.q.trim(),lig:+x.lig||3,rep:x.rep==='cadre'?'cadre':'lig',pts:+x.pts||0,...im}}),by:old.by||meId(),nom:old.nom||S.inscr[meId()]?.nom||'',at:old.at||new Date().toISOString(),maj:new Date().toISOString()};
-    await put('devoirs',id,doc);S.dv=null;S.dvDirty=false;S.view='classe';S.ctab='dev';S.dvT=T;if(T==='hebdo')S.dvSem=doc.semaine;render();scrollTo(0,0);toast(DVT[T].t+' enregistré'+(T==='interro'?'e':'')+'.');setTimeout(()=>dvPrev(id),250)},
-  'dv-modele':()=>{const A=dvBranches(S.dv.classeId);const B=[];for(const re of [/^fran/i,/^math/i,/scien|zoolog/i,/civique|histoire|géograph/i])(x=>x&&!B.includes(x)&&B.push(x))(A.find(n=>re.test(n)));for(const n of A)if(B.length<4&&!B.includes(n))B.push(n);const petit=/^[12]\s*(re|e|ère|ème)?\b/i.test(S.classes[S.dv.classeId]?.nom||'');
+    await put('devoirs',id,doc);dvForget(d.id||'',d.classeId,T);S.dv=null;S.dvDirty=false;S.view='classe';S.ctab='dev';S.dvT=T;if(T==='hebdo')S.dvSem=doc.semaine;render();scrollTo(0,0);toast(DVT[T].t+' enregistré'+(T==='interro'?'e':'')+'.');setTimeout(()=>dvPrev(id),250)},
+  'dv-modele':()=>{S.dvPick=[];dvPickSheet()},
+  'dv-modele-auto':()=>{const A=dvBranches(S.dv.classeId);const B=[];for(const re of [/^fran/i,/^math/i,/scien|zoolog/i,/civique|histoire|géograph/i])(x=>x&&!B.includes(x)&&B.push(x))(A.find(n=>re.test(n)));for(const n of A)if(B.length<4&&!B.includes(n))B.push(n);const petit=/^[12]\s*(re|e|ère|ème)?\b/i.test(S.classes[S.dv.classeId]?.nom||'');
   if(petit){const f=B.find(b=>/^fran/i.test(b))||B[0]||'Français',m=B.find(b=>/^math/i.test(b))||B[1]||'Mathématiques',sc=B.find(b=>/scien|zoolog/i.test(b))||B[2]||'Sciences',ci=B.find(b=>/civique/i.test(b))||B[3]||'Éducation civique & morale';
    S.dv.q=[{t:'qcm',br:f,q:'Coche le dessin du mot « chat ».',ch:['','','',''],chi:['chien','chat','poule','poisson'],bon:1,pts:1},{t:'txt',br:f,q:'Écris le nom de ce fruit.',lig:2,rep:'lig',pts:2,img:{id:'mangue',n:1,pos:'droite'}},
     {t:'qcm',br:m,q:'Combien de bananes vois-tu ?',ch:['3','4','5','6'],bon:2,pts:1,img:{id:'banane',n:5,pos:'dessous'}},{t:'txt',br:m,q:'Dessine 3 ronds.',lig:4,rep:'cadre',pts:2},
     {t:'qcm',br:sc,q:'Coche l’animal qui vit dans l’eau.',ch:['','',''],chi:['poisson','poule','chat'],bon:0,pts:1},{t:'txt',br:sc,q:'Colorie le soleil.',lig:2,rep:'lig',pts:1,img:{id:'soleil',n:1,pos:'droite'}},
     {t:'qcm',br:ci,q:'Avant de manger, je me lave les mains avec :',ch:['du savon','du sable'],bon:0,pts:1,img:{id:'main',n:1,pos:'droite'}}]}
   else S.dv.q=B.length?B.flatMap(b=>[dvQ('qcm',b),dvQ('txt',b)]):[dvQ('qcm'),dvQ('qcm'),dvQ('txt'),dvQ('txt')];if(!S.dv.consignes)S.dv.consignes=DV_CONS;S.dvSel=-1;S.dvDirty=true;dvRe()},
-  'dv-del':async b=>{if(!arm(b))return;const id=b.dataset.id||S.dv?.id;if(id)await del('devoirs',id);closeSheet();S.dv=null;S.view='classe';S.ctab='dev';render();toast('Composition supprimée.')},
+  'dv-del':async b=>{if(!arm(b))return;const id=b.dataset.id||S.dv?.id;if(id)dvForget(id);if(id)await del('devoirs',id);closeSheet();S.dv=null;S.view='classe';S.ctab='dev';render();toast('Composition supprimée.')},
   'dv-pdf':b=>{if(!isDir())return;const sem=dvSem();const v=b.dataset.v;let groups=[],name='';
     if(v==='one'){const d=S.devoirs[b.dataset.id];if(!d)return;groups=[{cls:S.classes[d.classeId],eleves:elevesOf(d.classeId),devs:[{id:b.dataset.id,...d}]}];name=`${DVT[dvTy(d)].t} - ${S.classes[d.classeId]?.nom||''}`}
     else if(v==='cls'){const c=b.dataset.id||S.cid;groups=[{cls:S.classes[c],eleves:elevesOf(c),devs:dvOf(c,sem)}];name=`Devoirs - ${S.classes[c]?.nom||''} - semaine du ${dfr(sem).replace(/\//g,'-')}`}

@@ -1,0 +1,20 @@
+name: apk
+on: { push: { branches: [apk-build] } }
+permissions: { contents: write }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.5' }
+      - run: gradle :app:assembleRelease --no-daemon
+      - name: sortie
+        run: |
+          BT=$(ls -d $ANDROID_HOME/build-tools/* | sort -V | tail -1)
+          mkdir out && $BT/zipalign -f -p 4 app/build/outputs/apk/release/app-release-unsigned.apk out/unsigned.apk
+          cp $BT/lib/apksigner.jar out/
+          git config user.name ci && git config user.email ci@users.noreply.github.com
+          git checkout --orphan apk-out && git rm -rq --cached . && git add -f out && git commit -qm out && git push -f origin apk-out

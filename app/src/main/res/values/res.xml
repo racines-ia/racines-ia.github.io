@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <string name="app_name">racines.ia</string>
+  <string name="asset_statements">[{ \"relation\": [\"delegate_permission/common.handle_all_urls\"], \"target\": { \"namespace\": \"web\", \"site\": \"https://racines-ia.github.io\" } }]</string>
+  <color name="bg">#2C1660</color>
+  <color name="sb">#1D0F3D</color>
+</resources>

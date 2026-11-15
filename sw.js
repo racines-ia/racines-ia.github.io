@@ -1,5 +1,5 @@
 /* racines.ia — démarrage hors ligne (les données restent sur Supabase) */
-const CACHE = 'racine-v4';
+const CACHE = 'racine-v5';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/racine-192.png', '/racine-512.png', '/ecole/', '/ecole/index.html', '/ecole/shim.js', '/ecole/config.js', '/ecole/icon-192-v3.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(CACHE).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', e => { e.waitUntil(caches.keys().then(ks => Promise.all(ks.filter(k => k !== CACHE).map(k => caches.delete(k)))).then(() => self.clients.claim())); });
@@ -32,6 +32,6 @@ self.addEventListener('push', e => {
     const vis = cs.filter(c => c.visibilityState === 'visible' && new URL(c.url).pathname.startsWith('/ecole'));
     vis.forEach(c => c.postMessage({ type: 'push', title, body }));
     if (vis.length && !d.always) return;
-    return self.registration.showNotification(title, { body, icon: '/ecole/icon-192-v3.png', badge: '/ecole/icon-192-v3.png', tag: d.tag || 'racines', renotify: true, vibrate: [120, 60, 120], data: { url: d.url || '/ecole/' } });
+    return self.registration.showNotification(title, { body, icon: '/ecole/icon-192-v3.png', badge: '/ecole/badge-96.png', tag: d.tag || 'racines', renotify: true, vibrate: [120, 60, 120], data: { url: d.url || '/ecole/' } });
   }));
 });

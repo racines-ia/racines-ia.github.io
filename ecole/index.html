@@ -2631,7 +2631,11 @@ function myPerson(){return ensList().find(x=>x.id===meId())||ensList().find(x=>m
 function mySig(){const p=myPerson();let loc=null;try{loc=JSON.parse(localStorage.getItem(MYSIG)||'null')}catch(e){}
   const img=p?.signature||(isDir()&&dirSig()?.id===p?.id?dirSig()?.img:'')||(loc&&loc.u===meId()?loc.img:'');
   const fn=isDir()?(posteOf(p)||p?.matiere||chefLbl()):(p?.matiere||'Enseignant');
-  return{img:img||'',nom:p?.nom||(isDir()?'La direction':'L’enseignant'),fn}}
+  const pid=p&&img&&(img===p.signature||img===dirSig()?.img)?(img===p.signature?p.id:dirSig()?.id):null;
+  return{img:img||'',nom:p?.nom||(isDir()?'La direction':'L’enseignant'),fn,pid}}
+/* les documents gardent une référence vers la signature du profil (pas l'image) : beaucoup moins de données */
+function sigRes(x){if(!x)return '';if(x.img)return x.img;if(!x.pid)return '';const q=ensList().find(e=>e.id===x.pid);return q?.signature||(dirSig()?.id===x.pid?dirSig()?.img:'')||''}
+const sigPack=(sg,extra)=>sg.pid?{pid:sg.pid,nom:sg.nom,...extra}:{img:sg.img,nom:sg.nom,...extra};
 function padInit(s){const cv=s.querySelector('#sigc');const dpr=Math.min(2,devicePixelRatio||1);const W=cv.clientWidth,H=cv.clientHeight;cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext('2d');c.scale(dpr,dpr);c.lineWidth=2.6;c.lineCap='round';c.lineJoin='round';c.strokeStyle='#1a0a10';
   let draw=false,last=null;cv.dataset.ink='0';const pos=ev=>{const r=cv.getBoundingClientRect();return[ev.clientX-r.left,ev.clientY-r.top]};
   cv.addEventListener('pointerdown',ev=>{ev.preventDefault();cv.setPointerCapture(ev.pointerId);draw=true;last=pos(ev);c.beginPath();c.arc(last[0],last[1],1.2,0,6.283);c.fillStyle='#1a0a10';c.fill();cv.dataset.ink='1'});
@@ -2651,10 +2655,10 @@ function fichePaper(f,ed){
   const X=(path,v,ph='',one)=>ed?`<span class="fpv fpe${one?' one':''}" contenteditable="true" spellcheck="true" data-fk="${path}" data-ph="${h(ph)}">${h(v||'')}</span>`:fpI(v);
   const top=`<div class="fp-top"><div class="fp-brand"><b>${h(E.nom||'')}</b><small>${h(E.devise||'Discipline · Unité · Travail')}</small></div><div class="fp-ttl"><h1>${h(ft.t.toUpperCase())}</h1><span>${h(ft.s)}</span></div></div>`;
   const info=`<div class="fp-info" style="grid-template-columns:1fr 1fr"><div>Classe : <b>${h(cl)}</b></div><div>Date : <b>${h(dateTxt)}</b></div></div>`;
-  const ens=f.sig?.img?`<img src="${h(f.sig.img)}" alt="">`:'';const dir=f.dir;
+  const ens=sigRes(f.sig)?`<img src="${h(sigRes(f.sig))}" alt="">`:'';const dir=f.dir;
   const foot=`<div class="fp-foot"><div class="fp-box"><b>${f.par?'Préparé par · '+h(f.par.fn||'la direction'):'Signature de l’enseignant'}</b><div class="fp-sg">${ens}</div><small>${h(f.sig?.nom||f.nom||'')}${f.par?' · pour '+h(f.nom||''):''}</small></div>
    <div class="fp-box dir"><b>Avis de la direction</b><p>${dir?h(dir.avis||'').replace(/\n/g,'<br>'):''}</p></div>
-   <div class="fp-box dir"><b>Visa ${dir?'· '+h(dir.fn||'Direction'):'de la direction'}</b><div class="fp-sg">${dir?.img?`<img src="${h(dir.img)}" alt="">`:''}</div><small>${dir?h(dir.nom||'')+' · '+h(dfr(dir.at.slice(0,10))):'Date : …… / …… / 20……'}</small></div></div>`;
+   <div class="fp-box dir"><b>Visa ${dir?'· '+h(dir.fn||'Direction'):'de la direction'}</b><div class="fp-sg">${sigRes(dir)?`<img src="${h(sigRes(dir))}" alt="">`:''}</div><small>${dir?h(dir.nom||'')+' · '+h(dfr(dir.at.slice(0,10))):'Date : …… / …… / 20……'}</small></div></div>`;
   const legal=`<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>${h(ft.t)} · ${h(f.nom||'')}</span></div>`;
   if(t==='journal'){const R=c.rows||{};
     const rows=CJH.map((hh,i)=>hh?`<tr><td class="fp-h">${hh[0]}<br>${hh[1]}</td>${CJC.map(([k,l])=>`<td>${X(`rows.${i}.${k}`,R[i]?.[k],l)}</td>`).join('')}</tr>`:`<tr class="fp-rec"><td class="fp-h">9h45 – 10h15</td><td colspan="${CJC.length}">RÉCRÉATION</td></tr>`).join('');
@@ -2803,12 +2807,12 @@ async function ficheAI(mode){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);const box
 async function ficheSave(){fCollect();const f=S.fDraft?.f;if(!f)return;if(ficheEmpty(f.type,f)){toast('Le document est vide : remplissez-le avant d’enregistrer.');return}
   const sg=mySig();if(!sg.img){mySigSheet(()=>ficheSave());return}
   const dir=isDir();const ens=dir?S.fk.e:meId();const p=dir?ensList().find(x=>x.id===ens):myPerson();const old=ficheOf(ens,f.date,f.type);const id=old?.id||fid(ens,f.date,f.type);const now=new Date().toISOString();
-  const doc={type:f.type,date:f.date,ens:old?.ens||ens,nom:p?.nom||'',classeId:f.classeId||(dir?clsOfEns(ens)[0]:mesClasses()[0])||'',c:f.c,sig:{img:sg.img,nom:sg.nom,at:now},at:old?.at||now,upd:now};
+  const doc={type:f.type,date:f.date,ens:old?.ens||ens,nom:p?.nom||'',classeId:f.classeId||(dir?clsOfEns(ens)[0]:mesClasses()[0])||'',c:f.c,sig:sigPack(sg,{at:now}),at:old?.at||now,upd:now};
   if(dir)doc.par={id:meId(),nom:sg.nom,fn:sg.fn};
   await put('fiches',id,doc);S.fDraft=null;S.fPrep=false;S.view='fiche';render();scrollTo(0,0);toast(dir?'Document préparé. Vous pouvez maintenant donner votre avis et le signer.':'Enregistré et signé. La direction a reçu le document.')}
 async function ficheSign(){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(!f)return;const avis=($('#f-avis')?.value||'').trim();if(!avis){toast('Écrivez votre avis, ou utilisez une proposition de l’IA.');$('#f-avis')?.focus();return}
   const sg=mySig();if(!sg.img){S.fAvis=avis;mySigSheet(()=>{render();setTimeout(ficheSign,50)});return}
-  const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),nom:sg.nom,fn:sg.fn,img:sg.img,avis,at:new Date().toISOString()}});S.fAvis='';fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}
+  const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),fn:sg.fn,avis,...sigPack(sg,{at:new Date().toISOString()})}});S.fAvis='';fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}
 
 /* ---------- Devoirs hebdomadaires ---------- */
 const dvSem=()=>S.dvSem||lundi(today());

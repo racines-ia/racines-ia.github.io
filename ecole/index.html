@@ -1437,15 +1437,16 @@ body.fs-on{overflow:hidden}
 .fs-scroll{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;padding:8px 8px calc(40vh + env(safe-area-inset-bottom,0px))}
 .fs-wrap{margin:0 auto;position:relative;background:#fff;border-radius:6px;box-shadow:0 10px 30px rgba(0,0,0,.4);overflow:hidden}
 .fs-wrap>.fp{transform-origin:top left;position:absolute;left:0;top:0}
-.fp-ed .fpe{display:block;min-height:1.4em;white-space:pre-wrap;outline:none;border-radius:4px;background:#fffbe8;box-shadow:inset 0 0 0 1px #eadfa6;padding:1px 4px;cursor:text;-webkit-user-select:text;user-select:text}
+.fp-ed .fpe{display:block;min-height:1.4em;white-space:pre-wrap;outline:none;border-radius:4px;background:transparent;border:1px dashed #cbbfe6;padding:1px 4px;cursor:text;-webkit-user-select:text;user-select:text}
 .fp-ed td .fpe{min-height:58px}
 .fp-ed .fpe.one{display:inline-block;min-width:150px;min-height:0;vertical-align:baseline}
 .fp-ed .fp-no .fpe.one{min-width:30px;background:rgba(255,255,255,.9);color:#1d0f3d}
 .fp-ed .fp-cote .fpe.one{min-width:28px}
 .fp-ed .fp-txt .fpe{min-height:64px}
-.fp-ed .fpe:focus{background:#fff;box-shadow:inset 0 0 0 2px var(--l)}
-.fp-ed .fpe:empty::before{content:attr(data-ph);color:#b6abd3;pointer-events:none}
-.fpd{font:inherit;font-size:12px;border:1px solid #eadfa6;background:#fffbe8;border-radius:4px;padding:1px 4px;color:#1a1330}
+.fp-ed .fpe:focus{background:#fff;border:1.5px solid var(--l)}
+.fp-ed .fpe:not(:empty){border-color:transparent}
+.fp-ed .fpe:empty::before{content:'Saisir ici · ' attr(data-ph);color:#b6abd3;font-style:italic;pointer-events:none}
+.fpd{font:inherit;font-size:12px;border:1px dashed #cbbfe6;background:transparent;border-radius:4px;padding:1px 4px;color:#1a1330}
 .fp-add{align-self:center;border:1.5px dashed var(--l);background:#f8f5ff;color:var(--v);font:inherit;font-weight:700;font-size:13px;border-radius:99px;padding:7px 16px;cursor:pointer;margin-top:6px}
 .fp-del{margin-left:auto;border:0;background:#fde8ec;color:#b3264a;font:inherit;font-size:10px;font-weight:700;border-radius:99px;padding:3px 9px;cursor:pointer;text-transform:none;letter-spacing:0}
 .fsgo{min-height:84px}
@@ -1543,6 +1544,7 @@ const avatar=(p,cls='')=>p.photo?`<img class="av ph ${cls}" src="${h(p.photo)}" 
 function elevesOf(cid){return Object.entries(S.eleves).filter(([,e])=>!cid||e.classeId===cid).map(([id,e])=>({id,...e})).sort((a,b)=>coll.compare(nomComplet(a),nomComplet(b)))}
 function teachersOf(cid){return ensList().filter(p=>clsOfEns(p.id).includes(cid))}
 const ICONS={
+  eye:'<path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
  trash:'<path d="M4 7h16M9 7V4.5h6V7M6.5 7l1 13h9l1-13M10 11v6M14 11v6"/>',
  card:'<rect x="5" y="2.5" width="14" height="19" rx="2.5"/><circle cx="12" cy="9" r="2.6"/><path d="M8.5 15.5c.7-1.6 2-2.4 3.5-2.4s2.8.8 3.5 2.4M9 18.5h6"/>',
  pen:'<path d="M4 20l4.2-1 10.6-10.6a2.1 2.1 0 0 0-3-3L5.2 16 4 20z"/><path d="M14 7l3 3"/>',
@@ -2414,11 +2416,11 @@ function fichePaper(f,ed){
 /* ---------- remplir sur la feuille, en plein écran ---------- */
 let fsZoom=0;// ancien zoom par crans (plus utilisé)
 const fsOn=()=>{const o=$('#fsed');return !!o&&!o.hidden};
-function fsOpen(){if(!fsOn()){fCollect();fsScale=null}const f=S.fDraft?.f;if(!f)return;const ft=FT[f.type];const dir=isDir();
+function fsOpen(ro){if(!fsOn()){fCollect();fsScale=null}const f=S.fDraft?.f;if(!f)return;const ft=FT[f.type];const dir=isDir();
   const d={...f,nom:dir?(ensList().find(x=>x.id===S.fk.e)?.nom||''):(myPerson()?.nom||''),sig:{img:mySig().img,nom:mySig().nom}};
   let o=$('#fsed');if(!o){o=document.createElement('div');o.id='fsed';document.body.appendChild(o)}
-  o.innerHTML=`<div class="fs-bar"><button type="button" class="x" data-act="fs-close" aria-label="Fermer">✕</button><span class="grow"><b>${h(ft.t)}</b></span><button type="button" class="x" data-act="fs-zoom" data-v="-1" aria-label="Réduire">−</button><button type="button" class="fs-pct" data-act="fs-zoom" data-v="fit" aria-label="Voir la feuille entière">100 %</button><button type="button" class="x" data-act="fs-zoom" data-v="1" aria-label="Agrandir">+</button><button type="button" class="btn grad sm" data-act="fs-save">${ic('check',16)} Enregistrer</button></div><div class="fs-tip">Touchez une case jaune : la feuille s’agrandit et vous écrivez. Pincez avec deux doigts pour zoomer.</div>
-   <div class="fs-scroll"><div class="fs-wrap">${fichePaper(d,true)}</div></div>`;
+  o.innerHTML=`<div class="fs-bar"><button type="button" class="x" data-act="fs-close" aria-label="Fermer">✕</button><span class="grow"><b>${h(ft.t)}</b></span><button type="button" class="x" data-act="fs-zoom" data-v="-1" aria-label="Réduire">−</button><button type="button" class="fs-pct" data-act="fs-zoom" data-v="fit" aria-label="Voir la feuille entière">100 %</button><button type="button" class="x" data-act="fs-zoom" data-v="1" aria-label="Agrandir">+</button>${ro?`<button type="button" class="btn grad sm" data-act="fprev">${ic('pen',16)} Remplir</button>`:`<button type="button" class="btn grad sm" data-act="fs-save">${ic('check',16)} Enregistrer</button>`}</div><div class="fs-tip">${ro?'Le document tel qu’il sera enregistré. Pincez avec deux doigts pour zoomer.':'Touchez une zone « Saisir ici » : la feuille s’agrandit et vous écrivez. Pincez avec deux doigts pour zoomer.'}</div>
+   <div class="fs-scroll"><div class="fs-wrap">${fichePaper(d,!ro)}</div></div>`;
   o.hidden=false;document.body.classList.add('fs-on');
   try{const r=document.documentElement;(r.requestFullscreen||r.webkitRequestFullscreen)?.call(r).then?.(()=>{if(ft.land)screen.orientation?.lock?.('landscape').catch(()=>{})}).catch(()=>{})}catch(e){}
   requestAnimationFrame(fsFit)}
@@ -2508,7 +2510,7 @@ function vFiche(){
       <button class="gcta fsgo" data-act="fprev"><span><b>Remplir sur la feuille</b><small>Plein écran · touchez une case de la feuille A4 et écrivez directement</small></span><i>${ic('pen',20)}</i></button>
       <p class="muted small" style="margin:-6px 0 0;text-align:center">ou remplissez le formulaire ci-dessous</p>
       ${fEditor(f)}
-      <div class="btns fbar"><button class="btn grad" data-act="fsave">${ic('check',18)} ${dir?'Enregistrer':'Enregistrer et signer'}</button><button class="btn" data-act="fprev">${ic('pen',16)} Sur la feuille</button>${saved?`<button class="btn danger" data-act="fdel" data-armtxt="Supprimer ?">Supprimer</button>`:''}</div>
+      <div class="btns fbar"><button class="btn grad" data-act="fsave">${ic('check',18)} ${dir?'Enregistrer':'Enregistrer et signer'}</button><button class="btn" data-act="fvoir">${ic('eye',16)} Visualiser le document</button>${saved?`<button class="btn danger" data-act="fdel" data-armtxt="Supprimer ?">Supprimer</button>`:''}</div>
       <p class="muted small" style="margin:0">${dir?'À l’enregistrement, votre signature se place comme « Préparé par ».':'À l’enregistrement, votre signature se place automatiquement et la direction reçoit le document.'}</p></div>`)}
   if(!saved){S.view='docs';return screen()}
   setTimeout(()=>{fMarkSeen(saved);fitPapers()},30);
@@ -4141,7 +4143,8 @@ const A={
   fens:b=>{S.fEns=b.dataset.id;S.view='docs';render();scrollTo(0,0)},
   fday:b=>{if(b.dataset.v>today())return;S.fDate=b.dataset.v;render()},
   fsave:()=>ficheSave(),
-  fprev:()=>fsOpen(),
+  fprev:()=>{if(fsOn()&&$('#fsed [data-act=fs-save]')){return}if(fsOn())fsClose(true);fsOpen()},
+  fvoir:()=>{if(fsOn()){fsSync();fsClose(true)}fsOpen(true)},
   'fs-close':()=>fsClose(),
   'fs-save':()=>{fsClose();ficheSave()},
   'fs-zoom':b=>{const v=b.dataset.v;if(v==='fit'){fsScale=null;fsFit();$('#fsed .fs-scroll').scrollTo(0,0);return}fsZoomTo((fsFit()||1)*(+v>0?1.3:1/1.3))},

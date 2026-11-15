@@ -1488,6 +1488,17 @@ body.fs-on{overflow:hidden}
 .lc-p small{font-weight:600;font-size:11px;color:var(--muted)}
 .fcdel{position:absolute;right:10px;bottom:10px;width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--bad-soft);color:var(--bad);cursor:pointer;font-size:10px;font-weight:800}
 .fcdel.armed{width:auto;padding:0 12px;border-radius:99px;background:var(--bad);color:#fff}
+
+/* pages A4 de la composition */
+.dvp{position:relative}
+.dv-pb{position:relative;flex:none}
+.dv-pbl{position:absolute;left:-40px;right:-40px;height:26px;transform:translateY(-13px);background:#140b2a;display:flex;align-items:center;justify-content:center;z-index:2}
+.dv-pbl span{background:#f2b55c;color:#2a1a00;font-size:12px;font-weight:800;border-radius:99px;padding:3px 12px;white-space:nowrap}
+.dv-pgn{position:absolute;right:14px;font-size:11px;font-weight:700;color:#8a80a8;pointer-events:none}
+.dv-pgs{margin-left:6px;font-size:12px;font-weight:800;background:var(--warn-soft);color:var(--warn);border-radius:99px;padding:5px 10px;white-space:nowrap}
+.dv-pbm{margin:14px -40px;height:30px;background:#140b2a;display:flex;align-items:center;justify-content:space-between;padding:0 14px;gap:8px}
+.dv-pbm span{background:#f2b55c;color:#2a1a00;font-size:12px;font-weight:800;border-radius:99px;padding:3px 12px;white-space:nowrap}
+.dv-pbm b{color:#fff;font-size:12px;font-weight:800;letter-spacing:.04em}
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -2723,7 +2734,7 @@ function dvPaper(d,e,ed){const E=ECO();const cls=S.classes[d.classeId];const tot
 function dvPrev(id,dd){const d=dd||S.devoirs[id];if(!d)return;const e=elevesOf(d.classeId)[0];
  openSheet('Aperçu · '+DVT[dvTy(d)].t,`<div class="stack"><p class="muted small" style="margin:0">Exemple de copie${e?' pour '+h(nomComplet(e)):''}. Chaque élève aura la sienne. <span class="pill num" id="dv-a4">Format A4</span></p><div class="cert-prev dv-prev"><div class="cert-zoom dv-zoom">${dvPaper({id,...d},e)}</div></div>
   ${dd?'':`<div class="btns"><button class="btn sm" data-act="dv-edit" data-id="${h(id)}">Modifier</button>${isDir()?`<button class="btn grad sm" data-act="dv-pdf" data-v="one" data-id="${h(id)}">${ic('doc',16)} PDF pour toute la classe</button>`:''}<button class="btn sm danger" data-act="dv-del" data-id="${h(id)}" data-armtxt="Confirmer la suppression ?">Supprimer</button></div>`}</div>`);
- requestAnimationFrame(()=>{const z=document.querySelector('.dv-zoom'),pv=document.querySelector('.dv-prev');if(z&&pv){const k=pv.clientWidth/794;z.style.transform=`scale(${k})`;pv.style.height=Math.round(z.firstElementChild.offsetHeight*k)+'px';const H=z.firstElementChild.offsetHeight,n=H<=1123*1.3?1:Math.ceil(H/1080);const t=document.getElementById('dv-a4');if(t)t.textContent=`Format A4 · ${n} page${n>1?'s':''} par élève`}})}
+ requestAnimationFrame(()=>{const z=document.querySelector('.dv-zoom'),pv=document.querySelector('.dv-prev');if(z&&pv){const n=dvPaginate(z.firstElementChild,true);const k=pv.clientWidth/794;z.style.transform=`scale(${k})`;pv.style.height=Math.round(z.firstElementChild.offsetHeight*k)+'px';const t=document.getElementById('dv-a4');if(t)t.textContent=`Format A4 · ${n} page${n>1?'s':''} par élève`}})}
 /* ---------- Éditeur : on compose directement sur la feuille A4 ---------- */
 const dvNum=i=>{let n=0;for(const g of dvGroupsI(S.dv))for(const x of g.it){n++;if(x.i===i)return n}return i+1};
 const stp=(act,i,v,lbl,unit='')=>`<span class="dvb-st"><small>${lbl}</small><button class="x" data-act="${act}" data-i="${i}" data-v="-1" aria-label="Moins">−</button><b class="num">${v}${unit}</b><button class="x" data-act="${act}" data-i="${i}" data-v="1" aria-label="Plus">+</button></span>`;
@@ -2739,14 +2750,38 @@ function dvBar(){const d=S.dv;const q=d?.q[S.dvSel];
    <button class="btn sm danger" data-act="dv-delq" data-i="${i}" data-armtxt="Confirmer ?">Supprimer</button></div>
   ${k==='qcm'?`<p class="muted small" style="margin:0">Touchez la petite case d’une réponse pour marquer la bonne (elle n’est pas imprimée).</p>`:''}`}
 function vDevoir(){const d=S.dv;if(!d){S.view='classe';return screen()}const cls=S.classes[d.classeId];const T=DVT[dvTy(d)];
- requestAnimationFrame(()=>{dvZoom();const sc=$('#dvsc');if(sc&&S.dvScr){sc.scrollTop=S.dvScr[0];sc.scrollLeft=S.dvScr[1]}});
+ requestAnimationFrame(()=>{dvRepag();dvZoom();const sc=$('#dvsc');if(sc&&S.dvScr){sc.scrollTop=S.dvScr[0];sc.scrollLeft=S.dvScr[1]}});
  return `<div class="dved" id="dved"><header class="dved-top"><button class="iconbtn" data-act="dv-back" aria-label="Retour">${ic('back',20)}</button>
   <div class="grow dved-t"><small>Cahier de composition</small><b>${T.t} · ${h(cls?.nom||'')}</b></div>
   ${dvTy(d)!=='hebdo'?`<button class="iconbtn" data-act="dv-set" aria-label="Date et période">${ic('cal',18)}</button>`:''}<button class="btn sm" data-act="dv-prevd">Aperçu</button><button class="btn grad sm" data-act="dv-save">Enregistrer</button></header>
   <div class="dved-sc" id="dvsc"><div class="dved-pg" id="dvpg">${dvPaper(d,null,true)}</div></div>
-  <div class="dved-z"><button class="x" data-act="dv-zoom" data-v="-1" aria-label="Réduire">−</button><b class="num" id="dvzl">${Math.round((S.dvZ||1)*100)} %</b><button class="x" data-act="dv-zoom" data-v="1" aria-label="Agrandir">+</button></div>
+  <div class="dved-z"><button class="x" data-act="dv-zoom" data-v="-1" aria-label="Réduire">−</button><b class="num" id="dvzl">${Math.round((S.dvZ||1)*100)} %</b><button class="x" data-act="dv-zoom" data-v="1" aria-label="Agrandir">+</button><span class="dv-pgs num" id="dvpgs">${S.dvPages||1} page${(S.dvPages||1)>1?'s':''} A4</span></div>
   <footer class="dved-bar" id="dvbar">${dvBar()}</footer>
   ${d.id&&S.devoirs[d.id]?'':''}</div>`}
+/* ---------- pages A4 : la feuille de composition est découpée en vraies pages ---------- */
+const DVPH=1123,DVTOP=34,DVBOT=30;
+function dvPaginate(root,ed){if(!root)return 1;root._brk=[];root.querySelectorAll('.dv-pb').forEach(x=>x.remove());const z=root.style.zoom;root.style.zoom='1';root.style.minHeight=DVPH+'px';
+ const T0=()=>root.getBoundingClientRect().top;
+ const blocks=[...root.querySelectorAll(':scope>.dvp-top,:scope>.dvp-h,:scope>.dvp-meta,:scope>.dvp-cons,:scope>.dvp-q>*')];let page=1;
+ for(let i=0;i<blocks.length;i++){const el=blocks[i];const t0=T0(),r=el.getBoundingClientRect();const top=r.top-t0,bot=r.bottom-t0;
+  if(bot>page*DVPH-DVBOT&&top>(page-1)*DVPH+DVTOP+4){let j=i;while(j>0&&blocks[j-1].matches('.dvp-br,.dv-pd')&&blocks[j-1].parentElement===el.parentElement)j--;
+   if(j<i&&blocks[j].getBoundingClientRect().top-t0<=(page-1)*DVPH+DVTOP+4)j=i;const tg=blocks[j];const tt=tg.getBoundingClientRect().top-T0();
+   const sp=document.createElement('div');sp.className='dv-pb';sp.style.height=Math.max(0,page*DVPH-tt+DVTOP)+'px';
+   if(ed)sp.innerHTML=`<div class="dv-pbl" style="top:${page*DVPH-tt}px"><span>Fin de la page ${page} · la feuille A4 est pleine, la suite va sur la page ${page+1}</span></div>`;
+   tg.parentElement.insertBefore(sp,tg);(root._brk=root._brk||[]).push(tg);page++;i=j-1}}
+ const q=root.querySelector('.dvp-q'),ft=root.querySelector('.dvp-ft');if(q&&ft){const cb=q.getBoundingClientRect().bottom-T0();if(cb+ft.offsetHeight>page*DVPH-DVBOT){page++;root._brk.push(ft)}}
+ root.style.minHeight=page*DVPH+'px';root.dataset.pages=page;
+ if(ed){root.querySelectorAll('.dv-pgn').forEach(x=>x.remove());for(let k=1;k<=page;k++){const n=document.createElement('div');n.className='dv-pgn';n.style.top=(k*DVPH-24)+'px';n.textContent=`Page ${k} / ${page}`;root.appendChild(n)}}
+ root.style.zoom=z;return page}
+let dvPgT=0;
+const dvOrd=root=>[...root.querySelectorAll(':scope>.dvp-q>.dvp-br,:scope>.dvp-q>.dvq,:scope>.dvp-ft')];
+/* l'éditeur montre les coupures de la copie imprimée (calculées sur la feuille sans les boutons de l'éditeur) */
+function dvRepag(){const root=$('#dvpg .dvp');if(!root||!S.dv)return;const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=dvPaper(S.dv,null);document.body.appendChild(host);
+ const pr=host.firstElementChild;const n=dvPaginate(pr,false);const P=dvOrd(pr);const idx=(pr._brk||[]).map(x=>P.indexOf(x));host.remove();
+ root.querySelectorAll('.dv-pbm').forEach(x=>x.remove());const E=dvOrd(root);idx.forEach((k,m)=>{const tg=E[k];if(!tg)return;const d=document.createElement('div');d.className='dv-pbm';d.innerHTML=`<span>Fin de la page ${m+1} · la feuille A4 est pleine</span><b>Page ${m+2}</b>`;tg.parentElement.insertBefore(d,tg)});
+ dvZoom();const l=$('#dvpgs');if(l)l.textContent=n+' page'+(n>1?'s':'')+' A4';
+ if(S.dvPages&&n>S.dvPages)toast(`La page ${n-1} est pleine : la suite passe sur la page ${n}. Chaque élève aura ${n} feuilles A4.`);S.dvPages=n}
+document.addEventListener('input',ev=>{if(ev.target.closest?.('#dvpg')){clearTimeout(dvPgT);dvPgT=setTimeout(dvRepag,450)}});
 const DVZ=[1,1.35,1.7,2.1,2.6];
 function dvZoom(){const sc=$('#dvsc'),p=$('#dvpg .dvp');if(!sc||!p)return;const fit=(sc.clientWidth-20)/794;p.style.zoom=String(fit*(S.dvZ||1));const l=$('#dvzl');if(l)l.textContent=Math.round((S.dvZ||1)*100)+' %'}
 function dvRe(){const sc=$('#dvsc');if(sc)S.dvScr=[sc.scrollTop,sc.scrollLeft];render()}
@@ -2812,14 +2847,11 @@ async function dvPDF(groups,filename,text){
  const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';document.body.appendChild(host);
  try{for(const g of groups)for(const d of g.devs){
    host.innerHTML=dvPaper(d,null);const node=host.firstElementChild;await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
-   const nr=node.getBoundingClientRect(),br=node.querySelector('.dv-st').getBoundingClientRect();
+   dvPaginate(node,false);const nr=node.getBoundingClientRect(),br=node.querySelector('.dv-st').getBoundingClientRect();
    const cv=await html2canvas(node,{scale:2,backgroundColor:'#ffffff',useCORS:true});const pages=[];const pxA4=Math.round(cv.width*A4H/A4W);
-   /* une seule feuille A4 quand le devoir déborde peu : la copie est réduite pour tenir sur la page */
-   const one=cv.height<=pxA4*1.3;const sc=one?Math.min(1,pxA4/cv.height):1;const w=A4W*sc,x0=(A4W-w)/2;const k=w/794;
-   const box={x:x0+(br.left-nr.left)*k,y:(br.top-nr.top)*k,w:br.width*k,h:br.height*k};
-   if(one)pages.push({url:cv.toDataURL('image/jpeg',.9),x:x0,y:0,w,h:cv.height*w/cv.width,alias:'dv'+(ai++)});
-   else{const kc=cv.width/node.offsetWidth,nt=nr.top;const cuts=[...node.querySelectorAll('.dvp-br,.dvq,.dvp-ft')].filter(x=>!(x.classList.contains('dvq')&&x.previousElementSibling?.classList.contains('dvp-br'))).map(x=>Math.round((x.getBoundingClientRect().top-nt)*kc)-6);
-    for(let y=0,hh=0,pi=0;y<cv.height;y+=hh,pi++){const top=pi?TOP:0;const pxPage=Math.floor(cv.width*(A4H-top)/A4W);const lim=y+pxPage;let end=cv.height;if(lim<cv.height){const c=cuts.filter(v=>v>y+pxPage*.45&&v<=lim);end=c.length?Math.max(...c):lim}hh=end-y;const c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;const gg=c2.getContext('2d');gg.fillStyle='#fff';gg.fillRect(0,0,c2.width,hh);gg.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);pages.push({url:c2.toDataURL('image/jpeg',.9),x:0,y:top,w:A4W,h:hh*A4W/cv.width,alias:'dv'+(ai++)})}}
+   const w=A4W,x0=0,k=w/794;const box={x:x0+(br.left-nr.left)*k,y:(br.top-nr.top)*k,w:br.width*k,h:br.height*k};
+   const np=+node.dataset.pages||1;const pxP=cv.height/np;
+   for(let pi=0;pi<np;pi++){const y=Math.round(pi*pxP),hh=Math.round(Math.min(cv.height,(pi+1)*pxP))-y;const c2=document.createElement('canvas');c2.width=cv.width;c2.height=hh;const gg=c2.getContext('2d');gg.fillStyle='#fff';gg.fillRect(0,0,c2.width,hh);gg.drawImage(cv,0,y,cv.width,hh,0,0,cv.width,hh);pages.push({url:c2.toDataURL('image/jpeg',.9),x:0,y:0,w:A4W,h:A4H,alias:'dv'+(ai++)})}
    for(const e of g.eleves){const photo=await dvPhoto(e);const pa='ph'+(ai++);
     pages.forEach((pg,i)=>{if(!first)pdf.addPage();first=false;pdf.addImage(pg.url,'JPEG',pg.x,pg.y,pg.w,pg.h,pg.alias);
      if(i===0){const s=Math.min(box.h-4,20);pdf.addImage(photo,'JPEG',box.x+2,box.y+(box.h-s)/2,s,s,pa);const tx=box.x+s+5;pdf.setTextColor(90,96,120);pdf.setFont('helvetica','normal');pdf.setFontSize(7.5);pdf.text('ÉLÈVE',tx,box.y+box.h/2-4.2);
@@ -4258,7 +4290,7 @@ const A={
   'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo)await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
   'pv-close':()=>pvClose(),
   'pv-zoom':b=>{PV.z=Math.min(3,Math.max(1,PV.z+(+b.dataset.v)*.5));pvLayout()},
-  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';const kd=dvKept('',S.cid,T);if(kd){S.dv=kd;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Votre brouillon a été repris.');return}S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
+  'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';const kd=dvKept('',S.cid,T);if(kd){S.dv=kd;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Votre brouillon a été repris.');return}S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.dvPages=0;S.view='devoir';render()},
   'dv-edit':b=>{const d=S.devoirs[b.dataset.id];if(!d)return;closeSheet();const kd=dvKept(b.dataset.id);if(kd){S.dv=kd;S.dvT=dvTy(kd);S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Vos modifications non enregistrées ont été reprises.');return}S.dv=JSON.parse(JSON.stringify({id:b.dataset.id,...d}));S.dv.type=dvTy(d);S.dv.q=S.dv.q||[];S.dv.q.forEach(q=>{if(!q.br)q.br=d.branche||''});S.dvT=S.dv.type;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.view='devoir';render()},
   'dv-prev':b=>dvPrev(b.dataset.id),
   'dv-prevd':()=>{if(S.dv)dvPrev('',S.dv)},

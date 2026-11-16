@@ -2611,7 +2611,7 @@ const PRS=[['I','Activités initiales',[['rap','Rappel'],['mot','Motivation'],['
 const PRI=[['ens','Enseignant'],['heure','Heure'],['br','Branche'],['rap','Sujet de rappel'],['suj','Sujet du jour'],['mat','Matériel didactique'],['meth','Méthode']];
 const FTK=['journal','prep','devoirs','exos','resume'];
 const CJH=[['7h30','8h15'],['8h15','9h00'],['9h00','9h45'],null,['10h15','10h50'],['10h50','11h30'],['11h30','12h15']];
-const CJC=[['br','Branche','Sous-branche'],['suj','Sujet',''],['mat','Matière','Contenu de la leçon'],['rev','Révision','Rappel'],['obj','Objectifs','L’élève sera capable de…'],['ana','Analyse','Déroulement'],['app','Application','Exercice'],['obs','Observation','']];
+const CJC=[['br','Branche','Sous-branche'],['suj','Sujet',''],['mat','Matière','Contenu de la leçon'],['obj','Objectifs opérationnels','L’élève sera capable de…'],['app','Application','Exercice'],['obs','Observation','']];
 const fid=(ens,d,t)=>ens+'__'+d+'__'+t;
 const ficheOf=(ens,d,t)=>{for(const e of ensIdsOf(ens)){const f=S.fiches?.[fid(e,d,t)];if(f)return{id:fid(e,d,t),...f}}return null};
 const fichesList=ens=>{const ids=ens?ensIdsOf(ens):null;return Object.entries(S.fiches||{}).filter(([,f])=>f&&(!ids||ids.includes(f.ens))).map(([id,f])=>({id,...f}))};
@@ -2670,7 +2670,7 @@ function fichePaper(f,ed){
   const legal=`<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>${h(ft.t)} · ${h(f.nom||'')}</span></div>`;
   if(t==='journal'){const R=c.rows||{};
     const rows=CJH.map((hh,i)=>hh?`<tr><td class="fp-h">${hh[0]}<br>${hh[1]}</td>${CJC.map(([k,l])=>`<td>${X(`rows.${i}.${k}`,R[i]?.[k],l)}</td>`).join('')}</tr>`:`<tr class="fp-rec"><td class="fp-h">9h45 – 10h15</td><td colspan="${CJC.length}">RÉCRÉATION</td></tr>`).join('');
-    return `<div class="fp fp-l${ed?' fp-ed':''}">${top}${info}<table class="fp-t"><colgroup><col style="width:78px"><col style="width:100px"><col><col><col><col><col><col><col style="width:96px"></colgroup><thead><tr><th>Heure</th>${CJC.map(([,l,s])=>`<th>${l}${s?`<small>${s}</small>`:''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${foot}${legal}</div>`}
+    return `<div class="fp fp-l${ed?' fp-ed':''}">${top}${info}<table class="fp-t"><colgroup><col style="width:78px"><col style="width:120px"><col><col><col><col><col style="width:110px"></colgroup><thead><tr><th>Heure</th>${CJC.map(([,l,s])=>`<th>${l}${s?`<small>${s}</small>`:''}</th>`).join('')}</tr></thead><tbody>${rows}</tbody></table>${foot}${legal}</div>`}
   const head=(lbl,pb,br,ps,suj)=>`<div class="fp-br"><i></i><b><small>${lbl}</small>${ed?X(pb,br,'Touchez pour écrire',1):h(br||'')}</b><i></i></div><div class="fp-suj">Sujet : <b>${ed?X(ps,suj,'Touchez pour écrire',1):h(suj||'')}</b></div>`;
   let body='';
   if(t==='devoirs')body=(c.items||[]).map((x,i)=>`${i?'<div class="fp-sep"></div>':''}${head('Branche',`items.${i}.br`,x.br,`items.${i}.suj`,x.suj)}<div class="fp-lab">Devoir${ed&&c.items.length>1?` <button type="button" class="fp-del" data-act="fdel-it" data-i="${i}">Retirer</button>`:''}</div><div class="fp-txt">${X(`items.${i}.txt`,x.txt,'Écrivez le devoir ici…')}</div><div class="fp-mrow"><span>À remettre le : <b>${ed?`<input type="date" class="fpd" data-fk="items.${i}.rem" value="${h(x.rem||'')}">`:x.rem?h(dfr(x.rem)):''}</b></span><span>Signature du parent : <i></i></span></div>`).join('')+(ed?`<button type="button" class="fp-add" data-act="fadd-it">+ Ajouter un devoir</button>`:'');

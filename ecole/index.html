@@ -2358,7 +2358,7 @@ function msgsOf(ensId){const ids=isDir()?ensIdsOf(ensId):myEnsIds();return Objec
 function msgUnread(ensId){const L=Object.values(S.msgs||{}).filter(m=>m&&!m.kind&&!m.luAt);if(isDir())return L.filter(m=>m.sens==='ens'&&(!ensId||ensIdsOf(ensId).includes(m.ens))).length;const ids=myEnsIds();return L.filter(m=>m.sens==='dir'&&ids.includes(m.ens)).length}
 const msgSeenBusy=new Set();
 function msgSeen(ensId){const mine=isDir()?'ens':'dir';for(const m of msgsOf(ensId)){if(m.sens!==mine||m.luAt||msgSeenBusy.has(m.id))continue;msgSeenBusy.add(m.id);const{id,...doc}=m;put('messages',id,{...doc,luAt:new Date().toISOString()}).catch(()=>{}).then(()=>msgSeenBusy.delete(id))}}
-const jourLbl=d=>{const td=today();if(d===td)return 'Aujourd’hui';const y=new Date(td+'T00:00:00Z');y.setUTCDate(y.getUTCDate()-1);if(d===iso(y))return 'Hier';const dd=D(d);return JLONG[dd.getUTCDay()]+' '+dfr(d)};
+const jourLbl=d=>{const td=today();if(d===td)return 'Aujourd’hui';{const t=new Date(td+'T00:00:00Z');t.setUTCDate(t.getUTCDate()+1);if(d===iso(t))return 'Demain'}const y=new Date(td+'T00:00:00Z');y.setUTCDate(y.getUTCDate()-1);if(d===iso(y))return 'Hier';const dd=D(d);return JLONG[dd.getUTCDay()]+' '+dfr(d)};
 function vMsgs(){
   const dir=isDir();const ens=dir?S.mEns:meId();
   if(dir&&!ens){
@@ -2749,8 +2749,15 @@ async function fichePDF(f){const dl=window.claude?.use?await claude.use('downloa
    await dl.save({filename:`${FT[f.type].t} - ${f.nom||''} - ${f.date}.pdf`,data:pdf.output('blob'),text:`*${ECO().nom} · ${FT[f.type].t}*\n${f.nom||''} · ${jourLbl(f.date)}`});toast('PDF prêt.')
   }catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être créé.')}finally{host.remove()}}
 /* ---------- écrans ---------- */
-const fDay=()=>S.fDate||today();
-function fDayNav(){const d=fDay(),td=today();const prev=new Date(D(d));prev.setUTCDate(prev.getUTCDate()-1);const nx=new Date(D(d));nx.setUTCDate(nx.getUTCDate()+1);
+/* heure limite : un document de l'enseignant enregistré après 08h00 compte pour le jour de classe suivant */
+const F_LIM='08:00';
+const kinNow=()=>new Date(Date.now()+3600e3).toISOString().slice(0,16);
+const nextSchool=d=>{const x=D(d);do{x.setUTCDate(x.getUTCDate()+1)}while(x.getUTCDay()===0);return x.toISOString().slice(0,10)};
+const fLimPassee=d=>kinNow()>=d+'T'+F_LIM;
+const fCible=d=>{if(!fLimPassee(d))return d;const k=kinNow(),kd=k.slice(0,10);return k.slice(11)<F_LIM&&new Date(D(kd)).getUTCDay()!==0?kd:nextSchool(kd)};
+const jPour=d=>{const l=jourLbl(d);return l==='Demain'?'demain':l==='Aujourd’hui'?'aujourd’hui':'le '+l.toLowerCase()};
+const fDay=()=>S.fDate||(isDir()?today():fCible(today()));
+function fDayNav(){const d=fDay(),td=isDir()?today():fCible(today());const prev=new Date(D(d));prev.setUTCDate(prev.getUTCDate()-1);const nx=new Date(D(d));nx.setUTCDate(nx.getUTCDate()+1);
   return `<div class="card pad fday"><button class="x" data-act="fday" data-v="${iso(prev)}" aria-label="Jour précédent">‹</button><label class="grow"><b>${h(jourLbl(d))}</b><small class="muted">${h(dfr(d))} · touchez pour choisir un jour</small><input type="date" class="fdin" data-act="fdayin" value="${d}" max="${td}"></label><button class="x" data-act="fday" data-v="${iso(nx)}" ${d>=td?'disabled':''} aria-label="Jour suivant">›</button></div>`}
 function fDaysArchive(ens){const by={};for(const f of fichesList(ens))(by[f.date]=by[f.date]||[]).push(f);const L=Object.keys(by).sort().reverse();
   if(!L.length)return '';return `<section class="sec"><h2 class="h2">Classés par jour</h2><div class="card list">${L.slice(0,40).map(d=>{const F=by[d];const sg=F.filter(f=>f.dir).length;return `<button class="li" data-act="fday" data-v="${d}"><span class="ib">${ic('cal',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(jourLbl(d))}</span><span class="muted small">${F.length} document${F.length>1?'s':''}${ens?'':` · ${new Set(F.map(f=>f.nom)).size} enseignant${new Set(F.map(f=>f.nom)).size>1?'s':''}`}</span></span><span class="pill ${sg===F.length?'good':'warn'} num">${sg}/${F.length} signé${sg>1?'s':''}</span></button>`}).join('')}</div></section>`}
@@ -2762,7 +2769,7 @@ function vDocs(){
   const dir=isDir();const d=fDay();
   if(!dir){const p=myPerson();return band({back:'prof',home:true,kicker:'Espace enseignant',title:'Mes documents',sub:'Cahier journal, devoirs, exercices et résumés · chaque jour'})+page(`<div class="stack">
     ${fDayNav()}
-    <div class="card pad small">Remplissez vos cahiers chaque jour. Quand vous enregistrez, votre signature se place toute seule et le document part à la direction. Vous pouvez le modifier tant que la direction ne l’a pas signé.</div>
+    <div class="card pad small">Remplissez vos cahiers chaque jour <b>avant ${F_LIM.replace(':','h')} du matin</b> : après ${F_LIM.replace(':','h')}, ils comptent pour le jour de classe suivant. Quand vous enregistrez, votre signature se place toute seule et le document part à la direction. Vous pouvez le modifier tant que la direction ne l’a pas signé.</div>
     ${fCards(meId(),d)}
     ${fDaysArchive(meId())}</div>`)}
   const ens=S.fEns;
@@ -2822,6 +2829,7 @@ function vFiche(){
     return band({back,home:true,kicker:dir?`${h(tn)} · ${jourLbl(k.d)}`:jourLbl(k.d),title:ft.t,sub:dir?'Préparé par la direction à la place de l’enseignant':saved?'Enregistré · vous pouvez encore le modifier':'Remplissez puis enregistrez'})+page(`<div class="stack">
       ${dir?`<div class="card pad small"><b>Enseignant absent ?</b> Vous préparez ce document à sa place. Votre nom et votre signature y figureront comme « Préparé par », puis vous pourrez le signer. L’enseignant le verra dans « Mes documents ».</div>`:''}
       ${saved?.retour&&!dir?`<div class="card pad stack fretbox"><b>${ic('pen',18)} À corriger · demandé par ${h(saved.retour.fn||'la direction')}</b>${saved.retour.avis?`<p style="margin:0">${h(saved.retour.avis).replace(/\n/g,'<br>')}</p>`:''}${repHTML(saved.retour.corr)}<small class="muted">Corrigez votre document ci-dessous, puis touchez « Enregistrer et signer » : la direction le reçoit à nouveau.</small></div>`:''}
+      ${!dir&&!saved&&fLimPassee(f.date)?`<div class="card pad small fretbox"><p style="margin:0"><strong>Il est passé ${F_LIM.replace(':','h')}.</strong> Ce document sera compté pour <strong>${h(jPour(fCible(f.date)))}</strong>. Les documents d’un jour doivent être remplis avant ${F_LIM.replace(':','h')} du matin.</p></div>`:''}
       ${saved&&!dir&&!saved.retour?`<div class="card pad small"><b>En attente de la direction.</b> Vous pouvez modifier ce document jusqu’à ce que la direction le signe.</div>`:''}
       <button class="gcta fsgo" data-act="fprev"><span><b>Remplir sur la feuille</b><small>Plein écran · touchez une case de la feuille A4 et écrivez directement</small></span><i>${ic('pen',20)}</i></button>
       <p class="muted small" style="margin:-6px 0 0;text-align:center">ou remplissez le formulaire ci-dessous</p>
@@ -2892,10 +2900,12 @@ async function ficheAI(mode){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);const box
   catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}}
 async function ficheSave(){fCollect();const f=S.fDraft?.f;if(!f)return;if(ficheEmpty(f.type,f)){toast('Le document est vide : remplissez-le avant d’enregistrer.');return}
   const sg=mySig();if(!sg.img){mySigSheet(()=>ficheSave());return}
-  const dir=isDir();const ens=dir?S.fk.e:meId();const p=dir?ensList().find(x=>x.id===ens):myPerson();const old=ficheOf(ens,f.date,f.type);const id=old?.id||fid(ens,f.date,f.type);const now=new Date().toISOString();
+  const dir=isDir();const ens=dir?S.fk.e:meId();const p=dir?ensList().find(x=>x.id===ens):myPerson();let old=ficheOf(ens,f.date,f.type);let moved='';
+  if(!dir&&!old&&fLimPassee(f.date)){const nd=fCible(f.date);if(ficheOf(ens,nd,f.type)){toast(`Il est passé ${F_LIM.replace(':','h')} : ce document compterait pour ${jPour(nd)}, mais vous l’avez déjà rempli pour ce jour.`);return}moved=f.date;f.date=nd;S.fk={...S.fk,d:nd};S.fDate=nd;old=null}
+  const id=old?.id||fid(ens,f.date,f.type);const now=new Date().toISOString();
   const doc={type:f.type,date:f.date,ens:old?.ens||ens,nom:p?.nom||'',classeId:f.classeId||(dir?clsOfEns(ens)[0]:mesClasses()[0])||'',c:f.c,sig:sigPack(sg,{at:now}),at:old?.at||now,upd:now};
   if(dir)doc.par={id:meId(),nom:sg.nom,fn:sg.fn};
-  await put('fiches',id,doc);S.fDraft=null;S.fPrep=false;S.view='fiche';render();scrollTo(0,0);toast(dir?'Document préparé. Vous pouvez maintenant donner votre avis et le signer.':'Enregistré et signé. La direction a reçu le document.')}
+  await put('fiches',id,doc);S.fDraft=null;S.fPrep=false;S.view='fiche';render();scrollTo(0,0);toast(dir?'Document préparé. Vous pouvez maintenant donner votre avis et le signer.':moved?`Enregistré après ${F_LIM.replace(':','h')} : il compte pour ${jPour(f.date)}.`:'Enregistré et signé. La direction a reçu le document.')}
 async function ficheSign(){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(!f)return;const avis=($('#f-avis')?.value||'').trim();if(!avis){toast('Écrivez votre avis, ou utilisez une proposition de l’IA.');$('#f-avis')?.focus();return}
   const sg=mySig();if(!sg.img){S.fAvis=avis;mySigSheet(()=>{render();setTimeout(ficheSign,50)});return}
   const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),fn:sg.fn,avis,...(S.fCorr?{corr:S.fCorr}:{}),...sigPack(sg,{at:new Date().toISOString()})},retour:null});S.fAvis='';S.fCorr=null;fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}

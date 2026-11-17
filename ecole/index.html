@@ -1347,8 +1347,17 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .fslot.rec{text-align:center;background:var(--sunk);letter-spacing:.06em}
 .fta{min-height:0;resize:vertical;line-height:1.4}
 .fbar{position:sticky;bottom:calc(84px + env(safe-area-inset-bottom,0px));z-index:5;background:var(--bg);padding:8px 0;border-radius:16px}
+.gcta.fana{width:100%}
+.frep{display:flex;flex-direction:column;gap:12px;margin-top:4px}
+.frep ul,.frep ol{margin:6px 0 0;padding-left:20px;display:flex;flex-direction:column;gap:6px;font-size:14px;line-height:1.45}
+.frep s{color:var(--bad);text-decoration-thickness:1.5px}
+.frep-h{display:flex;align-items:center;gap:6px;font-size:13.5px}.frep-h.bad{color:var(--bad)}.frep-h.warn{color:var(--warn,#e0a020)}.frep-h.good{color:var(--good)}
+.frep-sol{display:inline-block;margin-top:3px;background:var(--good-soft);border-radius:8px;padding:4px 8px}
+.fretbox{box-shadow:inset 0 0 0 1.5px var(--warn,#e0a020),var(--shadow-s)}
 .favbox{background:var(--good-soft);color:var(--ink)}
 .favbox b{color:var(--good);display:flex;gap:8px;align-items:center}
+.favbox .frep li b,.fretbox .frep li b{display:inline;color:inherit}
+.fretbox>b{display:flex;gap:8px;align-items:center}
 .fpw{width:100%;overflow:hidden;border-radius:10px;box-shadow:var(--shadow-s);background:#fff}
 .fpw>.fp{transform-origin:top left}
 /* papier A4 (pixels à 96 ppp) */
@@ -2776,7 +2785,8 @@ function vFiche(){
     const f=S.fDraft.f;const tn=ensList().find(x=>x.id===k.e)?.nom||'';
     return band({back,home:true,kicker:dir?`${h(tn)} · ${jourLbl(k.d)}`:jourLbl(k.d),title:ft.t,sub:dir?'Préparé par la direction à la place de l’enseignant':saved?'Enregistré · vous pouvez encore le modifier':'Remplissez puis enregistrez'})+page(`<div class="stack">
       ${dir?`<div class="card pad small"><b>Enseignant absent ?</b> Vous préparez ce document à sa place. Votre nom et votre signature y figureront comme « Préparé par », puis vous pourrez le signer. L’enseignant le verra dans « Mes documents ».</div>`:''}
-      ${saved&&!dir?`<div class="card pad small"><b>En attente de la direction.</b> Vous pouvez modifier ce document jusqu’à ce que la direction le signe.</div>`:''}
+      ${saved?.retour&&!dir?`<div class="card pad stack fretbox"><b>${ic('pen',18)} À corriger · demandé par ${h(saved.retour.fn||'la direction')}</b>${saved.retour.avis?`<p style="margin:0">${h(saved.retour.avis).replace(/\n/g,'<br>')}</p>`:''}${repHTML(saved.retour.corr)}<small class="muted">Corrigez votre document ci-dessous, puis touchez « Enregistrer et signer » : la direction le reçoit à nouveau.</small></div>`:''}
+      ${saved&&!dir&&!saved.retour?`<div class="card pad small"><b>En attente de la direction.</b> Vous pouvez modifier ce document jusqu’à ce que la direction le signe.</div>`:''}
       <button class="gcta fsgo" data-act="fprev"><span><b>Remplir sur la feuille</b><small>Plein écran · touchez une case de la feuille A4 et écrivez directement</small></span><i>${ic('pen',20)}</i></button>
       <p class="muted small" style="margin:-6px 0 0;text-align:center">ou remplissez le formulaire ci-dessous</p>
       ${fEditor(f)}
@@ -2786,14 +2796,17 @@ function vFiche(){
   setTimeout(()=>{fMarkSeen(saved);fitPapers()},30);
   const ai=dir&&!saved.dir;
   return band({back,home:true,kicker:`${h(saved.nom||'')} · ${jourLbl(k.d)}`,title:ft.t,sub:saved.dir?`Signé par ${h(saved.dir.nom||'')} le ${h(dfr(saved.dir.at.slice(0,10)))}`:saved.par?`Préparé par ${h(saved.par.nom||'la direction')} · à signer`:'Enregistré par l’enseignant · à lire et signer'})+page(`<div class="stack">
-   ${!dir&&saved.dir?`<div class="card pad stack favbox"><b>${ic('check',18)} Corrigé par ${h(saved.dir.fn||'la direction')} · ${h(saved.dir.nom||'')}</b>${saved.dir.avis?`<p style="margin:0">${h(saved.dir.avis).replace(/\n/g,'<br>')}</p>`:''}</div>`:''}
+   ${!dir&&saved.dir?`<div class="card pad stack favbox"><b>${ic('check',18)} Corrigé par ${h(saved.dir.fn||'la direction')} · ${h(saved.dir.nom||'')}</b>${saved.dir.avis?`<p style="margin:0">${h(saved.dir.avis).replace(/\n/g,'<br>')}</p>`:''}${repHTML(saved.dir.corr)}</div>`:''}
    <div class="fpw">${fichePaper(saved)}</div>
    <div class="btns"><button class="btn" data-act="fpdf">${ic('doc',18)} PDF</button>${dir||!saved.dir?`<button class="btn danger" data-act="fdel" data-armtxt="Touchez encore pour supprimer">${ic('trash',16)} Supprimer</button>`:''}${dir&&!saved.dir?`<button class="btn" data-act="fprep" data-e="${h(k.e)}" data-d="${k.d}" data-t="${k.t}">${ic('pen',18)} Modifier le document</button>`:''}</div>
    ${dir?`<section class="card pad stack"><div class="sec-h"><h2 class="h2">Avis de la direction</h2>${saved.dir?'<span class="pill good">Signé</span>':''}</div>
      <textarea class="inp" id="f-avis" rows="4" placeholder="Votre avis et vos remarques à l’enseignant">${h(saved.dir?.avis||S.fAvis||'')}</textarea>
+     <button type="button" class="gcta fana" data-act="fai" data-v="ana"><span><b>Analyser le document avec l’IA</b><small>Fautes d’orthographe, erreurs de frappe, défauts pédagogiques, et ce que l’enseignant doit corriger</small></span><i>${ic('spark',20)}</i></button>
      <div class="aibar"><span class="aitag">${ic('spark',14)} IA</span><button type="button" class="chipb sm" data-act="fai" data-v="rem">Proposer des remarques</button><button type="button" class="chipb sm" data-act="fai" data-v="cor">Corriger mon texte</button></div>
      <div id="faibox"></div>
      <button class="btn grad" data-act="fsign">${ic('check',18)} ${saved.dir?'Modifier l’avis':'Signer et enregistrer'}</button>
+     ${saved.dir?'':`<button class="btn" data-act="fretour">${ic('pen',16)} Renvoyer à l’enseignant pour correction</button>`}
+     ${saved.retour&&!saved.dir?`<p class="small" style="margin:0"><span class="pill">Renvoyé pour correction</span> le ${h(dfr(saved.retour.at.slice(0,10)))} · l’enseignant peut modifier puis renvoyer.</p>`:''}
      <p class="muted small" style="margin:0">Votre signature se place automatiquement. L’enseignant reçoit une notification.</p></section>`:''}</div>`);
 }
 function fCollect(){const f=S.fDraft?.f;if(!f)return;document.querySelectorAll('#fed [data-fk]').forEach(el=>{const p=el.dataset.fk.split('.');let o=f.c;for(let i=0;i<p.length-1;i++){const k=p[i];if(o[k]==null)o[k]=/^\d+$/.test(p[i+1])&&Array.isArray(o)?{}:{};o=o[k]}o[p[p.length-1]]=el.value})}
@@ -2803,9 +2816,38 @@ function ficheText(f){const c=f.c||{};if(f.type==='journal')return CJH.map((hh,i
   if(f.type==='exos')return `Branche: ${c.br} | Sujet: ${c.suj}\n`+(c.q||[]).map((x,i)=>`Q${i+1}: ${x.q}\nR${i+1}: ${x.r}`).join('\n');
   return `Cours: ${c.br} | Sujet: ${c.suj}\nMatière: ${c.mat}`}
 let fAiCtl=null;
+function repHTML(r){if(!r)return '';const F=r.fautes||[],P=r.pistes||[],B=r.forts||[];if(!F.length&&!P.length&&!B.length)return '';
+  return `<div class="frep">${F.length?`<div><b class="frep-h bad">${ic('pen',15)} Fautes à corriger (${F.length})</b><ul>${F.map(x=>`<li><s>${h(x.faute||'')}</s> → <b>${h(x.correction||'')}</b>${x.ou?` <small class="muted">· ${h(x.ou)}</small>`:''}</li>`).join('')}</ul></div>`:''}
+   ${P.length?`<div><b class="frep-h warn">${ic('spark',15)} À améliorer et comment faire (${P.length})</b><ol>${P.map(x=>`<li>${x.ou?`<small class="muted">${h(x.ou)}</small><br>`:''}<span>${h(x.probleme||'')}</span><br><span class="frep-sol">💡 ${h(x.solution||'')}</span></li>`).join('')}</ol></div>`:''}
+   ${B.length?`<div><b class="frep-h good">${ic('check',15)} Points forts</b><ul>${B.map(x=>`<li>${h(x)}</li>`).join('')}</ul></div>`:''}</div>`}
+async function ficheAna(f,box,sample,cl){
+  const prompt=`Tu es inspecteur pédagogique et correcteur de français dans une école primaire en République démocratique du Congo. Lis attentivement ce « ${FT[f.type].t} » rempli par l’enseignant ${f.nom||''} (${cl}) pour le ${jourLbl(f.date)}.
+
+Contenu du document (chaque case est indiquée par son heure ou sa rubrique) :
+${ficheText(f)||'(document presque vide)'}
+
+Fais une correction complète et utile pour l’enseignant :
+1. "fautes" : relève TOUTES les fautes d’orthographe, de grammaire, d’accord, de conjugaison, d’accents, de ponctuation et les erreurs de frappe. Pour chacune : "faute" (le mot ou groupe fautif exactement comme écrit), "correction" (la forme correcte), "ou" (la rubrique et l’heure ou le numéro où elle se trouve). N’invente pas de faute : si un mot est correct, ne le cite pas.
+2. "pistes" : les défauts pédagogiques ou de contenu (case vide ou trop vague, objectif opérationnel non mesurable ou sans verbe d’action, méthode absente ou inadaptée, application sans lien avec la leçon, erreur de contenu ou de calcul, réponse fausse, devoir trop long, incohérence entre sujet et matière…). Pour chacun : "ou", "probleme" (ce qui ne va pas, en une phrase) et "solution" (ce que l’enseignant doit écrire ou faire concrètement, avec un exemple de formulation corrigée quand c’est possible).
+3. "forts" : 1 à 3 points forts réels du document.
+4. "avis" : un avis du directeur à l’enseignant, 3 à 5 phrases, au vouvoiement, bienveillant mais exigeant, qui résume ce qu’il doit corriger en priorité.
+Écris tout en français simple. Ne cite que ce qui figure dans le document.
+${IA_EMO.replace('chaque texte','l’avis seulement')}Réponds uniquement par un objet JSON {"fautes":[{"faute":"…","correction":"…","ou":"…"}],"pistes":[{"ou":"…","probleme":"…","solution":"…"}],"forts":["…"],"avis":"…"}, sans autre texte.`;
+  fAiCtl?.abort();fAiCtl=new AbortController();box.innerHTML='<p class="muted small">L’assistant lit tout le document et vérifie chaque case… (quelques secondes)</p>';
+  try{let o=await sample.json(prompt,{signal:fAiCtl.signal,modelTier:'quick'});if(Array.isArray(o))o=o[0]||{};
+   const A=v=>Array.isArray(v)?v:[];const rep={fautes:A(o.fautes).filter(x=>x&&x.faute&&x.correction&&x.faute!==x.correction).slice(0,40).map(x=>({faute:String(x.faute),correction:String(x.correction),ou:String(x.ou||'')})),pistes:A(o.pistes).filter(x=>x&&x.probleme).slice(0,15).map(x=>({ou:String(x.ou||''),probleme:String(x.probleme),solution:String(x.solution||'')})),forts:A(o.forts).map(String).filter(Boolean).slice(0,3)};
+   const avis=String(o.avis||'');box._rep=rep;box._avis=avis;
+   const n=rep.fautes.length+rep.pistes.length;
+   box.innerHTML=`<div class="aiprop stack"><b>${n?`${rep.fautes.length} faute${rep.fautes.length>1?'s':''} et ${rep.pistes.length} point${rep.pistes.length>1?'s':''} à améliorer`:'Aucune faute relevée 👍'}</b>${repHTML(rep)}${avis?`<div><b class="small">Avis proposé</b><p style="margin:4px 0 0">${h(avis)}</p></div>`:''}
+    <button type="button" class="btn sm grad" data-act="fanause">${ic('check',16)} Utiliser cet avis et joindre les corrections</button><small class="muted">Les corrections seront montrées à l’enseignant avec votre avis, que vous signiez ou que vous renvoyiez le document pour correction.</small></div>`}
+  catch(err){const m={not_granted:'Vous avez refusé l’accès à l’assistant.',rate_limited:'Limite d’utilisation atteinte. Réessayez plus tard.',cancelled:''}[err?.code];box.innerHTML=m===''?'':`<p class="muted small">${m||'L’assistant n’a pas pu répondre. Réessayez.'}</p>`}}
+async function ficheRetour(){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(!f||f.dir)return;const avis=($('#f-avis')?.value||'').trim();const corr=S.fCorr||null;
+  if(!avis&&!corr){toast('Écrivez ce que l’enseignant doit corriger, ou analysez le document avec l’IA.');return}
+  const sg=mySig();const {id,...rest}=f;await put('fiches',id,{...rest,retour:{id:meId(),nom:sg.nom,fn:sg.fn,avis,corr,at:new Date().toISOString()}});S.fAvis='';S.fCorr=null;render();toast('Document renvoyé. L’enseignant reçoit une notification.')}
 async function ficheAI(mode){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);const box=$('#faibox'),ta=$('#f-avis');if(!f||!box)return;
   const sample=window.claude?.use?await claude.use('sample').catch(()=>null):null;if(!sample){box.innerHTML='<p class="muted small">L’assistant IA n’est pas disponible ici.</p>';return}
   const cl=S.classes[f.classeId]?.nom||'';
+  if(mode==='ana')return ficheAna(f,box,sample,cl);
   const prompt=mode==='cor'?`Corrige l’orthographe et la grammaire de cet avis d’un directeur d’école primaire à un enseignant, et reformule-le de façon claire, respectueuse et professionnelle, sans changer le sens. Texte : ${ta.value||'(vide)'}\n${IA_EMO}Réponds uniquement avec un tableau JSON contenant 1 texte, par exemple ["…"].`
    :`Tu es conseiller pédagogique dans une école primaire en République démocratique du Congo. Le directeur doit donner son avis sur le « ${FT[f.type].t} » rempli par l’enseignant ${f.nom||''} (${cl}) pour le ${jourLbl(f.date)}.\n\nContenu du document :\n${ficheText(f)||'(document presque vide)'}\n\nPropose 3 avis différents que le directeur pourrait écrire à l’enseignant : chacun 2 à 4 phrases, en français simple, au vouvoiement, bienveillant mais exigeant. Relève ce qui est bien fait et donne des remarques concrètes pour améliorer la préparation (objectifs mesurables, clarté des questions, lien entre révision, analyse et application, longueur des devoirs, exactitude des réponses…). Ne invente rien qui ne soit pas dans le document. Si le document est incomplet, dis-le poliment.\n${IA_EMO}Réponds uniquement avec un tableau JSON de 3 textes (chaînes).`;
   fAiCtl?.abort();fAiCtl=new AbortController();box.innerHTML='<p class="muted small">L’assistant lit le document…</p>';
@@ -2820,7 +2862,7 @@ async function ficheSave(){fCollect();const f=S.fDraft?.f;if(!f)return;if(ficheE
   await put('fiches',id,doc);S.fDraft=null;S.fPrep=false;S.view='fiche';render();scrollTo(0,0);toast(dir?'Document préparé. Vous pouvez maintenant donner votre avis et le signer.':'Enregistré et signé. La direction a reçu le document.')}
 async function ficheSign(){const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(!f)return;const avis=($('#f-avis')?.value||'').trim();if(!avis){toast('Écrivez votre avis, ou utilisez une proposition de l’IA.');$('#f-avis')?.focus();return}
   const sg=mySig();if(!sg.img){S.fAvis=avis;mySigSheet(()=>{render();setTimeout(ficheSign,50)});return}
-  const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),fn:sg.fn,avis,...sigPack(sg,{at:new Date().toISOString()})}});S.fAvis='';fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}
+  const {id,...rest}=f;await put('fiches',id,{...rest,dir:{id:meId(),fn:sg.fn,avis,...(S.fCorr?{corr:S.fCorr}:{}),...sigPack(sg,{at:new Date().toISOString()})},retour:null});S.fAvis='';S.fCorr=null;fMarkSeen(ficheOf(k.e,k.d,k.t));render();toast('Document signé. L’enseignant reçoit une notification.')}
 
 /* ---------- Devoirs hebdomadaires ---------- */
 const dvSem=()=>S.dvSem||lundi(today());
@@ -4487,7 +4529,7 @@ const A={
   'pz-new':async b=>{b.disabled=true;b.textContent='L’IA écrit…';const d=today();if(S.pensees)delete S.pensees[d];await penseeDuJour();render();toast('Nouvelle pensée du jour enregistrée.')},
   'pz-edit':()=>openSheet('Pensée du jour',`<div class="stack"><div class="field"><label for="pz-t">Votre pensée pour aujourd’hui</label><textarea class="inp" id="pz-t" rows="4">${h(S.pensees?.[today()]?.txt||'')}</textarea></div><button class="btn grad" data-act="pz-save">Enregistrer</button></div>`),
   'pz-save':async()=>{const t=($('#pz-t')?.value||'').trim();if(!t){toast('Écrivez la pensée.');return}const doc={txt:t,ia:false,at:new Date().toISOString(),by:meId()};if(S.demo){S.pensees[today()]=doc}else await put('pensees',today(),doc);closeSheet();render();toast('Pensée du jour enregistrée.')},
-  fopen:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fPrep=false;S.fAvis='';S.view='fiche';render();scrollTo(0,0)},
+  fopen:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fPrep=false;S.fAvis='';S.fCorr=null;S.view='fiche';render();scrollTo(0,0)},
   fprep:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fPrep=true;S.view='fiche';render();scrollTo(0,0)},
   fens:b=>{S.fEns=b.dataset.id;S.view='docs';render();scrollTo(0,0)},
   fday:b=>{if(b.dataset.v>today())return;S.fDate=b.dataset.v;render()},
@@ -4505,6 +4547,8 @@ const A={
   'fdel-q':b=>{if(fsOn()){fsSync();S.fDraft.f.c.q.splice(+b.dataset.i,1);const y=$('#fsed .fs-scroll').scrollTop;fsOpen();$('#fsed .fs-scroll').scrollTop=y;return}fCollect();S.fDraft.f.c.q.splice(+b.dataset.i,1);render()},
   fpdf:()=>{const k=S.fk;const f=ficheOf(k.e,k.d,k.t);if(f)fichePDF(f)},
   fai:b=>ficheAI(b.dataset.v),
+  fanause:()=>{const box=$('#faibox');if(!box?._rep)return;S.fCorr=box._rep;if(box._avis&&$('#f-avis')){$('#f-avis').value=box._avis;S.fAvis=box._avis}toast('Avis placé et corrections jointes. Signez ou renvoyez pour correction.');$('#f-avis')?.scrollIntoView({block:'center',behavior:'smooth'})},
+  fretour:()=>ficheRetour(),
   faiuse:b=>{const L=$('#faibox')?._list;const t=L?.[+b.dataset.i];if(t&&$('#f-avis')){$('#f-avis').value=t;S.fAvis=t}},
   fsign:()=>ficheSign(),
   'fsig-ok':()=>{const img=sigData();if(!img){toast('Signez d’abord dans le cadre.');return}try{localStorage.setItem(MYSIG,JSON.stringify({u:meId(),img}))}catch(e){}const cb=fSigCb;fSigCb=null;$('#sheet').hidden=true;$('#sheet').innerHTML='';toast('Signature enregistrée.');cb&&cb()},

@@ -31,7 +31,9 @@ Deno.serve(async (req) => {
   if (col === "paiements" && op === "INSERT") {
     to = admins; msg = { title: "Nouveau paiement enregistré", body: "Un paiement vient d’être enregistré. Ouvrez l’application pour le voir.", tag: "paiement" };
   } else if (col === "fiches") {
-    if (d.dir && (!old || !old.dir || old.dir.at !== d.dir.at)) {
+    if (!d.dir && d.retour && (!old || !old.retour || old.retour.at !== d.retour.at)) {
+      to = teacher(d.ens); msg = { title: "Document à corriger", body: `La direction vous demande de corriger votre ${TYPES[d.type] || "document"}. Ouvrez l’application pour voir les corrections.`, tag: "fiche-" + ev.id };
+    } else if (d.dir && (!old || !old.dir || old.dir.at !== d.dir.at)) {
       to = teacher(d.ens); msg = { title: "Votre document a été corrigé", body: `La direction a signé votre ${TYPES[d.type] || "document"} et donné son avis.`, tag: "fiche-" + ev.id };
     } else if (!d.dir) {
       to = admins; msg = { title: "Document à signer", body: `${d.nom || "Un enseignant"} a enregistré son ${TYPES[d.type] || "document"}.`, tag: "fiche-" + ev.id };

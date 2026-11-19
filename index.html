@@ -304,7 +304,7 @@ function vAccueil(){
   return `<section class="hero"><div class="hbg" aria-hidden="true"><img class="hmk" src="${A.mark}" alt=""></div>
    <div class="htx"><div class="eye">racines.ia · gestion scolaire</div>
    <h1>Moderniser le <em>système éducatif.</em></h1>
-   <p>Une seule application pour toutes vos écoles : appel, cotes, bulletins officiels, palmarès et rapports aux parents.</p></div>
+   <p>Une seule application pour toutes vos écoles : appel, cotes, bulletins officiels, palmarès et rapports aux parents.</p><a class="pill dark sm" style="text-decoration:none;display:inline-flex;margin-top:14px" href="/site/">Découvrir racines.ia en détail →</a></div>
    <div class="hph" aria-hidden="true"><img src="${A.boss}" alt="" draggable="false"></div></section>
    <section class="sec"><div class="sec-h"><h2>Ce que fait racines.ia</h2><small>${FEATS.length} outils</small></div>
     <div class="shots">${FEATS.map(([i,t,d,g])=>`<article class="shot" data-act="ico" data-i="${i}"><div class="sbg" aria-hidden="true"></div><img class="i3d${i==='robot'?' robo':''}" src="${A['i_'+i]}" alt="" draggable="false"><h3>${t}</h3><p>${d}</p><span class="tag">${g}</span></article>`).join('')}</div></section>

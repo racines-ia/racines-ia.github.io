@@ -2965,8 +2965,8 @@ function tabDev(){
    ${L.length?`<div class="card list">${L.map(li).join('')}</div>`:`<div class="card empty"><h3>${T==='hebdo'?'Aucun devoir hebdomadaire cette semaine':T==='interro'?'Aucune interrogation pour le moment':'Aucun examen pour le moment'}</h3><p class="muted small">Touchez « Composer » pour ouvrir une feuille A4 et écrire vos questions.</p></div>`}`;
 }
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
-const MCAT={prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
-const MCOL={prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
+const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
+const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
 const manOk=m=>isDir()||!m.classeId||mesClasses().includes(m.classeId);
 function manList(){const cat=S.mCat||'',cl=S.mCls||'',q=(S.mQ||'').trim().toLowerCase();
  return Object.entries(S.manuels||{}).map(([id,m])=>({id,...m})).filter(m=>m&&m.path&&manOk(m)&&(!cat||m.cat===cat)&&(!cl||m.classeId===cl||(!m.classeId&&cl))&&(!q||(m.titre||'').toLowerCase().includes(q))).sort((a,b)=>(a.titre||'').localeCompare(b.titre||'','fr'))}
@@ -3006,7 +3006,7 @@ async function manOpen(id){const m=S.manuels?.[id];if(!m)return;PV.id=id;PV.z=1;
  document.body.appendChild(box);document.documentElement.classList.add('dfs-lock');
  try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');const lib=await loadPdfjs();PV.doc=await lib.getDocument({url}).promise;await pvShow()}
  catch(e){const sc=document.getElementById('pv-sc');if(sc)sc.innerHTML=`<p class="pv-msg">Impossible d’ouvrir ce livre (${h(e?.message||'connexion')}). Vérifiez la connexion puis réessayez.</p>`}}
-function pvLbl(){const t=`Page ${PV.n} / ${PV.doc?.numPages||'…'}`;const a=document.getElementById('pv-pg'),b=document.getElementById('pv-pgh');if(a)a.textContent=t;if(b)b.textContent=`${PV.doc?.numPages||'…'} pages`;const pr=document.getElementById('pv-prev'),nx=document.getElementById('pv-next');if(pr)pr.disabled=PV.n<=1;if(nx)nx.disabled=PV.n>=(PV.doc?.numPages||1);const mb=document.getElementById('pv-mb');if(mb)mb.textContent=PV.mode==='livre'?'📜':'📖'}
+function pvLbl(){const t=`Page ${PV.n} / ${PV.doc?.numPages||'…'}`;const a=document.getElementById('pv-pg'),b=document.getElementById('pv-pgh');if(a)a.textContent=t;if(b)b.textContent=`${PV.doc?.numPages||'…'} page${(PV.doc?.numPages||2)>1?'s':''}`;const pr=document.getElementById('pv-prev'),nx=document.getElementById('pv-next');if(pr)pr.disabled=PV.n<=1;if(nx)nx.disabled=PV.n>=(PV.doc?.numPages||1);const mb=document.getElementById('pv-mb');if(mb)mb.textContent=PV.mode==='livre'?'📜':'📖'}
 /* ---- mode livre : on feuillette les pages comme un cahier ---- */
 async function pvCanvas(n,W,H){const k=n+'@'+Math.round(W);if(PV.cache.has(k))return PV.cache.get(k);const pr=(async()=>{const pg=await PV.doc.getPage(n);const v0=pg.getViewport({scale:1});const dpr=Math.min(2.5,window.devicePixelRatio||1);const vp=pg.getViewport({scale:W/v0.width*dpr});const cv=document.createElement('canvas');cv.width=vp.width;cv.height=vp.height;await pg.render({canvasContext:cv.getContext('2d'),viewport:vp}).promise;return cv})();PV.cache.set(k,pr);if(PV.cache.size>10)PV.cache.delete(PV.cache.keys().next().value);return pr}
 function pvDims(){const sc=document.getElementById('pv-sc');const aw=sc.clientWidth-20,ah=sc.clientHeight-20;let W=aw,H=W*PV.ar;if(H>ah){H=ah;W=H/PV.ar}return{W:W*PV.z,H:H*PV.z}}

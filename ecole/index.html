@@ -2984,7 +2984,7 @@ async function manOpen(id){const m=S.manuels?.[id];if(!m)return;PV.id=id;PV.z=1;
  let box=document.getElementById('pdfv');if(box)box.remove();box=document.createElement('div');box.id='pdfv';box.className='pdfv';
  box.innerHTML=`<header><button class="iconbtn" data-act="pv-close" aria-label="Fermer">${ic('back',20)}</button><div class="grow pv-t"><small>${h(MCAT[m.cat]||'Manuel')}</small><b>${h(m.titre)}</b></div><button class="x" data-act="pv-zoom" data-v="-1" aria-label="Réduire">−</button><button class="x" data-act="pv-zoom" data-v="1" aria-label="Agrandir">+</button></header><div class="pv-sc" id="pv-sc"><p class="pv-msg">Ouverture du livre…</p></div><footer><span class="num" id="pv-pg">—</span></footer>`;
  document.body.appendChild(box);document.documentElement.classList.add('dfs-lock');
- try{const url=S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');const lib=await loadPdfjs();PV.doc=await lib.getDocument({url}).promise;await pvLayout()}
+ try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');const lib=await loadPdfjs();PV.doc=await lib.getDocument({url}).promise;await pvLayout()}
  catch(e){const sc=document.getElementById('pv-sc');if(sc)sc.innerHTML=`<p class="pv-msg">Impossible d’ouvrir ce livre (${h(e?.message||'connexion')}). Vérifiez la connexion puis réessayez.</p>`}}
 async function pvLayout(){const sc=document.getElementById('pv-sc');if(!sc||!PV.doc)return;const p1=await PV.doc.getPage(1);const v=p1.getViewport({scale:1});const W=(sc.clientWidth-16)*PV.z,Hh=W*v.height/v.width;
  sc.innerHTML=Array.from({length:PV.doc.numPages},(_,i)=>`<div class="pv-p" data-n="${i+1}" style="width:${W}px;height:${Hh}px"><span>${i+1}</span></div>`).join('');
@@ -4623,7 +4623,7 @@ const A={
   'man-add':()=>manSheet(),
   'man-cat':b=>{S.mCat=b.dataset.v;render()},
   'man-open':b=>manOpen(b.dataset.id),
-  'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo)await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
+  'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo&&!/^(\/|https:)/.test(m.path))await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
   'pv-close':()=>pvClose(),
   'pv-zoom':b=>{PV.z=Math.min(3,Math.max(1,PV.z+(+b.dataset.v)*.5));pvLayout()},
   'dv-new':()=>{const T=DVT[S.dvT]?S.dvT:'hebdo';const kd=dvKept('',S.cid,T);if(kd){S.dv=kd;S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=true;S.view='devoir';render();toast('Votre brouillon a été repris.');return}S.dv={id:'',type:T,classeId:S.cid,semaine:T==='hebdo'?dvSem():lundi(today()),date:today(),per:T==='examen'?'ex1':(/^p/.test(S.pKey||'')?S.pKey:'p1'),titre:'',consignes:T==='hebdo'?DV_CONS:DV_CONS.replace(' Fais signer ce devoir par tes parents et rapporte-le à ton enseignant.',''),q:[]};S.dvSel=-1;S.dvZ=1;S.dvScr=null;S.dvDirty=false;S.dvPages=0;S.view='devoir';render()},

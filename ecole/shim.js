@@ -450,7 +450,7 @@
   const manuels = {
     async upload(id, file) {
       const path = ME.member.school_id + '/' + id + '.pdf';
-      const { error } = await sb.storage.from('manuels').upload(path, file, { contentType: 'application/pdf', upsert: true });
+      const { error } = await sb.storage.from('manuels').upload(path, file, { contentType: 'application/pdf', upsert: false });
       if (error) throw { message: error.message };
       return path;
     },

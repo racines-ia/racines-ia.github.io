@@ -2967,12 +2967,12 @@ function tabDev(){
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
-const manOk=m=>isDir()||!m.classeId||mesClasses().includes(m.classeId);
+const manOk=m=>m.cat==='horaire'?(isDir()?!!m.tous:!m.tous&&mesClasses().includes(m.classeId)):(isDir()||!m.classeId||mesClasses().includes(m.classeId));
 function manList(){const cat=S.mCat||'',cl=S.mCls||'',q=(S.mQ||'').trim().toLowerCase();
  return Object.entries(S.manuels||{}).map(([id,m])=>({id,...m})).filter(m=>m&&m.path&&manOk(m)&&(!cat||m.cat===cat)&&(!cl||m.classeId===cl||(!m.classeId&&cl))&&(!q||(m.titre||'').toLowerCase().includes(q))).sort((a,b)=>(a.titre||'').localeCompare(b.titre||'','fr'))}
 const manSize=n=>n>=1048576?(n/1048576).toFixed(1).replace('.',',')+' Mo':Math.max(1,Math.round(n/1024))+' Ko';
 function vManuels(){const L=manList();const cls=isDir()?classIds():mesClasses();
- const cover=m=>`<span class="mb-cv" style="--c:${MCOL[m.cat]||'#555'}"><i></i><b>${h(m.titre||'Livre')}</b><small>${h(MCAT[m.cat]||'')}</small></span>`;
+ const cover=m=>m.cat==='horaire'?`<span class="mb-cv" style="padding:0;overflow:hidden;background:#2a1760"><img src="/ecole/docs/horaire-garde.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"></span>`:`<span class="mb-cv" style="--c:${MCOL[m.cat]||'#555'}"><i></i><b>${h(m.titre||'Livre')}</b><small>${h(MCAT[m.cat]||'')}</small></span>`;
  return band({back:isDir()?'gestion':'prof',home:true,kicker:'Bibliothèque',title:'Manuels',sub:'Programmes nationaux, livres et guides en PDF, lus ici dans l’application'})+page(`<div class="stack">
   <div class="card pad stack"><button class="btn grad" data-act="man-add">${ic('plus',18)} Ajouter un livre (PDF)</button>
    <div class="search">${ic('search',18)}<input class="inp" id="man-q" type="search" placeholder="Chercher un livre…" value="${h(S.mQ||'')}" aria-label="Chercher un livre"></div>
@@ -3001,7 +3001,7 @@ function loadPdfjs(){if(pdfjsP)return pdfjsP;pdfjsP=new Promise((ok,ko)=>{const 
 const PV={doc:null,z:1,io:null,id:'',mode:'livre',n:1,cache:new Map(),busy:false,ar:1.414};
 async function manOpen(id){const m=S.manuels?.[id];if(!m)return;PV.id=id;PV.z=1;PV.n=1;PV.cache=new Map();try{PV.mode=localStorage.getItem('clr-pv-mode')||'livre'}catch(e){}
  let box=document.getElementById('pdfv');if(box)box.remove();box=document.createElement('div');box.id='pdfv';box.className='pdfv';
- box.innerHTML=`<header><button class="iconbtn" data-act="pv-close" aria-label="Fermer">${ic('back',20)}</button><div class="grow pv-t"><small>${h(MCAT[m.cat]||'Manuel')} · <span id="pv-pgh">…</span></small><b>${h(m.titre)}</b></div><button class="x" data-act="pv-mode" aria-label="Changer de lecture" title="Feuilleter ou défiler" id="pv-mb">📜</button><button class="x" data-act="pv-zoom" data-v="-1" aria-label="Réduire">−</button><button class="x" data-act="pv-zoom" data-v="1" aria-label="Agrandir">+</button></header><div class="pv-sc" id="pv-sc"><p class="pv-msg">Ouverture du livre…</p></div>
+ box.innerHTML=`<header><button class="iconbtn" data-act="pv-close" aria-label="Fermer">${ic('back',20)}</button><div class="grow pv-t"><small>${h(MCAT[m.cat]||'Manuel')} · <span id="pv-pgh">…</span></small><b>${h(m.titre)}</b></div><button class="x" data-act="pv-share" aria-label="Imprimer ou envoyer" title="Imprimer ou envoyer">🖨️</button><button class="x" data-act="pv-mode" aria-label="Changer de lecture" title="Feuilleter ou défiler" id="pv-mb">📜</button><button class="x" data-act="pv-zoom" data-v="-1" aria-label="Réduire">−</button><button class="x" data-act="pv-zoom" data-v="1" aria-label="Agrandir">+</button></header><div class="pv-sc" id="pv-sc"><p class="pv-msg">Ouverture du livre…</p></div>
   <footer class="pv-ft"><button class="pv-nav" data-act="pv-go" data-v="-1" id="pv-prev" aria-label="Page précédente">${ic('back',18)}<span>Retour</span></button><button class="pv-pgb num" data-act="pv-pick" id="pv-pg">—</button><button class="pv-nav nx" data-act="pv-go" data-v="1" id="pv-next" aria-label="Page suivante"><span>Aller</span>${ic('back',18)}</button></footer>`;
  document.body.appendChild(box);document.documentElement.classList.add('dfs-lock');
  try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');const lib=await loadPdfjs();PV.doc=await lib.getDocument({url}).promise;await pvShow()}
@@ -4676,6 +4676,8 @@ const A={
   'man-cat':b=>{S.mCat=b.dataset.v;render()},
   'man-open':b=>manOpen(b.dataset.id),
   'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo&&!/^(\/|https:)/.test(m.path))await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
+  'pv-share':async b=>{const m=S.manuels?.[PV.id];if(!m)return;b.disabled=true;try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);const bl=await (await fetch(url)).blob();const f=new File([bl],(m.titre||'document').replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf',{type:'application/pdf'});
+   if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:m.titre});else{const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=f.name;document.body.appendChild(a);a.click();a.remove();toast('Fichier enregistré : ouvrez-le pour l’imprimer.')}}catch(e){if(e?.name!=='AbortError')toast('Envoi impossible pour le moment.')}b.disabled=false},
   'pv-close':()=>pvClose(),
   'pv-zoom':b=>{PV.z=Math.min(3,Math.max(1,PV.z+(+b.dataset.v)*.5));pvShow()},
   'pv-go':b=>pvFlip(+b.dataset.v),

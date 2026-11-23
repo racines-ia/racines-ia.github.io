@@ -1388,6 +1388,18 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .favbox b{color:var(--good);display:flex;gap:8px;align-items:center}
 .favbox .frep li b,.fretbox .frep li b{display:inline;color:inherit}
 .fretbox>b{display:flex;gap:8px;align-items:center}
+
+/* cahier de visite des classes */
+.vp .vp-lg{width:62px;height:62px;border-radius:50%;background:#fff;margin:6px 0 6px 14px;align-self:center;flex:none;overflow:hidden;box-shadow:0 0 0 3px rgba(255,255,255,.3)}.vp .vp-lg img{width:100%;height:100%;object-fit:cover;display:block}
+.vp .fp-brand small.vp-c{display:block;letter-spacing:0;text-transform:none;font-size:8.5px;opacity:.8;margin-top:3px;line-height:1.3}
+.vp-id{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--g);border-radius:11px;overflow:hidden;background:var(--s)}.vp-id>div{padding:3px 12px;font-size:11.5px;font-weight:700;color:var(--v);border-top:1px solid var(--g);border-left:1px solid var(--g);min-height:22px}.vp-id>div:nth-child(-n+2){border-top:0}.vp-id>div:nth-child(odd){border-left:0}.vp-id b{color:var(--k);font-weight:600}
+.vp-t{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}.vp{gap:8px}.vp .fp-top{min-height:60px}.vp-t th,.vp-t td{border:1px solid var(--g);padding:1px 7px;height:18px;line-height:1.2;vertical-align:middle}.vp-t th{background:var(--m);color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.vp-t .vp-sec td{background:#e4dcf6;font-weight:700;color:var(--m);text-align:center;font-size:11px;letter-spacing:.02em}.vp-t .vp-tot td{background:var(--s);font-weight:700}.vp-t .vp-all td{background:var(--m);color:#fff;font-weight:800;font-size:12px}
+.vp-t td.c{text-align:center}.vp-t td.o{font-size:10px;color:var(--k)}
+.vp-rem{border:1.4px solid var(--v);border-radius:11px;padding:5px 12px;font-size:11px;min-height:38px}.vp-rem b{display:block;font-size:10px;color:var(--v);text-transform:uppercase;letter-spacing:.04em}
+.vp-sig{display:grid;grid-template-columns:1fr 250px;gap:12px}.vp-sig .fp-box{min-height:72px}
+.vf-sec{display:grid;gap:8px}.vf-sec h3{margin:0;font-size:15px}.vf-row{display:grid;grid-template-columns:1fr 74px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line,#ffffff1a)}.vf-row:first-of-type{border-top:0}.vf-row .vf-l{font-weight:600}.vf-row .vf-l small{display:block;color:var(--muted,#9a90b8);font-weight:500}.vf-row .inp{text-align:center;padding:10px 6px}.vf-row .vf-o{grid-column:1/-1}
+.vf-tot{display:flex;justify-content:space-between;font-weight:700;padding-top:8px;border-top:2px solid var(--line,#ffffff33)}
 .fpw{width:100%;overflow:hidden;border-radius:10px;box-shadow:var(--shadow-s);background:#fff}
 .fpw>.fp{transform-origin:top left}
 /* papier A4 (pixels à 96 ppp) */
@@ -1635,7 +1647,7 @@ const POSTES_E=[['titulaire','Titulaire'],['professeur','Professeur']];
 const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire',etudes:'Directeur des études',discipline:'Directeur de discipline',titulaire:'Titulaire',professeur:'Professeur',directeur:'Directeur'};
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
 const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs','regjour','docs','fiche','fsuivi','comm','pensee'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs','regjour']};
-function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'}
+function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'||v==='visites'||v==='visite'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
 const posteOf=p=>p?.poste?POSTE_LBL[p.poste]:'';
@@ -1680,8 +1692,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',fiches:'fiches',communiques:'communiques',pensees:'pensees',comvus:'comvus'};
-const S={communiques:{},pensees:{},comvus:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',visites:'visites',fiches:'fiches',communiques:'communiques',pensees:'pensees',comvus:'comvus'};
+const S={communiques:{},pensees:{},comvus:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},visites:{},vEns:'',vDraft:null,ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -1904,7 +1916,7 @@ const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
   const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
-  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'||S.view==='devall'||S.view==='manuels'?(isDir()?'gestion':'prof'):S.view;
+  const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'||S.view==='devall'||S.view==='visites'||S.view==='visite'||S.view==='manuels'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
   const first=!NAVST.done,moved=NAVST.cur!==cur;NAVST.done=true;NAVST.cur=cur;
@@ -1927,7 +1939,7 @@ function screen(){
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir','manuels','docs','fiche','fsuivi','comm','pensee'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,manuels:vManuels,docs:vDocs,fsuivi:vSuivi,fiche:vFiche,comm:vComm})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,visites:vVisites,visite:vVisite,manuels:vManuels,docs:vDocs,fsuivi:vSuivi,fiche:vFiche,comm:vComm})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -2197,6 +2209,7 @@ function vGestion(){
   <button class="gcta" data-act="go" data-v="comm"><span><b>Communiqués</b><small>Écrivez un communiqué : il s’affiche en grand chez chaque enseignant dès qu’il ouvre l’école.</small></span><i>${ic('chev',20)}</i></button>
   <button class="gcta" data-act="go" data-v="devall"><span><b>Composition</b><small>Devoirs hebdomadaires, interrogations et examens de chaque classe, avec les copies de toute l’école à imprimer.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="go" data-v="disc"><span><b>Discipline du personnel${(()=>{const n=discUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.</small></span><i>${ic('chev',22)}</i></button>
+  <button class="gcta" data-act="go" data-v="visites0"><span><b>Cahier de visite des classes</b><small>Fiche de visite de chaque classe : personnalité, maîtrise de la matière, stratégie, documents. Classée par enseignant et par jour, avec votre signature.</small></span><i>${ic('chev',22)}</i></button>
   <button class="gcta" data-act="mopen" data-id=""><span><b>Remarques aux enseignants${(()=>{const n=msgUnread();return n?` · ${n} réponse${n>1?'s':''} à lire`:''})()}</b><small>Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.</small></span><i>${ic('chev',22)}</i></button>
   <section class="sec"><div class="sec-h"><h2 class="h2">Informations du bulletin</h2><span class="btns"><button class="btn sm" data-act="cal">Calendrier des périodes</button><button class="btn sm" data-act="ecole">Modifier</button></span></div>
   <div class="card pad"><dl class="kv">${[['Province éducationnelle',ec.province],['Ville',ec.ville],['Commune / Ter.',ec.commune],['Code de l’école',ec.code],['Chef d’établissement',ec.chef]].map(([l,v])=>`<dt>${l}</dt><dd>${v?h(v):'<span class="muted">À compléter</span>'}</dd>`).join('')}</dl></div></section>
@@ -2964,6 +2977,84 @@ function tabDev(){
    <p class="muted small" style="margin:0">${txt} Vous écrivez directement sur la feuille A4, comme sur papier. ${isDir()?'Chaque élève reçoit sa copie avec sa photo, son nom et sa classe.':'La direction imprime une copie par élève, avec son nom et sa photo.'}</p></div>
    ${L.length?`<div class="card list">${L.map(li).join('')}</div>`:`<div class="card empty"><h3>${T==='hebdo'?'Aucun devoir hebdomadaire cette semaine':T==='interro'?'Aucune interrogation pour le moment':'Aucun examen pour le moment'}</h3><p class="muted small">Touchez « Composer » pour ouvrir une feuille A4 et écrire vos questions.</p></div>`}`;
 }
+
+/* ---------- Cahier de visite des classes (fiche de visite, classée par enseignant et par jour) ---------- */
+const VIS=[
+ {t:'I. Personnalité',it:[['Présentation',4],['Langues',4],['Autorité',4],['Tenue de la classe',3]]},
+ {t:'II. Maîtrise de la matière et structure de la leçon',it:[['Exactitude',8],['Dosage',4],['Objectif opérationnel',4],['Adaptation',4],['Prérequis',4],['Inscription au JC',4],['Développement',4],['Synthèse',4],['Application',4]]},
+ {t:'III. Stratégie et moyens d’enseignement',it:[['Méthodes et procédés',5],['Facilités de transmission',5],['Matériel didactique',5],['Utilisation du tableau noir',5],['Participation des élèves',5],['Discipline',5]]},
+ {t:'IV. Documents des élèves et de l’enseignant',it:[['Journal de classe (élèves)',1],['Cahier de résumé (élèves)',1],['Cahier de devoir (élèves)',1],['Prévision des matières (enseignant)',2],['Répartition des matières (enseignant)',2],['Journal de classe (enseignant)',2],['Cahier de cotation (enseignant)',2],['Cahier de préparation (enseignant)',2]]}];
+const visMax=si=>sum(VIS[si].it.map(x=>x[1])),VIS_MAX=sum(VIS.map((_,i)=>visMax(i)));
+const visPts=(v,si,ii)=>{const x=v?.pts?.['s'+si+'i'+ii];return x===undefined||x===null||x===''||isNaN(+x)?null:+x};
+const visSec=(v,si)=>sum(VIS[si].it.map((_,ii)=>visPts(v,si,ii)||0));
+const visAll=v=>sum(VIS.map((_,i)=>visSec(v,i)));
+const visFmt=n=>String(Math.round(n*100)/100).replace('.',',');
+const visList=ens=>Object.entries(S.visites||{}).map(([id,v])=>({id,...v})).filter(v=>!ens||v.ens===ens).sort((a,b)=>((b.date||'')+(b.heure||'')).localeCompare((a.date||'')+(a.heure||'')));
+function visitePaper(v){
+  const E=ECO(),ec=S.config.ecole||{};const dd=v.date?dfrL(v.date):'';const cl=v.classeId?S.classes[v.classeId]?.nom||'':(v.classe||'');
+  const coord=[ec.province&&'Province éducationnelle : '+ec.province,ec.ville&&'Ville : '+ec.ville,ec.commune&&'Commune : '+ec.commune,ec.code&&'Code : '+ec.code].filter(Boolean).join(' · ');
+  const top=`<div class="fp-top"><span class="vp-lg"><img src="${h(E.logo||'icon-192-v3.png')}" alt=""></span><div class="fp-brand"><b>${h(E.nom||'')}</b><small>${h(E.devise||'Discipline · Unité · Travail')}</small>${coord?`<small class="vp-c">${h(coord)}</small>`:''}</div><div class="fp-ttl"><h1>FICHE DE VISITE DE CLASSE</h1><span>${h(ec.chef?chefLbl()+' : '+ec.chef:chefLbl())}</span></div></div>`;
+  const I=(l,x)=>`<div>${l} : <b>${h(x||'')}</b></div>`;
+  const id=`<div class="vp-id">${I('Nom de l’enseignant',v.ensNom)}${I('Section',v.section)}${I('Classe',cl)}${I('Branche',v.branche)}${I('Sous-branche',v.sousBranche)}${I('Sujet',v.sujet)}${I('Heure',v.heure)}${I('Date',dd)}</div>`;
+  let n=0;const rows=VIS.map((S0,si)=>`<tr class="vp-sec"><td colspan="5">${h(S0.t)} · ${visMax(si)} pts</td></tr>`+S0.it.map(([l,m],ii)=>{n++;const p=visPts(v,si,ii);return `<tr><td class="c">${n}</td><td>${h(l)}</td><td class="c">${m} pt${m>1?'s':''}</td><td class="c"><b>${p===null?'':visFmt(p)}</b></td><td class="o">${h(v.obs?.['s'+si+'i'+ii]||'')}</td></tr>`}).join('')+`<tr class="vp-tot"><td></td><td>TOTAL</td><td class="c">${visMax(si)} pts</td><td class="c">${v.pts&&Object.keys(v.pts).length?visFmt(visSec(v,si)):''}</td><td></td></tr>`).join('');
+  const has=v.pts&&Object.keys(v.pts).length;
+  const tbl=`<table class="vp-t"><colgroup><col style="width:46px"><col><col style="width:96px"><col style="width:92px"><col style="width:210px"></colgroup><thead><tr><th>N° ord</th><th>Sujets</th><th>Pondérations</th><th>Pts obtenus</th><th>Observations</th></tr></thead><tbody>${rows}<tr class="vp-all"><td></td><td>TOTAL GÉNÉRAL</td><td class="c">${VIS_MAX} pts</td><td class="c">${has?visFmt(visAll(v)):''}</td><td>${has?Math.round(visAll(v)/VIS_MAX*100)+' %':''}</td></tr></tbody></table>`;
+  const rem=`<div class="vp-rem"><b>Remarques et suggestions du visiteur</b>${h(v.remarque||'').replace(/\n/g,'<br>')}</div>`;
+  const sg=sigRes(v.sig);
+  const foot=`<div class="vp-sig"><div class="fp-box dir"><b>Visa et signature · ${h(v.sig?.fn||chefLbl())}</b><div class="fp-sg">${sg?`<img src="${h(sg)}" alt="" style="max-height:54px">`:''}</div><small>${h(v.sig?.nom||ec.chef||'')}${v.date?' · '+h(dfr(v.date)):' · Date : …… / …… / 20……'}</small></div><div class="fp-box"><b>Vu par l’enseignant</b><div class="fp-sg"></div><small>Date : …… / …… / 20……</small></div></div>`;
+  return `<div class="fp fp-p vp">${top}${id}${tbl}${rem}${foot}<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>Fiche de visite de classe${v.ensNom?' · '+h(v.ensNom):''}</span></div></div>`}
+async function visPDF(v,name){const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
+  toast('Préparation du PDF…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
+  const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=visitePaper(v);document.body.appendChild(host);
+  try{await Promise.all([...host.querySelectorAll('img')].map(im=>im.complete?0:new Promise(r=>{im.onload=im.onerror=r})));
+   const cv=await html2canvas(host.firstElementChild,{scale:2,backgroundColor:'#ffffff',useCORS:true});const {jsPDF}=window.jspdf;const pdf=new jsPDF({unit:'mm',format:'a4',orientation:'portrait'});
+   const r=Math.min(210/cv.width,297/cv.height);const w=cv.width*r,hh=cv.height*r;pdf.addImage(cv.toDataURL('image/jpeg',.92),'JPEG',(210-w)/2,(297-hh)/2,w,hh);
+   await dl.save({filename:name,data:pdf.output('blob'),text:`*${ECO().nom} · Fiche de visite de classe*`});toast('PDF prêt.')
+  }catch(err){if(err?.code!=='declined')toast('Le PDF n’a pas pu être créé.')}finally{host.remove()}}
+function vVisites(){
+  const E=S.vEns;const td=today();const mois=td.slice(0,7);
+  if(E){const p=ensList().find(x=>x.id===E)||{nom:''};const L=visList(E);const by={};L.forEach(v=>(by[v.date]=by[v.date]||[]).push(v));const days=Object.keys(by).sort().reverse();
+   return band({back:'visites0',home:true,kicker:'Cahier de visite des classes',title:h(p.nom),sub:`${L.length} visite${L.length>1?'s':''} · ${L.filter(v=>(v.date||'').startsWith(mois)).length} ce mois-ci`})+page(`<div class="stack">
+    <button class="btn grad" data-act="vis-new" data-id="${h(E)}">${ic('plus',18)} Nouvelle visite de classe</button>
+    ${days.length?days.map(d=>`<section class="sec"><h2 class="h2">${h(jourLbl(d))} · ${h(dfr(d))}</h2><div class="card list">${by[d].map(v=>`<button class="li" data-act="vis-open" data-id="${h(v.id)}"><span class="ib g">${ic('eye',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(v.sujet||v.branche||'Visite de classe')}</span><span class="muted small">${h((v.classeId?S.classes[v.classeId]?.nom:v.classe)||'')}${v.heure?' · '+h(v.heure):''}${v.branche&&v.sujet?' · '+h(v.branche):''}</span></span><span class="pill ${visAll(v)/VIS_MAX>=.5?'good':'warn'} num">${visFmt(visAll(v))} / ${VIS_MAX}</span></button>`).join('')}</div></section>`).join(''):`<div class="card empty"><h3>Aucune visite pour le moment</h3><p class="muted small">Touchez « Nouvelle visite de classe » pour remplir la fiche pendant votre passage en classe.</p></div>`}</div>`)}
+  const T=ensList().filter(p=>!isGest(p)&&(!p.prepare||clsOfEns(p.id).length));const all=visList();
+  return band({back:'gestion',home:true,kicker:'Direction',title:'Cahier de visite des classes',sub:'Une fiche par visite, classée par enseignant et par jour'})+page(`<div class="stack">
+   <div class="card pad small"><b>${all.filter(v=>(v.date||'').startsWith(mois)).length} visite${all.filter(v=>(v.date||'').startsWith(mois)).length>1?'s':''} ce mois-ci</b> · ${all.length} au total. Choisissez un enseignant pour voir ses visites ou en commencer une nouvelle.</div>
+   <button class="btn" data-act="vis-blank">${ic('doc',18)} Fiche vierge à imprimer (PDF)</button>
+   <div class="card list">${T.map(p=>{const L=visList(p.id);const last=L[0];const cl=clsOfEns(p.id).filter(c=>S.classes[c]).map(c=>S.classes[c].nom).join(', ');
+    return `<button class="li" data-act="vis-ens" data-id="${h(p.id)}">${avatar(p)}<span class="grow"><span class="ttl" style="display:block">${h(p.nom)}</span><span class="muted small">${h(cl)}${cl?' · ':''}${L.length?L.length+' visite'+(L.length>1?'s':'')+' · dernière '+h(dfr(last.date)):'Pas encore visité'}</span></span>${L.length?`<span class="pill num">${L.length}</span>`:''}</button>`}).join('')||'<div class="card empty"><h3>Aucun enseignant</h3></div>'}</div></div>`)}
+function visNew(ens){const p=ensList().find(x=>x.id===ens)||{nom:''};const c=clsOfEns(ens).filter(x=>S.classes[x])[0]||'';
+  S.vDraft={edit:true,ens,ensNom:p.nom||'',classeId:c,date:today(),heure:new Date().toTimeString().slice(0,5),section:'',branche:'',sousBranche:'',sujet:'',pts:{},obs:{},remarque:''};S.view='visite';render();scrollTo(0,0)}
+function vVisite(){
+  const v=S.vDraft;if(!v){S.view='visites';return vVisites()}
+  if(!v.edit){setTimeout(fitPapers,30);return band({back:'visites',home:true,kicker:'Cahier de visite des classes',title:h(v.ensNom||'Visite'),sub:`${h(jourLbl(v.date))} · ${visFmt(visAll(v))} / ${VIS_MAX}`})+page(`<div class="stack">
+    <div class="fpw">${visitePaper(v)}</div>
+    <div class="btns"><button class="btn grad" data-act="vis-pdf">${ic('doc',18)} PDF · imprimer ou envoyer</button><button class="btn" data-act="vis-edit">${ic('pen',18)} Modifier</button><button class="btn danger" data-act="vis-del" data-armtxt="Confirmer la suppression ?">Supprimer</button></div></div>`)}
+  const sel=(k,L,cur)=>`<select class="inp" data-vf="${k}">${L.map(([a,b])=>`<option value="${h(a)}" ${a===cur?'selected':''}>${h(b)}</option>`).join('')}</select>`;
+  const F=(l,k,t='text',ph='')=>`<div class="field"><label>${l}</label><input class="inp" data-vf="${k}" type="${t}" value="${h(v[k]||'')}" placeholder="${h(ph)}"></div>`;
+  return band({back:'visites',home:true,kicker:'Visite de classe',title:h(v.ensNom||'Nouvelle visite'),sub:'Remplissez pendant votre passage en classe'})+page(`<div class="stack" id="vform">
+   <section class="card pad stack"><h3 style="margin:0;font-size:15px">Identification et localisation</h3>
+    <div class="field"><label>Classe</label>${sel('classeId',[['','—'],...classIds().map(c=>[c,S.classes[c]?.nom||c])],v.classeId||'')}</div>
+    ${F('Section','section','text','Ex. Primaire')}${F('Branche','branche')}${F('Sous-branche','sousBranche')}${F('Sujet de la leçon','sujet')}
+    <div class="field"><label>Date</label><input class="inp" data-vf="date" type="date" value="${h(v.date||today())}" max="${today()}"></div>${F('Heure','heure','time')}</section>
+   ${VIS.map((S0,si)=>`<section class="card pad vf-sec"><h3>${h(S0.t)} <span class="muted small">· ${visMax(si)} pts</span></h3>${S0.it.map(([l,m],ii)=>{const k='s'+si+'i'+ii;const p=visPts(v,si,ii);return `<div class="vf-row"><span class="vf-l">${h(l)}<small>sur ${m} pt${m>1?'s':''}</small></span><input class="inp" data-vk="${k}" data-max="${m}" inputmode="decimal" placeholder="0" value="${p===null?'':String(p).replace('.',',')}" aria-label="${h(l)}"><input class="inp vf-o" data-vo="${k}" placeholder="Observation" value="${h(v.obs?.[k]||'')}"></div>`}).join('')}<div class="vf-tot"><span>Total</span><span><b id="vt-${si}">${visFmt(visSec(v,si))}</b> / ${visMax(si)}</span></div></section>`).join('')}
+   <section class="card pad stack"><div class="vf-tot" style="border:0;padding:0;font-size:16px"><span>Total général</span><span><b id="vt-all">${visFmt(visAll(v))}</b> / ${VIS_MAX}</span></div>
+    <div class="field"><label>Remarques et suggestions</label><textarea class="inp" data-vf="remarque" rows="4" placeholder="Vos remarques à l’enseignant…">${h(v.remarque||'')}</textarea></div></section>
+   <button class="btn grad" data-act="vis-save">${ic('check',18)} Enregistrer et signer</button></div>`)}
+function visCollect(){const v=S.vDraft;if(!v||!v.edit)return;const root=document.getElementById('vform');if(!root)return;
+  root.querySelectorAll('[data-vf]').forEach(el=>{v[el.dataset.vf]=el.value});if(v.classeId&&S.classes[v.classeId])v.classe=S.classes[v.classeId].nom;
+  v.pts=v.pts||{};v.obs=v.obs||{};
+  root.querySelectorAll('[data-vk]').forEach(el=>{const t=el.value.trim().replace(',','.');if(t===''||isNaN(+t)){delete v.pts[el.dataset.vk];return}v.pts[el.dataset.vk]=Math.max(0,Math.min(+el.dataset.max,+t))});
+  root.querySelectorAll('[data-vo]').forEach(el=>{const t=el.value.trim();if(t)v.obs[el.dataset.vo]=t;else delete v.obs[el.dataset.vo]});
+  VIS.forEach((_,si)=>{const e=document.getElementById('vt-'+si);if(e)e.textContent=visFmt(visSec(v,si))});const a=document.getElementById('vt-all');if(a)a.textContent=visFmt(visAll(v))}
+async function visSave(){visCollect();const v=S.vDraft;if(!v)return;
+  if(!Object.keys(v.pts||{}).length){toast('Entrez au moins une note.');return}
+  const sg=mySig();if(!sg.img){mySigSheet(()=>visSave());return}
+  const id=v.id||'v-'+Date.now().toString(36)+Math.random().toString(36).slice(2,5);
+  const doc={ens:v.ens,ensNom:v.ensNom,classeId:v.classeId||'',classe:v.classe||'',date:v.date||today(),heure:v.heure||'',section:v.section||'',branche:v.branche||'',sousBranche:v.sousBranche||'',sujet:v.sujet||'',pts:v.pts,obs:v.obs||{},remarque:(v.remarque||'').trim(),sig:sigPack(sg,{fn:sg.fn}),by:meId(),at:v.at||new Date().toISOString(),upd:new Date().toISOString()};
+  try{await put('visites',id,doc)}catch(e){return}
+  S.vDraft={id,...doc};S.vEns=doc.ens;toast('Visite enregistrée et signée.');render();scrollTo(0,0)}
+document.addEventListener('input',ev=>{if(ev.target.closest?.('#vform'))visCollect()});
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
@@ -4594,6 +4685,7 @@ addEventListener('hashchange',()=>{if(location.hash==='#apercu-enseignant'&&S.re
 /* ---------- actions ---------- */
 function arm(btn){if(btn.classList.contains('armed'))return true;btn.classList.add('armed');btn.dataset.lbl=btn.textContent;btn.textContent=btn.dataset.armtxt||'Appuyez encore pour confirmer';setTimeout(()=>{if(btn.isConnected){btn.classList.remove('armed');btn.textContent=btn.dataset.lbl}},4000);return false}
 function go(v){if(v==='prof'&&!isDir()){openProf(meId(),'prof');return}
+  if(v==='visites0'){S.vEns='';S.vDraft=null;v='visites'}else if(v==='visites')S.vDraft=null;
   if(v==='maclasse'){const c=mesClasses()[0];if(c){S.cid=c;S.view='classe';S.ctab='appel'}render();scrollTo(0,0);return}
   if(v==='msgs'&&isDir())S.mEns='';
   if(v==='docsall'){S.fEns='';v='docs'}
@@ -4630,6 +4722,14 @@ const A={
   'pz-save':async()=>{const t=($('#pz-t')?.value||'').trim();if(!t){toast('Écrivez la pensée.');return}const doc={txt:t,ia:false,at:new Date().toISOString(),by:meId()};if(S.demo){S.pensees[today()]=doc}else await put('pensees',today(),doc);closeSheet();render();toast('Pensée du jour enregistrée.')},
   fopen:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fPrep=false;S.fAvis='';S.fCorr=null;S.view='fiche';render();scrollTo(0,0)},
   fprep:b=>{S.fk={e:b.dataset.e,d:b.dataset.d,t:b.dataset.t};S.fDraft=null;S.fPrep=true;S.view='fiche';render();scrollTo(0,0)},
+  'vis-ens':b=>{S.vEns=b.dataset.id;S.vDraft=null;render();scrollTo(0,0)},
+  'vis-new':b=>visNew(b.dataset.id),
+  'vis-open':b=>{const v=S.visites?.[b.dataset.id];if(!v)return;S.vDraft={id:b.dataset.id,...v};S.view='visite';render();scrollTo(0,0)},
+  'vis-edit':()=>{if(S.vDraft){S.vDraft.edit=true;render();scrollTo(0,0)}},
+  'vis-save':()=>visSave(),
+  'vis-del':async b=>{if(!arm(b))return;const id=S.vDraft?.id;if(!id)return;await del('visites',id);S.vDraft=null;S.view='visites';toast('Visite supprimée.');render()},
+  'vis-pdf':()=>{const v=S.vDraft;if(v)visPDF(v,`Visite de classe - ${v.ensNom||''} - ${v.date||''}.pdf`)},
+  'vis-blank':()=>visPDF({pts:{},obs:{}},'Fiche de visite de classe - vierge.pdf'),
   fens:b=>{S.fEns=b.dataset.id;S.view='docs';render();scrollTo(0,0)},
   fday:b=>{if(b.dataset.v>today())return;S.fDate=b.dataset.v;render()},
   fsave:()=>ficheSave(),

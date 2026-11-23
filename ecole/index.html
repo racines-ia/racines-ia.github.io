@@ -1393,11 +1393,12 @@ table.pssit td,table.pssit th{text-align:center}table.pssit .name{text-align:lef
 .vp .vp-lg{width:62px;height:62px;border-radius:50%;background:#fff;margin:6px 0 6px 14px;align-self:center;flex:none;overflow:hidden;box-shadow:0 0 0 3px rgba(255,255,255,.3)}.vp .vp-lg img{width:100%;height:100%;object-fit:cover;display:block}
 .vp .fp-brand small.vp-c{display:block;letter-spacing:0;text-transform:none;font-size:8.5px;opacity:.8;margin-top:3px;line-height:1.3}
 .vp-id{display:grid;grid-template-columns:1fr 1fr;border:1px solid var(--g);border-radius:11px;overflow:hidden;background:var(--s)}.vp-id>div{padding:3px 12px;font-size:11.5px;font-weight:700;color:var(--v);border-top:1px solid var(--g);border-left:1px solid var(--g);min-height:22px}.vp-id>div:nth-child(-n+2){border-top:0}.vp-id>div:nth-child(odd){border-left:0}.vp-id b{color:var(--k);font-weight:600}
-.vp-t{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}.vp{gap:8px}.vp .fp-top{min-height:60px}.vp-t th,.vp-t td{border:1px solid var(--g);padding:1px 7px;height:18px;line-height:1.2;vertical-align:middle}.vp-t th{background:var(--m);color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
+.vp-t{width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed}.vp{gap:7px}.vp .fp-top{min-height:60px}.vp-t th,.vp-t td{border:1px solid var(--g);padding:1px 7px;height:17px;line-height:1.2;vertical-align:middle}.vp-t th{background:var(--m);color:#fff;font-size:9.5px;text-transform:uppercase;letter-spacing:.04em;font-weight:700}
 .vp-t .vp-sec td{background:#e4dcf6;font-weight:700;color:var(--m);text-align:center;font-size:11px;letter-spacing:.02em}.vp-t .vp-tot td{background:var(--s);font-weight:700}.vp-t .vp-all td{background:var(--m);color:#fff;font-weight:800;font-size:12px}
 .vp-t td.c{text-align:center}.vp-t td.o{font-size:10px;color:var(--k)}
 .vp-rem{border:1.4px solid var(--v);border-radius:11px;padding:5px 12px;font-size:11px;min-height:38px}.vp-rem b{display:block;font-size:10px;color:var(--v);text-transform:uppercase;letter-spacing:.04em}
 .vp-sig{display:grid;grid-template-columns:1fr 250px;gap:12px}.vp-sig .fp-box{min-height:72px}
+.vp.fp-ed td .fpe{min-height:0}.vp.fp-ed .fpe.one{min-width:40px;min-height:0}.vp.fp-ed .vp-id .fpe.one{min-width:110px}.vp.fp-ed td.c .fpe.one{min-width:34px;text-align:center}.vp-rem .fpe{min-height:34px}
 .vf-sec{display:grid;gap:8px}.vf-sec h3{margin:0;font-size:15px}.vf-row{display:grid;grid-template-columns:1fr 74px;gap:8px;align-items:center;padding:8px 0;border-top:1px solid var(--line,#ffffff1a)}.vf-row:first-of-type{border-top:0}.vf-row .vf-l{font-weight:600}.vf-row .vf-l small{display:block;color:var(--muted,#9a90b8);font-weight:500}.vf-row .inp{text-align:center;padding:10px 6px}.vf-row .vf-o{grid-column:1/-1}
 .vf-tot{display:flex;justify-content:space-between;font-weight:700;padding-top:8px;border-top:2px solid var(--line,#ffffff33)}
 .fpw{width:100%;overflow:hidden;border-radius:10px;box-shadow:var(--shadow-s);background:#fff}
@@ -2983,26 +2984,27 @@ const VIS=[
  {t:'I. Personnalité',it:[['Présentation',4],['Langues',4],['Autorité',4],['Tenue de la classe',3]]},
  {t:'II. Maîtrise de la matière et structure de la leçon',it:[['Exactitude',8],['Dosage',4],['Objectif opérationnel',4],['Adaptation',4],['Prérequis',4],['Inscription au JC',4],['Développement',4],['Synthèse',4],['Application',4]]},
  {t:'III. Stratégie et moyens d’enseignement',it:[['Méthodes et procédés',5],['Facilités de transmission',5],['Matériel didactique',5],['Utilisation du tableau noir',5],['Participation des élèves',5],['Discipline',5]]},
- {t:'IV. Documents des élèves et de l’enseignant',it:[['Journal de classe (élèves)',1],['Cahier de résumé (élèves)',1],['Cahier de devoir (élèves)',1],['Prévision des matières (enseignant)',2],['Répartition des matières (enseignant)',2],['Journal de classe (enseignant)',2],['Cahier de cotation (enseignant)',2],['Cahier de préparation (enseignant)',2]]}];
+ {t:'IV. Documents des élèves et de l’enseignant',it:[['Journal de classe (élèves)',1],['Cahier de résumé (élèves)',1],['Cahier de devoir (élèves)',1],['Prévision des matières (enseignant)',2],['Répartition des matières (enseignant)',2],['Journal de classe (enseignant)',2],['Cahier de cotation (enseignant)',2],['Cahier de préparation (enseignant)',2],['Horaire des cours (enseignant)',2]]}];
 const visMax=si=>sum(VIS[si].it.map(x=>x[1])),VIS_MAX=sum(VIS.map((_,i)=>visMax(i)));
 const visPts=(v,si,ii)=>{const x=v?.pts?.['s'+si+'i'+ii];return x===undefined||x===null||x===''||isNaN(+x)?null:+x};
 const visSec=(v,si)=>sum(VIS[si].it.map((_,ii)=>visPts(v,si,ii)||0));
 const visAll=v=>sum(VIS.map((_,i)=>visSec(v,i)));
 const visFmt=n=>String(Math.round(n*100)/100).replace('.',',');
 const visList=ens=>Object.entries(S.visites||{}).map(([id,v])=>({id,...v})).filter(v=>!ens||v.ens===ens).sort((a,b)=>((b.date||'')+(b.heure||'')).localeCompare((a.date||'')+(a.heure||'')));
-function visitePaper(v){
+function visitePaper(v,ed){
   const E=ECO(),ec=S.config.ecole||{};const dd=v.date?dfrL(v.date):'';const cl=v.classeId?S.classes[v.classeId]?.nom||'':(v.classe||'');
   const coord=[ec.province&&'Province éducationnelle : '+ec.province,ec.ville&&'Ville : '+ec.ville,ec.commune&&'Commune : '+ec.commune,ec.code&&'Code : '+ec.code].filter(Boolean).join(' · ');
   const top=`<div class="fp-top"><span class="vp-lg"><img src="${h(E.logo||'icon-192-v3.png')}" alt=""></span><div class="fp-brand"><b>${h(E.nom||'')}</b><small>${h(E.devise||'Discipline · Unité · Travail')}</small>${coord?`<small class="vp-c">${h(coord)}</small>`:''}</div><div class="fp-ttl"><h1>FICHE DE VISITE DE CLASSE</h1><span>${h(ec.chef?chefLbl()+' : '+ec.chef:chefLbl())}</span></div></div>`;
-  const I=(l,x)=>`<div>${l} : <b>${h(x||'')}</b></div>`;
-  const id=`<div class="vp-id">${I('Nom de l’enseignant',v.ensNom)}${I('Section',v.section)}${I('Classe',cl)}${I('Branche',v.branche)}${I('Sous-branche',v.sousBranche)}${I('Sujet',v.sujet)}${I('Heure',v.heure)}${I('Date',dd)}</div>`;
-  let n=0;const rows=VIS.map((S0,si)=>`<tr class="vp-sec"><td colspan="5">${h(S0.t)} · ${visMax(si)} pts</td></tr>`+S0.it.map(([l,m],ii)=>{n++;const p=visPts(v,si,ii);return `<tr><td class="c">${n}</td><td>${h(l)}</td><td class="c">${m} pt${m>1?'s':''}</td><td class="c"><b>${p===null?'':visFmt(p)}</b></td><td class="o">${h(v.obs?.['s'+si+'i'+ii]||'')}</td></tr>`}).join('')+`<tr class="vp-tot"><td></td><td>TOTAL</td><td class="c">${visMax(si)} pts</td><td class="c">${v.pts&&Object.keys(v.pts).length?visFmt(visSec(v,si)):''}</td><td></td></tr>`).join('');
+  const X=(k,x,ph)=>ed?`<span class="fpv fpe one" contenteditable="true" spellcheck="true" data-vf="${k}" data-ph="${h(ph||'')}">${h(x||'')}</span>`:h(x||'');
+  const I=(l,x,k,ph)=>`<div>${l} : <b>${k&&ed?X(k,x,ph):h(x||'')}</b></div>`;
+  const id=`<div class="vp-id">${I('Nom de l’enseignant',v.ensNom,'ensNom','nom')}${I('Section',v.section,'section','section')}${I('Classe',cl,'classeTxt','classe')}${I('Branche',v.branche,'branche','branche')}${I('Sous-branche',v.sousBranche,'sousBranche','sous-branche')}${I('Sujet',v.sujet,'sujet','sujet')}${I('Heure',v.heure,'heure','00:00')}${I('Date',dd)}</div>`;
+  let n=0;const rows=VIS.map((S0,si)=>`<tr class="vp-sec"><td colspan="5">${h(S0.t)} · ${visMax(si)} pts</td></tr>`+S0.it.map(([l,m],ii)=>{n++;const p=visPts(v,si,ii);return `<tr><td class="c">${n}</td><td>${h(l)}</td><td class="c">${m} pt${m>1?'s':''}</td><td class="c"><b>${ed?`<span class="fpv fpe one" contenteditable="true" inputmode="decimal" data-vk="s${si}i${ii}" data-max="${m}" data-ph="0">${p===null?'':visFmt(p)}</span>`:p===null?'':visFmt(p)}</b></td><td class="o">${ed?`<span class="fpv fpe" contenteditable="true" spellcheck="true" data-vo="s${si}i${ii}" data-ph="…">${h(v.obs?.['s'+si+'i'+ii]||'')}</span>`:h(v.obs?.['s'+si+'i'+ii]||'')}</td></tr>`}).join('')+`<tr class="vp-tot"><td></td><td>TOTAL</td><td class="c">${visMax(si)} pts</td><td class="c"><span data-tsec="${si}">${v.pts&&Object.keys(v.pts).length?visFmt(visSec(v,si)):''}</span></td><td></td></tr>`).join('');
   const has=v.pts&&Object.keys(v.pts).length;
-  const tbl=`<table class="vp-t"><colgroup><col style="width:46px"><col><col style="width:96px"><col style="width:92px"><col style="width:210px"></colgroup><thead><tr><th>N° ord</th><th>Sujets</th><th>Pondérations</th><th>Pts obtenus</th><th>Observations</th></tr></thead><tbody>${rows}<tr class="vp-all"><td></td><td>TOTAL GÉNÉRAL</td><td class="c">${VIS_MAX} pts</td><td class="c">${has?visFmt(visAll(v)):''}</td><td>${has?Math.round(visAll(v)/VIS_MAX*100)+' %':''}</td></tr></tbody></table>`;
-  const rem=`<div class="vp-rem"><b>Remarques et suggestions du visiteur</b>${h(v.remarque||'').replace(/\n/g,'<br>')}</div>`;
+  const tbl=`<table class="vp-t"><colgroup><col style="width:46px"><col><col style="width:96px"><col style="width:92px"><col style="width:210px"></colgroup><thead><tr><th>N° ord</th><th>Sujets</th><th>Pondérations</th><th>Pts obtenus</th><th>Observations</th></tr></thead><tbody>${rows}<tr class="vp-all"><td></td><td>TOTAL GÉNÉRAL</td><td class="c">${VIS_MAX} pts</td><td class="c"><span data-tall>${has?visFmt(visAll(v)):''}</span></td><td><span data-tpct>${has?Math.round(visAll(v)/VIS_MAX*100)+' %':''}</span></td></tr></tbody></table>`;
+  const rem=`<div class="vp-rem"><b>Remarques et suggestions du visiteur</b>${ed?`<span class="fpv fpe" contenteditable="true" spellcheck="true" data-vf="remarque" data-ph="Remarques à l’enseignant…">${h(v.remarque||'')}</span>`:h(v.remarque||'').replace(/\n/g,'<br>')}</div>`;
   const sg=sigRes(v.sig);
   const foot=`<div class="vp-sig"><div class="fp-box dir"><b>Visa et signature · ${h(v.sig?.fn||chefLbl())}</b><div class="fp-sg">${sg?`<img src="${h(sg)}" alt="" style="max-height:54px">`:''}</div><small>${h(v.sig?.nom||ec.chef||'')}${v.date?' · '+h(dfr(v.date)):' · Date : …… / …… / 20……'}</small></div><div class="fp-box"><b>Vu par l’enseignant</b><div class="fp-sg"></div><small>Date : …… / …… / 20……</small></div></div>`;
-  return `<div class="fp fp-p vp">${top}${id}${tbl}${rem}${foot}<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>Fiche de visite de classe${v.ensNom?' · '+h(v.ensNom):''}</span></div></div>`}
+  return `<div class="fp fp-p vp${ed?' fp-ed':''}">${top}${id}${tbl}${rem}${foot}<div class="fp-legal"><span>racines.ia · moderniser le système éducatif</span><span>Fiche de visite de classe${v.ensNom?' · '+h(v.ensNom):''}</span></div></div>`}
 async function visPDF(v,name){const dl=window.claude?.use?await claude.use('downloads').catch(()=>null):null;if(!dl){toast('Le partage n’est pas disponible ici.');return}
   toast('Préparation du PDF…');try{await loadLibs()}catch(err){toast('Impossible de préparer le PDF. Vérifiez la connexion.');return}
   const host=document.createElement('div');host.style.cssText='position:fixed;left:-10000px;top:0;width:794px;background:#fff';host.innerHTML=visitePaper(v);document.body.appendChild(host);
@@ -3029,24 +3031,34 @@ function vVisite(){
   const v=S.vDraft;if(!v){S.view='visites';return vVisites()}
   if(!v.edit){setTimeout(fitPapers,30);return band({back:'visites',home:true,kicker:'Cahier de visite des classes',title:h(v.ensNom||'Visite'),sub:`${h(jourLbl(v.date))} · ${visFmt(visAll(v))} / ${VIS_MAX}`})+page(`<div class="stack">
     <div class="fpw">${visitePaper(v)}</div>
-    <div class="btns"><button class="btn grad" data-act="vis-pdf">${ic('doc',18)} PDF · imprimer ou envoyer</button><button class="btn" data-act="vis-edit">${ic('pen',18)} Modifier</button><button class="btn danger" data-act="vis-del" data-armtxt="Confirmer la suppression ?">Supprimer</button></div></div>`)}
+    <div class="btns"><button class="btn grad" data-act="vis-pdf">${ic('doc',18)} PDF · imprimer ou envoyer</button><button class="btn" data-act="vis-editfs">${ic('pen',18)} Modifier sur la feuille</button><button class="btn" data-act="vis-edit">Formulaire</button><button class="btn danger" data-act="vis-del" data-armtxt="Confirmer la suppression ?">Supprimer</button></div></div>`)}
   const sel=(k,L,cur)=>`<select class="inp" data-vf="${k}">${L.map(([a,b])=>`<option value="${h(a)}" ${a===cur?'selected':''}>${h(b)}</option>`).join('')}</select>`;
   const F=(l,k,t='text',ph='')=>`<div class="field"><label>${l}</label><input class="inp" data-vf="${k}" type="${t}" value="${h(v[k]||'')}" placeholder="${h(ph)}"></div>`;
   return band({back:'visites',home:true,kicker:'Visite de classe',title:h(v.ensNom||'Nouvelle visite'),sub:'Remplissez pendant votre passage en classe'})+page(`<div class="stack" id="vform">
+   <button class="btn grad" data-act="vis-fs">${ic('pen',18)} Remplir directement sur la feuille A4</button>
    <section class="card pad stack"><h3 style="margin:0;font-size:15px">Identification et localisation</h3>
     <div class="field"><label>Classe</label>${sel('classeId',[['','—'],...classIds().map(c=>[c,S.classes[c]?.nom||c])],v.classeId||'')}</div>
     ${F('Section','section','text','Ex. Primaire')}${F('Branche','branche')}${F('Sous-branche','sousBranche')}${F('Sujet de la leçon','sujet')}
     <div class="field"><label>Date</label><input class="inp" data-vf="date" type="date" value="${h(v.date||today())}" max="${today()}"></div>${F('Heure','heure','time')}</section>
-   ${VIS.map((S0,si)=>`<section class="card pad vf-sec"><h3>${h(S0.t)} <span class="muted small">· ${visMax(si)} pts</span></h3>${S0.it.map(([l,m],ii)=>{const k='s'+si+'i'+ii;const p=visPts(v,si,ii);return `<div class="vf-row"><span class="vf-l">${h(l)}<small>sur ${m} pt${m>1?'s':''}</small></span><input class="inp" data-vk="${k}" data-max="${m}" inputmode="decimal" placeholder="0" value="${p===null?'':String(p).replace('.',',')}" aria-label="${h(l)}"><input class="inp vf-o" data-vo="${k}" placeholder="Observation" value="${h(v.obs?.[k]||'')}"></div>`}).join('')}<div class="vf-tot"><span>Total</span><span><b id="vt-${si}">${visFmt(visSec(v,si))}</b> / ${visMax(si)}</span></div></section>`).join('')}
-   <section class="card pad stack"><div class="vf-tot" style="border:0;padding:0;font-size:16px"><span>Total général</span><span><b id="vt-all">${visFmt(visAll(v))}</b> / ${VIS_MAX}</span></div>
+   ${VIS.map((S0,si)=>`<section class="card pad vf-sec"><h3>${h(S0.t)} <span class="muted small">· ${visMax(si)} pts</span></h3>${S0.it.map(([l,m],ii)=>{const k='s'+si+'i'+ii;const p=visPts(v,si,ii);return `<div class="vf-row"><span class="vf-l">${h(l)}<small>sur ${m} pt${m>1?'s':''}</small></span><input class="inp" data-vk="${k}" data-max="${m}" inputmode="decimal" placeholder="0" value="${p===null?'':String(p).replace('.',',')}" aria-label="${h(l)}"><input class="inp vf-o" data-vo="${k}" placeholder="Observation" value="${h(v.obs?.[k]||'')}"></div>`}).join('')}<div class="vf-tot"><span>Total</span><span><b data-tsec="${si}">${visFmt(visSec(v,si))}</b> / ${visMax(si)}</span></div></section>`).join('')}
+   <section class="card pad stack"><div class="vf-tot" style="border:0;padding:0;font-size:16px"><span>Total général</span><span><b data-tall>${visFmt(visAll(v))}</b> / ${VIS_MAX}</span></div>
     <div class="field"><label>Remarques et suggestions</label><textarea class="inp" data-vf="remarque" rows="4" placeholder="Vos remarques à l’enseignant…">${h(v.remarque||'')}</textarea></div></section>
    <button class="btn grad" data-act="vis-save">${ic('check',18)} Enregistrer et signer</button></div>`)}
-function visCollect(){const v=S.vDraft;if(!v||!v.edit)return;const root=document.getElementById('vform');if(!root)return;
-  root.querySelectorAll('[data-vf]').forEach(el=>{v[el.dataset.vf]=el.value});if(v.classeId&&S.classes[v.classeId])v.classe=S.classes[v.classeId].nom;
+function visCollect(){const v=S.vDraft;if(!v||!v.edit)return;const o=document.getElementById('fsed');const root=(o&&!o.hidden&&o.querySelector('.vp'))?o:document.getElementById('vform');if(!root)return;
+  const val=el=>/^(INPUT|SELECT|TEXTAREA)$/.test(el.tagName)?el.value:el.innerText.replace(/ /g,' ').replace(/\n+$/,'');
+  root.querySelectorAll('[data-vf]').forEach(el=>{const k=el.dataset.vf,t=val(el);if(k==='classeTxt'){const c=classIds().find(x=>(S.classes[x]?.nom||'')===t.trim());v.classeId=c||'';v.classe=t.trim();return}v[k]=t});
+  if(root.id==='vform'&&v.classeId&&S.classes[v.classeId])v.classe=S.classes[v.classeId].nom;
   v.pts=v.pts||{};v.obs=v.obs||{};
-  root.querySelectorAll('[data-vk]').forEach(el=>{const t=el.value.trim().replace(',','.');if(t===''||isNaN(+t)){delete v.pts[el.dataset.vk];return}v.pts[el.dataset.vk]=Math.max(0,Math.min(+el.dataset.max,+t))});
-  root.querySelectorAll('[data-vo]').forEach(el=>{const t=el.value.trim();if(t)v.obs[el.dataset.vo]=t;else delete v.obs[el.dataset.vo]});
-  VIS.forEach((_,si)=>{const e=document.getElementById('vt-'+si);if(e)e.textContent=visFmt(visSec(v,si))});const a=document.getElementById('vt-all');if(a)a.textContent=visFmt(visAll(v))}
+  root.querySelectorAll('[data-vk]').forEach(el=>{const t=val(el).trim().replace(',','.');if(t===''||isNaN(+t)){delete v.pts[el.dataset.vk];return}v.pts[el.dataset.vk]=Math.max(0,Math.min(+el.dataset.max,+t))});
+  root.querySelectorAll('[data-vo]').forEach(el=>{const t=val(el).trim();if(t)v.obs[el.dataset.vo]=t;else delete v.obs[el.dataset.vo]});
+  const has=Object.keys(v.pts).length;
+  document.querySelectorAll('[data-tsec]').forEach(e=>{e.textContent=has?visFmt(visSec(v,+e.dataset.tsec)):''});document.querySelectorAll('[data-tall]').forEach(e=>e.textContent=has?visFmt(visAll(v)):'');document.querySelectorAll('[data-tpct]').forEach(e=>e.textContent=has?Math.round(visAll(v)/VIS_MAX*100)+' %':'')}
+/* remplir directement sur la feuille A4, en plein écran */
+function visFs(){visCollect();const v=S.vDraft;if(!v)return;fsScale=null;
+  let o=$('#fsed');if(!o){o=document.createElement('div');o.id='fsed';document.body.appendChild(o)}
+  o.innerHTML=`<div class="fs-bar"><button type="button" class="x" data-act="fs-close" aria-label="Fermer">✕</button><span class="grow"><b>Fiche de visite de classe</b></span><button type="button" class="x" data-act="fs-zoom" data-v="-1" aria-label="Réduire">−</button><button type="button" class="fs-pct" data-act="fs-zoom" data-v="fit" aria-label="Voir la feuille entière">100 %</button><button type="button" class="x" data-act="fs-zoom" data-v="1" aria-label="Agrandir">+</button><button type="button" class="btn grad sm" data-act="vis-fsave">${ic('check',16)} Enregistrer</button></div><div class="fs-tip">Touchez une case : la feuille s’agrandit et vous écrivez. Les totaux se calculent seuls. Pincez avec deux doigts pour zoomer.</div>
+   <div class="fs-scroll"><div class="fs-wrap">${visitePaper(v,true)}</div></div>`;
+  o.hidden=false;document.body.classList.add('fs-on');requestAnimationFrame(fsFit)}
 async function visSave(){visCollect();const v=S.vDraft;if(!v)return;
   if(!Object.keys(v.pts||{}).length){toast('Entrez au moins une note.');return}
   const sg=mySig();if(!sg.img){mySigSheet(()=>visSave());return}
@@ -3054,7 +3066,8 @@ async function visSave(){visCollect();const v=S.vDraft;if(!v)return;
   const doc={ens:v.ens,ensNom:v.ensNom,classeId:v.classeId||'',classe:v.classe||'',date:v.date||today(),heure:v.heure||'',section:v.section||'',branche:v.branche||'',sousBranche:v.sousBranche||'',sujet:v.sujet||'',pts:v.pts,obs:v.obs||{},remarque:(v.remarque||'').trim(),sig:sigPack(sg,{fn:sg.fn}),by:meId(),at:v.at||new Date().toISOString(),upd:new Date().toISOString()};
   try{await put('visites',id,doc)}catch(e){return}
   S.vDraft={id,...doc};S.vEns=doc.ens;toast('Visite enregistrée et signée.');render();scrollTo(0,0)}
-document.addEventListener('input',ev=>{if(ev.target.closest?.('#vform'))visCollect()});
+document.addEventListener('input',ev=>{if(ev.target.closest?.('#vform')||ev.target.closest?.('#fsed .vp'))visCollect()});
+document.addEventListener('focusout',ev=>{const el=ev.target.closest?.('#fsed [data-vk]');if(!el)return;const t=el.innerText.trim().replace(',','.');if(t===''||isNaN(+t)){el.textContent='';return}const n=Math.max(0,Math.min(+el.dataset.max,+t));el.textContent=visFmt(n);visCollect()});
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
@@ -4727,6 +4740,9 @@ const A={
   'vis-open':b=>{const v=S.visites?.[b.dataset.id];if(!v)return;S.vDraft={id:b.dataset.id,...v};S.view='visite';render();scrollTo(0,0)},
   'vis-edit':()=>{if(S.vDraft){S.vDraft.edit=true;render();scrollTo(0,0)}},
   'vis-save':()=>visSave(),
+  'vis-fs':()=>visFs(),
+  'vis-editfs':()=>{if(S.vDraft){S.vDraft.edit=true;render();visFs()}},
+  'vis-fsave':()=>{fsClose();visSave()},
   'vis-del':async b=>{if(!arm(b))return;const id=S.vDraft?.id;if(!id)return;await del('visites',id);S.vDraft=null;S.view='visites';toast('Visite supprimée.');render()},
   'vis-pdf':()=>{const v=S.vDraft;if(v)visPDF(v,`Visite de classe - ${v.ensNom||''} - ${v.date||''}.pdf`)},
   'vis-blank':()=>visPDF({pts:{},obs:{}},'Fiche de visite de classe - vierge.pdf'),

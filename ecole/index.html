@@ -2354,6 +2354,7 @@ const aTimers={};
 function marquer(cid,d,eids,val){
   if(spDay(cid,d)){toast(spLbl(spDay(cid,d))+' : cette journée est barrée.');return}
   const id=aid(cid,d);const doc=JSON.parse(JSON.stringify(S.appel[id]||{classeId:cid,date:d,p:{}}));
+  if(!doc.p||typeof doc.p!=='object')doc.p={};doc.classeId=cid;doc.date=d;
   for(const e of eids){if(val==null){const cur=doc.p[e]||'';const nx=cur===''?'P':cur==='P'?'A':cur==='A'?'M':'';if(nx)doc.p[e]=nx;else delete doc.p[e]}else if(!doc.p[e])doc.p[e]=val}
   doc.by=meId();S.appel={...S.appel,[id]:doc};render();
   clearTimeout(aTimers[id]);aTimers[id]=setTimeout(()=>put('appel',id,S.appel[id]).catch(()=>{}),500);

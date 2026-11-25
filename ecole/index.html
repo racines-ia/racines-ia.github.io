@@ -1648,7 +1648,8 @@ const POSTES_E=[['titulaire','Titulaire'],['professeur','Professeur']];
 const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire',etudes:'Directeur des études',discipline:'Directeur de discipline',titulaire:'Titulaire',professeur:'Professeur',directeur:'Directeur'};
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
 const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs','regjour','docs','fiche','fsuivi','comm','pensee'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs','regjour']};
-function canView(v){if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'||v==='visites'||v==='visite'||v==='cdoc'}
+const PCK='clr-percep-off';const percepOff=()=>{try{return localStorage.getItem(PCK)==='1'}catch(e){return false}};
+function canView(v){if((v==='perception'||v==='caisse')&&percepOff())return false;if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'||v==='visites'||v==='visite'||v==='cdoc'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
 const posteOf=p=>p?.poste?POSTE_LBL[p.poste]:'';
@@ -1916,7 +1917,7 @@ function gated(){return !S.ready||(!S.demo&&!S.me.id)||(!isDir()&&(!S.inscr[meId
 const NAVST={done:false,cur:null};
 function navHtml(){
   if(gated())return '';
-  const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(isSec()&&myPoste()==='secretaire'):canView(k)));
+  const t=(isDir()?[['accueil','Accueil','home'],['classes','Classes','grid'],['activite','Activité','bell'],['eleves','Élèves','users'],['perception','Perception','money'],['gestion','Administration','admin']]:[['prof','Mon profil','shield'],['maclasse','Ma classe','grid']]).filter(([k])=>!isDir()||(k==='perception'?(!percepOff()&&isSec()&&myPoste()==='secretaire'):canView(k)));
   const cur=S.view==='classe'?(isDir()?'classes':'maclasse'):S.view==='prof'||S.view==='presence'||S.view==='sante'||S.view==='perception'||S.view==='caisse'||S.view==='corbeille'||S.view==='msgs'||S.view==='regjour'||S.view==='disc'||S.view==='devall'||S.view==='cdoc'||S.view==='visites'||S.view==='visite'||S.view==='manuels'?(isDir()?'gestion':'prof'):S.view;
   const nb=isDir()?unseen():0;
   const me=ensList().find(p=>p.id===meId())||(isDir()?ensList().find(p=>isGest(p)&&/direct/i.test(p.matiere||'')):null);
@@ -2182,7 +2183,7 @@ function eleveRows(list,showCls){return list.map((e,n)=>{const dn=e.dateNaissanc
 function tabEleves(){
   const es=elevesOf(S.cid);
   return `<div class="sec-h"><h2 class="h2">${es.length} élève${es.length>1?'s':''}</h2><span class="btns">${es.length?`<button class="btn sm" data-act="cartescls" data-id="${h(S.cid)}">${ic('card',16)} Cartes d’élèves</button>`:''}<button class="btn grad sm" data-act="new-eleve">${ic('plus',18)} Inscrire un élève</button></span></div>
-   ${es.length&&isDir()?(()=>{const nb=es.filter(e=>blk(e.id)).length;const ret=es.filter(e=>{try{return situation(e.id).st==='retard'&&!blk(e.id)}catch(x){return false}}).length;return `<div class="card pad stack blkbar"><div><b>Résultats visibles par l’enseignant</b><small class="muted num">${nb?`${nb} élève${nb>1?'s':''} désactivé${nb>1?'s':''} sur ${es.length}`:'Tous les élèves sont actifs'} · l’interrupteur à droite de chaque nom active ou désactive l’élève.</small></div><div class="btns"><button class="btn sm" data-act="blk-all" data-v="1">Tout désactiver</button><button class="btn sm" data-act="blk-all" data-v="0">Tout activer</button>${ret?`<button class="btn sm" data-act="blk-ret">Désactiver les ${ret} en retard de frais</button>`:''}</div></div>`})():''}
+   ${es.length&&isDir()?(()=>{const nb=es.filter(e=>blk(e.id)).length;const ret=percepOff()?0:es.filter(e=>{try{return situation(e.id).st==='retard'&&!blk(e.id)}catch(x){return false}}).length;return `<div class="card pad stack blkbar"><div><b>Résultats visibles par l’enseignant</b><small class="muted num">${nb?`${nb} élève${nb>1?'s':''} désactivé${nb>1?'s':''} sur ${es.length}`:'Tous les élèves sont actifs'} · l’interrupteur à droite de chaque nom active ou désactive l’élève.</small></div><div class="btns"><button class="btn sm" data-act="blk-all" data-v="1">Tout désactiver</button><button class="btn sm" data-act="blk-all" data-v="0">Tout activer</button>${ret?`<button class="btn sm" data-act="blk-ret">Désactiver les ${ret} en retard de frais</button>`:''}</div></div>`})():''}
    ${es.length?`<div class="card list">${eleveRows(es)}</div>`:`<div class="card empty"><h3>Aucun élève inscrit</h3><p class="muted small">Ajoutez le premier élève avec son identité complète.</p></div>`}`;
 }
 
@@ -3078,7 +3079,9 @@ function vCdoc(){
    ${canView('disc')?C('disc','Discipline du personnel'+(nd?` · ${nd} réponse${nd>1?'s':''} à lire`:''),'Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.'):''}
    ${canView('visites')?C('visites0','Cahier de visite des classes'+(nv?` · ${nv} ce mois-ci`:''),'Fiche de visite de chaque classe, classée par enseignant et par jour, avec votre signature.'):''}
    ${canView('msgs')?C('','Remarques aux enseignants'+(nm?` · ${nm} réponse${nm>1?'s':''} à lire`:''),'Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.','mopen'):''}
-   ${canView('presence')?C('presence','Cahier de présence',`Présence du personnel · aujourd’hui : ${np} présent${np>1?'s':''} sur ${L.length}`):''}</div>`)}
+   ${canView('presence')?C('presence','Cahier de présence',`Présence du personnel · aujourd’hui : ${np} présent${np>1?'s':''} sur ${L.length}`):''}
+   ${isDir()?C('','Mes préférences','Affichage de l’application sur ce téléphone.','pcv-open'):''}</div>`)}
+function prefSheet(){const off=percepOff();openSheet('Mes préférences',`<div class="stack"><div class="card pad stack blkbar"><div style="display:flex;align-items:center;gap:12px"><div class="grow"><b>Perception des frais</b><small class="muted" style="display:block">${off?'Masquée : plus rien ne s’affiche sur ce téléphone.':'Visible : la perception s’affiche normalement.'}</small></div><button class="bsw${off?'':' on'}" data-act="pcv-toggle" role="switch" aria-checked="${!off}" aria-label="Afficher la perception des frais"><i></i></button></div></div><p class="muted small" style="margin:0">Fermé, tout ce qui concerne les frais, les paiements et la perception disparaît de l’application sur ce téléphone. Rouvrez cet interrupteur pour tout retrouver.</p></div>`)}
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
@@ -4495,10 +4498,10 @@ function seenGet(){try{return localStorage.getItem('clr-seen')||''}catch(e){retu
 function seenSet(v){try{localStorage.setItem('clr-seen',v)}catch(e){}}
 function events(){const out=[];for(const j of Object.values(S.journal)){if(!S.classes[j.classeId])continue;if(j.appel)out.push({t:'appel',j,at:j.appel.at,e:j.appel});if(j.cotes)out.push({t:'cotes',j,at:j.cotes.at,e:j.cotes})}return out.sort((a,b)=>(b.at||'').localeCompare(a.at||''))}
 function iAmChef(){if(!isDir())return false;if(S.demo)return !isSec()||['promoteur','prefet'].includes(myPoste());if(isSec())return ['promoteur','prefet'].includes(myPoste());const c=chefPerson();if(!c)return true;const me=S.inscr[meId()];return c.id===meId()||me?.profil===c.id||(!!me&&/direct/i.test(me.matiere||''))}
-function payNews(){if(!iAmChef())return[];const s=seenGet();return Object.entries(S.paiem).filter(([,p])=>p.at&&(!s||p.at>s)&&p.by!==meId()).map(([id,p])=>({id,...p}))}
+function payNews(){if(!iAmChef()||percepOff())return[];const s=seenGet();return Object.entries(S.paiem).filter(([,p])=>p.at&&(!s||p.at>s)&&p.by!==meId()).map(([id,p])=>({id,...p}))}
 function unseen(){const s=seenGet();return events().filter(x=>!s||x.at>s).length+payNews().length}
 const PNK='clr-pay-vus';
-function payAlert(){if(!S.ready||S.demo||!iAmChef())return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(PNK)||'null')||[])}catch(e){seen=new Set()}
+function payAlert(){if(!S.ready||S.demo||!iAmChef()||percepOff())return;let seen;try{seen=new Set(JSON.parse(localStorage.getItem(PNK)||'null')||[])}catch(e){seen=new Set()}
   const first=!localStorage.getItem(PNK);const td=today();const N=Object.entries(S.paiem).filter(([id,p])=>!seen.has(id)&&p.by!==meId()&&p.date===td);
   Object.keys(S.paiem).forEach(id=>seen.add(id));try{localStorage.setItem(PNK,JSON.stringify([...seen].slice(-3000)))}catch(e){}
   if(first||!N.length)return;const tot=sum(N.map(([,p])=>numM(p.montant)));const p0=N[N.length-1][1];const e=S.eleves[p0.eleveId]||{nom:p0.nom||''};const qui=p0.byNom||'Le surécole';
@@ -4530,7 +4533,7 @@ function vActivite(){
      <span class="${st.ap}">Appel <em class="num">${st.apTxt}</em></span><span class="${st.co}">Cotes <em class="num">${st.coTxt}</em></span></button>`}).join('')}</div>
    <button class="btn sm" data-act="rjopen" data-v="" style="align-self:flex-start">${ic('book',16)} Feuilleter le registre jour par jour</button>
    <p class="muted small" style="margin:0"><span class="lg-dot on"></span> Fait et clôturé · <span class="lg-dot mid"></span> En cours · <span class="lg-dot"></span> Pas encore fait (clignote). Touchez une classe pour voir le bilan du jour.</p></div>
-   ${iAmChef()?(()=>{const {L,tot,nel}=caisseData(td);const nw=p=>seen&&p.at>seen&&p.by!==meId();return `<section class="card pad stack paynot"><div class="sec-h"><div><h2 class="h2">Paiements du jour</h2><span class="muted small num">${L.length?`${nel} élève${nel>1?'s':''} · ${fmtM(tot)}`:'Aucun paiement enregistré aujourd’hui'}</span></div><button class="btn sm" data-act="pc-journal">Autres jours</button></div>
+   ${iAmChef()&&!percepOff()?(()=>{const {L,tot,nel}=caisseData(td);const nw=p=>seen&&p.at>seen&&p.by!==meId();return `<section class="card pad stack paynot"><div class="sec-h"><div><h2 class="h2">Paiements du jour</h2><span class="muted small num">${L.length?`${nel} élève${nel>1?'s':''} · ${fmtM(tot)}`:'Aucun paiement enregistré aujourd’hui'}</span></div><button class="btn sm" data-act="pc-journal">Autres jours</button></div>
     ${L.length?`<div class="tblwrap"><table class="t cjt"><thead><tr><th>N°</th><th class="name">Nom, postnom et prénom</th><th>Classe</th><th class="mt">Montant</th></tr></thead><tbody>${L.map((p,i)=>`<tr class="${nw(p)?'nw':''}"><td class="num muted">${i+1}</td><td class="name"><button class="cj-n" data-act="pc-el" data-id="${h(p.eleveId)}">${h(nomComplet(p.e))}</button><small class="muted num">${hm(p.at)} · par ${h(p.byNom||'la direction')}${nw(p)?' · <b class="nwb">Nouveau</b>':''}</small></td><td class="cl">${h(p.cls.replace(' année primaire',''))}</td><td class="mt num"><b>${fmtM(p.montant)}</b></td></tr>`).join('')}<tr class="tot"><td></td><td class="name">Total du jour</td><td></td><td class="mt num"><b>${fmtM(tot)}</b></td></tr></tbody></table></div>`:''}
     <p class="muted small" style="margin:0">Vous seul voyez ce tableau. Il se remplit dès que le surécole enregistre un paiement.</p></section>`})():''}
    ${cards||`<div class="card empty"><span class="ib g">${ic('check',22)}</span><h3>Aucune activité pour l’instant</h3><p class="muted small">Les clôtures d’appel et de cotes des enseignants apparaîtront ici.</p></div>`}`);
@@ -4920,6 +4923,8 @@ const A={
   rkey:b=>rapportSheet(S.rEl,b.dataset.v),
   ai:b=>aiRewrite(b.dataset.f,b.dataset.v),
   'pc-el':b=>eleveFinSheet(b.dataset.id),
+  'pcv-open':()=>prefSheet(),
+  'pcv-toggle':()=>{try{if(percepOff())localStorage.removeItem(PCK);else localStorage.setItem(PCK,'1')}catch(e){}if(percepOff()&&(S.view==='perception'||S.view==='caisse'))S.view='gestion';prefSheet();render();toast(percepOff()?'Perception masquée.':'Perception affichée.')},
   'pc-pay':b=>paySheet(b.dataset.id||''),
   'pc-multi':b=>{S.payMulti=b.dataset.v==='1';paySheet('')},
   'pc-edit':b=>{const p=S.paiem[b.dataset.id];if(p)paySheet(p.eleveId,b.dataset.id)},

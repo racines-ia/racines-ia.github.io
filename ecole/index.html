@@ -3081,7 +3081,7 @@ function vCdoc(){
    ${canView('msgs')?C('','Remarques aux enseignants'+(nm?` · ${nm} réponse${nm>1?'s':''} à lire`:''),'Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.','mopen'):''}
    ${canView('presence')?C('presence','Cahier de présence',`Présence du personnel · aujourd’hui : ${np} présent${np>1?'s':''} sur ${L.length}`):''}
    ${isDir()?C('','Mes préférences','Affichage de l’application sur ce téléphone.','pcv-open'):''}</div>`)}
-function prefSheet(){const off=percepOff();openSheet('Mes préférences',`<div class="stack"><div class="card pad stack blkbar"><div style="display:flex;align-items:center;gap:12px"><div class="grow"><b>Perception des frais</b><small class="muted" style="display:block">${off?'Masquée : plus rien ne s’affiche sur ce téléphone.':'Visible : la perception s’affiche normalement.'}</small></div><button class="bsw${off?'':' on'}" data-act="pcv-toggle" role="switch" aria-checked="${!off}" aria-label="Afficher la perception des frais"><i></i></button></div></div><p class="muted small" style="margin:0">Fermé, tout ce qui concerne les frais, les paiements et la perception disparaît de l’application sur ce téléphone. Rouvrez cet interrupteur pour tout retrouver.</p></div>`)}
+function prefSheet(){const off=percepOff();openSheet('Mes préférences',`<div class="stack"><div class="card pad stack blkbar"><div style="display:flex;align-items:center;gap:12px"><div class="grow"><b>Loyers</b><small class="muted" style="display:block">${off?'Masqués sur ce téléphone.':'Visibles sur ce téléphone.'}</small></div><button class="bsw${off?'':' on'}" data-act="pcv-toggle" role="switch" aria-checked="${!off}" aria-label="Afficher les loyers"><i></i></button></div></div><p class="muted small" style="margin:0">Fermé : les loyers disparaissent de l’application sur ce téléphone. Rouvrez pour tout retrouver.</p></div>`)}
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
@@ -4924,7 +4924,7 @@ const A={
   ai:b=>aiRewrite(b.dataset.f,b.dataset.v),
   'pc-el':b=>eleveFinSheet(b.dataset.id),
   'pcv-open':()=>prefSheet(),
-  'pcv-toggle':()=>{try{if(percepOff())localStorage.removeItem(PCK);else localStorage.setItem(PCK,'1')}catch(e){}if(percepOff()&&(S.view==='perception'||S.view==='caisse'))S.view='gestion';prefSheet();render();toast(percepOff()?'Perception masquée.':'Perception affichée.')},
+  'pcv-toggle':()=>{try{if(percepOff())localStorage.removeItem(PCK);else localStorage.setItem(PCK,'1')}catch(e){}if(percepOff()&&(S.view==='perception'||S.view==='caisse'))S.view='gestion';prefSheet();render();toast(percepOff()?'Loyers masqués.':'Loyers affichés.')},
   'pc-pay':b=>paySheet(b.dataset.id||''),
   'pc-multi':b=>{S.payMulti=b.dataset.v==='1';paySheet('')},
   'pc-edit':b=>{const p=S.paiem[b.dataset.id];if(p)paySheet(p.eleveId,b.dataset.id)},

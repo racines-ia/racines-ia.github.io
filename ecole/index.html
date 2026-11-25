@@ -2783,12 +2783,12 @@ async function fichePDF(f){const dl=window.claude?.use?await claude.use('downloa
 const F_LIM='08:00';
 const kinNow=()=>new Date(Date.now()+3600e3).toISOString().slice(0,16);
 const nextSchool=d=>{const x=D(d);do{x.setUTCDate(x.getUTCDate()+1)}while(x.getUTCDay()===0);return x.toISOString().slice(0,10)};
-const fLimPassee=d=>kinNow()>=d+'T'+F_LIM;
+const fLimPassee=d=>false;
 const fCible=d=>{if(!fLimPassee(d))return d;const k=kinNow(),kd=k.slice(0,10);return k.slice(11)<F_LIM&&new Date(D(kd)).getUTCDay()!==0?kd:nextSchool(kd)};
 const jPour=d=>{const l=jourLbl(d);return l==='Demain'?'demain':l==='Aujourd’hui'?'aujourd’hui':'le '+l.toLowerCase()};
-const fDay=()=>S.fDate||(isDir()?today():fCible(today()));
-function fDayNav(){const d=fDay(),td=isDir()?today():fCible(today());const prev=new Date(D(d));prev.setUTCDate(prev.getUTCDate()-1);const nx=new Date(D(d));nx.setUTCDate(nx.getUTCDate()+1);
-  return `<div class="card pad fday"><button class="x" data-act="fday" data-v="${iso(prev)}" aria-label="Jour précédent">‹</button><label class="grow"><b>${h(jourLbl(d))}</b><small class="muted">${h(dfr(d))} · touchez pour choisir un jour</small><input type="date" class="fdin" data-act="fdayin" value="${d}" max="${td}"></label><button class="x" data-act="fday" data-v="${iso(nx)}" ${d>=td?'disabled':''} aria-label="Jour suivant">›</button></div>`}
+const fDay=()=>S.fDate||today();
+function fDayNav(){const d=fDay();const prev=new Date(D(d));prev.setUTCDate(prev.getUTCDate()-1);const nx=new Date(D(d));nx.setUTCDate(nx.getUTCDate()+1);
+  return `<div class="card pad fday"><button class="x" data-act="fday" data-v="${iso(prev)}" aria-label="Jour précédent">‹</button><label class="grow"><b>${h(jourLbl(d))}</b><small class="muted">${h(dfr(d))} · touchez pour choisir un jour</small><input type="date" class="fdin" data-act="fdayin" value="${d}"></label><button class="x" data-act="fday" data-v="${iso(nx)}" aria-label="Jour suivant">›</button></div>`}
 function fDaysArchive(ens){const by={};for(const f of fichesList(ens))(by[f.date]=by[f.date]||[]).push(f);const L=Object.keys(by).sort().reverse();
   if(!L.length)return '';return `<section class="sec"><h2 class="h2">Classés par jour</h2><div class="card list">${L.slice(0,40).map(d=>{const F=by[d];const sg=F.filter(f=>f.dir).length;return `<button class="li" data-act="fday" data-v="${d}"><span class="ib">${ic('cal',20)}</span><span class="grow"><span class="ttl" style="display:block">${h(jourLbl(d))}</span><span class="muted small">${F.length} document${F.length>1?'s':''}${ens?'':` · ${new Set(F.map(f=>f.nom)).size} enseignant${new Set(F.map(f=>f.nom)).size>1?'s':''}`}</span></span><span class="pill ${sg===F.length?'good':'warn'} num">${sg}/${F.length} signé${sg>1?'s':''}</span></button>`}).join('')}</div></section>`}
 function fCards(ens,d){const s=fSeen();return `<div class="fgrid">${FTK.map(t=>{const f=ficheOf(ens,d,t);const ft=FT[t];const nouv=f&&(isDir()?!f.dir&&!s.has(fKey(f)):f.dir&&!s.has(fKey(f)));
@@ -2799,7 +2799,7 @@ function vDocs(){
   const dir=isDir();const d=fDay();
   if(!dir){const p=myPerson();return band({back:'prof',home:true,kicker:'Espace enseignant',title:'Mes documents',sub:'Cahier journal, devoirs, exercices et résumés · chaque jour'})+page(`<div class="stack">
     ${fDayNav()}
-    <div class="card pad small">Remplissez vos cahiers chaque jour <b>avant ${F_LIM.replace(':','h')} du matin</b> : après ${F_LIM.replace(':','h')}, ils comptent pour le jour de classe suivant. Quand vous enregistrez, votre signature se place toute seule et le document part à la direction. Vous pouvez le modifier tant que la direction ne l’a pas signé.</div>
+    <div class="card pad small">Préparez vos cahiers <b>quand vous voulez</b>, chez vous comme à l’école : touchez la date pour choisir le jour (aujourd’hui, demain ou un autre jour). Quand vous enregistrez, votre signature se place toute seule et le document part à la direction. Vous pouvez le modifier tant que la direction ne l’a pas signé.</div>
     ${fCards(meId(),d)}
     ${fDaysArchive(meId())}</div>`)}
   const ens=S.fEns;
@@ -4758,7 +4758,7 @@ const A={
   'vis-pdf':()=>{const v=S.vDraft;if(v)visPDF(v,`Visite de classe - ${v.ensNom||''} - ${v.date||''}.pdf`)},
   'vis-blank':()=>visPDF({pts:{},obs:{}},'Fiche de visite de classe - vierge.pdf'),
   fens:b=>{S.fEns=b.dataset.id;S.view='docs';render();scrollTo(0,0)},
-  fday:b=>{if(b.dataset.v>today())return;S.fDate=b.dataset.v;render()},
+  fday:b=>{S.fDate=b.dataset.v;render()},
   fsave:()=>ficheSave(),
   fprev:()=>{if(fsOn()&&$('#fsed [data-act=fs-save]')){return}if(fsOn())fsClose(true);fsOpen()},
   fvoir:()=>{if(fsOn()){fsSync();fsClose(true)}fsOpen(true)},
@@ -5032,7 +5032,7 @@ document.addEventListener('keydown',ev=>{if(ev.key==='Escape'&&FS.open){closeBul
   if(ev.key==='Enter'&&ev.target.classList?.contains('gi')){ev.preventDefault();const all=[...document.querySelectorAll('.etab .gi,.ftab .gi,.dtab .gi')];const i=all.indexOf(ev.target);const cols=ev.target.closest('.dtab')?1:ev.target.closest('tr').querySelectorAll('.gi').length;const nx=all[i+cols]||all[i+1];nx?.focus();nx?.select?.()}});
 document.addEventListener('change',ev=>{const t=ev.target;if(t.dataset.act==='areg'){S.aReg=t.value;render()}if(t.dataset.act==='bsel'){S.sel=t.value;refreshBul()}if(t.dataset.act==='demoposte'){const sec=!!t.value;if(sec!==!!S.demoSec&&S.sim){Object.assign(S,sec?simDataSec():simData());S.cid='';S.sel='';S.tri='t1';S.bTri='t1';S.pKey='t1';S.psKey='t1';const tt=Object.entries(S.affect).find(([id,a])=>(a.classes||[]).includes(sec?'1sc':'6ap')&&S.inscr[id]);S.demoEns=tt?tt[0]:'demo-ens'}S.demoSec=sec;S.demoPoste=t.value||'';S.demoRole='dir';S.view='accueil';render();scrollTo(0,0)}if(t.dataset.act==='prevens'){S.demoEns=t.value;S.view='prof';S.pid=t.value;render();scrollTo(0,0)}if(t.dataset.act==='mcours'){S.cours=t.value;render()}if(t.dataset.act==='fsel'){S.sel=t.value;render()}if(t.id==='rj-date'&&t.value){S.rjDate=t.value;render()}});
 document.addEventListener('input',ev=>{const t=ev.target;if(t.id==='m-txt')S.mDraft=t.value;if(t.id==='gq'){S.gq=t.value;render()}if(t.id==='sq'){S.sq=t.value;render()}if(t.id==='pq'){S.pq=t.value;render()}if(t.classList.contains('gi'))gradeInput(t)});
-document.addEventListener('change',ev=>{const t=ev.target;if(t.classList?.contains('fdin')&&t.value){S.fDate=t.value>today()?today():t.value;render()}});
+document.addEventListener('change',ev=>{const t=ev.target;if(t.classList?.contains('fdin')&&t.value){S.fDate=t.value;render()}});
 document.addEventListener('input',ev=>{if(ev.target.closest?.('#fed'))fCollect();if(ev.target.closest?.('#fsed'))fsSync();if(ev.target.id==='f-avis')S.fAvis=ev.target.value});
 document.addEventListener('pointerdown',ev=>{if(ev.target.closest?.('.cm-tools button'))ev.preventDefault()});
 document.addEventListener('submit',async ev=>{

@@ -1627,6 +1627,7 @@ body.fs-on{overflow:hidden}
 .ios-g ol{margin:0;padding-left:20px;display:flex;flex-direction:column;gap:8px;line-height:1.45}
 .ios-sh{display:inline-grid;place-items:center;width:26px;height:26px;border-radius:7px;background:var(--sunk);vertical-align:middle;color:#5aa9ff}
 @media (prefers-reduced-motion:reduce){#nfold,.nf-ic{transition:none!important;animation:none!important}}
+.rap-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}.rap-card{display:flex;flex-direction:column;gap:8px;text-align:left;background:var(--card,#1d1130);border:1px solid rgba(255,255,255,.08);border-radius:18px;padding:10px;color:inherit}.rap-card img{width:100%;aspect-ratio:210/297;object-fit:cover;border-radius:12px;box-shadow:0 8px 24px rgba(0,0,0,.35)}.rap-card b{display:block;font-size:15px;line-height:1.25}
 </style>
 <script>window.applyTheme&&applyTheme()</script>
 
@@ -1649,7 +1650,7 @@ const POSTE_LBL={promoteur:'Promoteur',prefet:'Préfet',secretaire:'Secrétaire'
 function myPoste(){if(!isSec())return isDir()?'directeur':'enseignant';if(S.demo)return isDir()?(S.demoPoste||'promoteur'):'titulaire';const me=S.inscr[meId()];const src=me?.profil?S.inscr[me.profil]:me;return src?.poste||(isDir()?'prefet':'titulaire')}
 const VIEWS_P={secretaire:['accueil','eleves','perception','caisse'],etudes:['accueil','classes','classe','activite','eleves','palmsit','msgs','regjour','docs','fiche','fsuivi','comm','pensee'],discipline:['accueil','activite','eleves','presence','sante','classes','classe','msgs','regjour']};
 const PCK='clr-percep-off';const percepOff=()=>{try{return localStorage.getItem(PCK)==='1'}catch(e){return false}};
-function canView(v){if((v==='perception'||v==='caisse')&&percepOff())return false;if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'||v==='visites'||v==='visite'||v==='cdoc'}
+function canView(v){if((v==='perception'||v==='caisse')&&percepOff())return false;if(!isSec()||!isDir())return true;const L=VIEWS_P[myPoste()];return !L||L.includes(v)||v==='prof'||v==='visites'||v==='visite'||v==='cdoc'||v==='rapports'}
 const canStaff=()=>!isSec()?isDir():['promoteur','prefet'].includes(myPoste());
 function canEditPerson(p){if(!isSec())return isDir();const m=myPoste();if(m==='promoteur')return true;if(m==='prefet')return (p?.poste||'')!=='promoteur';return false}
 const posteOf=p=>p?.poste?POSTE_LBL[p.poste]:'';
@@ -1694,8 +1695,8 @@ const APPRE=[['','—'],['E','E · Élite'],['TB','TB · Très bien'],['B','B ·
 
 const JOURS=['D','L','M','M','J','V','S'];
 const MOIS=['janvier','février','mars','avril','mai','juin','juillet','août','septembre','octobre','novembre','décembre'];
-const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',visites:'visites',fiches:'fiches',communiques:'communiques',pensees:'pensees',comvus:'comvus'};
-const S={communiques:{},pensees:{},comvus:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},visites:{},vEns:'',vDraft:null,ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
+const COLS={classes:'classes',affectations:'affect',inscriptions:'inscr',eleves:'eleves',notes:'notes',registres:'regs',appel:'appel',config:'config',journal:'journal',signatures:'sigs',personnel:'agents',presence:'presence',rapports:'rapports',sante:'sante',frais:'frais',paiements:'paiem',messages:'msgs',devoirs:'devoirs',manuels:'manuels',visites:'visites',rapdir:'rapdir',fiches:'fiches',communiques:'communiques',pensees:'pensees',comvus:'comvus'};
+const S={rapdir:{},communiques:{},pensees:{},comvus:{},commEd:null,fiches:{},fDate:'',fEns:'',fk:null,fDraft:null,fAvis:'',manuels:{},visites:{},vEns:'',vDraft:null,ready:false,demo:false,sim:false,demoRole:'dir',me:{id:null,dir:false},classes:{},affect:{},inscr:{},eleves:{},notes:{},regs:{},appel:{},config:{},journal:{},sigs:{},agents:{},presence:{},rapports:{},sante:{},frais:{},paiem:{},msgs:{},devoirs:{},mEns:'',pq:'',pFil:'tous',jDate:'',sq:'',sCls:'',rMois:'',rEl:'',pDate:'',pKey:'t1',pVue:'cl',fAct:'',seenAt:'',
   view:'accueil',pid:'',pBack:'',cid:'',ctab:'appel',tri:'t1',cours:'',sel:'',vieMode:'app',bTri:'t1',q:'',gq:'',fCls:'',aReg:'',aVue:'reg',aMois:''};
 let db=null,user=null;
 
@@ -1941,7 +1942,7 @@ function screen(){
   }
   if(!isDir()){const mine=mesClasses();if(!['prof','classe','msgs','disc','devoir','manuels','docs','fiche','fsuivi','comm','pensee'].includes(S.view)||(S.view==='classe'&&!mine.includes(S.cid))){S.view='prof';S.pid=meId()}if(S.view==='prof')S.pid=meId()}
   if(isDir()&&!canView(S.view))S.view='accueil';
-  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,visites:vVisites,visite:vVisite,cdoc:vCdoc,manuels:vManuels,docs:vDocs,fsuivi:vSuivi,fiche:vFiche,comm:vComm})[S.view]();
+  return ({accueil:vAccueil,classes:vClasses,classe:vClasse,eleves:vEleves,gestion:vGestion,prof:vProf,activite:vActivite,presence:vPresence,sante:vSante,perception:vPerception,palmsit:vPalmSit,corbeille:vCorbeille,msgs:vMsgs,caisse:vCaisse,regjour:vRegJour,disc:vDisc,devoir:vDevoir,devall:vDevAll,visites:vVisites,visite:vVisite,cdoc:vCdoc,rapports:vRapports,manuels:vManuels,docs:vDocs,fsuivi:vSuivi,fiche:vFiche,comm:vComm})[S.view]();
 }
 function inscription(){return `<div class="card pad stack">
   <p class="muted small" style="margin:0">La direction verra votre demande et vous attribuera votre classe.</p>
@@ -3077,11 +3078,14 @@ function vCdoc(){
    ${canView('comm')?C('comm','Communiqués','Écrivez un communiqué : il s’affiche en grand chez chaque enseignant dès qu’il ouvre l’école.'):''}
    ${canView('devall')?C('devall','Composition','Devoirs hebdomadaires, interrogations et examens de chaque classe, avec les copies de toute l’école à imprimer.'):''}
    ${canView('disc')?C('disc','Discipline du personnel'+(nd?` · ${nd} réponse${nd>1?'s':''} à lire`:''),'Demandes d’explication, blâmes, et suspension de l’accès d’un enseignant à l’application.'):''}
+   ${isDir()?C('rapports','Rapport de l’année scolaire',`${Object.keys(S.rapdir||{}).length} rapport${Object.keys(S.rapdir||{}).length>1?'s':''} · à feuilleter, imprimer ou envoyer`):''}
    ${canView('visites')?C('visites0','Cahier de visite des classes'+(nv?` · ${nv} ce mois-ci`:''),'Fiche de visite de chaque classe, classée par enseignant et par jour, avec votre signature.'):''}
    ${canView('msgs')?C('','Remarques aux enseignants'+(nm?` · ${nm} réponse${nm>1?'s':''} à lire`:''),'Chaque jour : écrivez une suggestion ou une remarque à un enseignant. Il reçoit une notification et peut vous répondre.','mopen'):''}
    ${canView('presence')?C('presence','Cahier de présence',`Présence du personnel · aujourd’hui : ${np} présent${np>1?'s':''} sur ${L.length}`):''}
    ${isDir()?C('','Mes préférences','Affichage de l’application sur ce téléphone.','pcv-open'):''}</div>`)}
 function prefSheet(){const off=percepOff();openSheet('Mes préférences',`<div class="stack"><div class="card pad stack blkbar"><div style="display:flex;align-items:center;gap:12px"><div class="grow"><b>Loyers</b><small class="muted" style="display:block">${off?'Masqués sur ce téléphone.':'Visibles sur ce téléphone.'}</small></div><button class="bsw${off?'':' on'}" data-act="pcv-toggle" role="switch" aria-checked="${!off}" aria-label="Afficher les loyers"><i></i></button></div></div><p class="muted small" style="margin:0">Fermé : les loyers disparaissent de l’application sur ce téléphone. Rouvrez pour tout retrouver.</p></div>`)}
+function vRapports(){const L=Object.entries(S.rapdir||{}).map(([id,r])=>({id,...r})).sort((a,b)=>(b.at||'').localeCompare(a.at||''));
+ return band({back:'cdoc',home:true,kicker:'Documents du chef d’établissement',title:'Rapport de l’année scolaire',sub:'Rapports officiels de l’école · à feuilleter, imprimer ou envoyer'})+page(`<div class="stack">${L.length?`<div class="rap-grid">${L.map(r=>`<button class="rap-card" data-act="rap-open" data-id="${h(r.id)}"><img src="${h(r.cover||'')}" alt="" loading="lazy"><span><b>${h(r.titre)}</b><small class="muted">${r.pages?r.pages+' pages · ':''}Année ${h(r.annee||'')}</small></span></button>`).join('')}</div>`:'<div class="card empty"><h3>Aucun rapport</h3></div>'}<p class="muted small" style="margin:0">Ces rapports ne sont visibles que par la direction.</p></div>`)}
 /* ---------- Manuels : bibliothèque de livres PDF lus dans l'application ---------- */
 const MCAT={horaire:'Horaire des examens',prog:'Programme national',eleve:'Livre de l’élève',guide:'Guide de l’enseignant',parcours:'Parcours et fiches',autre:'Autres documents'};
 const MCOL={horaire:'#7b3fe4',prog:'#2f5d50',eleve:'#6d3fe0',guide:'#b0431e',parcours:'#1f5f9e',autre:'#555'};
@@ -3117,12 +3121,15 @@ async function manUpload(f,fd){const file=f.querySelector('#m-f').files[0];const
 let pdfjsP=null;
 function loadPdfjs(){if(pdfjsP)return pdfjsP;pdfjsP=new Promise((ok,ko)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';s.onload=()=>{window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';ok(window.pdfjsLib)};s.onerror=()=>{pdfjsP=null;ko(new Error('lecteur'))};document.head.appendChild(s)});return pdfjsP}
 const PV={doc:null,z:1,io:null,id:'',mode:'livre',n:1,cache:new Map(),busy:false,ar:1.414};
-async function manOpen(id){const m=S.manuels?.[id];if(!m)return;PV.id=id;PV.z=1;PV.n=1;PV.cache=new Map();try{PV.mode=localStorage.getItem('clr-pv-mode')||'livre'}catch(e){}
+const pvItem=()=>PV.src==='rap'?S.rapdir?.[PV.id]:S.manuels?.[PV.id];
+async function pvBytes(m){const r=await fetch(m.path);if(!r.ok)throw new Error('introuvable');const buf=new Uint8Array(await r.arrayBuffer());const raw=Uint8Array.from(atob(m.key),c=>c.charCodeAt(0));const k=await crypto.subtle.importKey('raw',raw,'AES-GCM',false,['decrypt']);return new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:buf.slice(0,12)},k,buf.slice(12)))}
+function rapOpen(id){return manOpen(id,'rap')}
+async function manOpen(id,src){const m=src==='rap'?S.rapdir?.[id]:S.manuels?.[id];if(!m)return;PV.src=src||'';PV.id=id;PV.z=1;PV.n=1;PV.cache=new Map();try{PV.mode=localStorage.getItem('clr-pv-mode')||'livre'}catch(e){}
  let box=document.getElementById('pdfv');if(box)box.remove();box=document.createElement('div');box.id='pdfv';box.className='pdfv';
- box.innerHTML=`<header><button class="iconbtn" data-act="pv-close" aria-label="Fermer">${ic('back',20)}</button><div class="grow pv-t"><small>${h(MCAT[m.cat]||'Manuel')} · <span id="pv-pgh">…</span></small><b>${h(m.titre)}</b></div><button class="x" data-act="pv-share" aria-label="Imprimer ou envoyer" title="Imprimer ou envoyer">🖨️</button><button class="x" data-act="pv-mode" aria-label="Changer de lecture" title="Feuilleter ou défiler" id="pv-mb">📜</button><button class="x" data-act="pv-zoom" data-v="-1" aria-label="Réduire">−</button><button class="x" data-act="pv-zoom" data-v="1" aria-label="Agrandir">+</button></header><div class="pv-sc" id="pv-sc"><p class="pv-msg">Ouverture du livre…</p></div>
+ box.innerHTML=`<header><button class="iconbtn" data-act="pv-close" aria-label="Fermer">${ic('back',20)}</button><div class="grow pv-t"><small>${h(m.key?'Rapport':MCAT[m.cat]||'Manuel')} · <span id="pv-pgh">…</span></small><b>${h(m.titre)}</b></div><button class="x" data-act="pv-share" aria-label="Imprimer ou envoyer" title="Imprimer ou envoyer">🖨️</button><button class="x" data-act="pv-mode" aria-label="Changer de lecture" title="Feuilleter ou défiler" id="pv-mb">📜</button><button class="x" data-act="pv-zoom" data-v="-1" aria-label="Réduire">−</button><button class="x" data-act="pv-zoom" data-v="1" aria-label="Agrandir">+</button></header><div class="pv-sc" id="pv-sc"><p class="pv-msg">Ouverture du livre…</p></div>
   <footer class="pv-ft"><button class="pv-nav" data-act="pv-go" data-v="-1" id="pv-prev" aria-label="Page précédente">${ic('back',18)}<span>Retour</span></button><button class="pv-pgb num" data-act="pv-pick" id="pv-pg">—</button><button class="pv-nav nx" data-act="pv-go" data-v="1" id="pv-next" aria-label="Page suivante"><span>Aller</span>${ic('back',18)}</button></footer>`;
  document.body.appendChild(box);document.documentElement.classList.add('dfs-lock');
- try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');const lib=await loadPdfjs();PV.doc=await lib.getDocument({url}).promise;await pvShow()}
+ try{const lib=await loadPdfjs();if(m.key){PV.doc=await lib.getDocument({data:await pvBytes(m)}).promise}else{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);if(!url)throw new Error('introuvable');PV.doc=await lib.getDocument({url}).promise}await pvShow()}
  catch(e){const sc=document.getElementById('pv-sc');if(sc)sc.innerHTML=`<p class="pv-msg">Impossible d’ouvrir ce livre (${h(e?.message||'connexion')}). Vérifiez la connexion puis réessayez.</p>`}}
 function pvLbl(){const t=`Page ${PV.n} / ${PV.doc?.numPages||'…'}`;const a=document.getElementById('pv-pg'),b=document.getElementById('pv-pgh');if(a)a.textContent=t;if(b)b.textContent=`${PV.doc?.numPages||'…'} page${(PV.doc?.numPages||2)>1?'s':''}`;const pr=document.getElementById('pv-prev'),nx=document.getElementById('pv-next');if(pr)pr.disabled=PV.n<=1;if(nx)nx.disabled=PV.n>=(PV.doc?.numPages||1);const mb=document.getElementById('pv-mb');if(mb)mb.textContent=PV.mode==='livre'?'📜':'📖'}
 /* ---- mode livre : on feuillette les pages comme un cahier ---- */
@@ -4806,9 +4813,10 @@ const A={
   'man-cat':b=>{S.mCat=b.dataset.v;render()},
   'man-open':b=>manOpen(b.dataset.id),
   'man-del':async b=>{if(!arm(b))return;const m=S.manuels[b.dataset.id];if(!m)return;try{if(!S.demo&&!/^(\/|https:)/.test(m.path))await (await claude.use('manuels')).remove(m.path)}catch(e){}await del('manuels',b.dataset.id);toast('Livre supprimé.')},
-  'pv-share':async b=>{const m=S.manuels?.[PV.id];if(!m)return;b.disabled=true;try{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);const bl=await (await fetch(url)).blob();const f=new File([bl],(m.titre||'document').replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf',{type:'application/pdf'});
+  'pv-share':async b=>{const m=pvItem();if(!m)return;b.disabled=true;try{const bl=m.key?new Blob([await pvBytes(m)],{type:'application/pdf'}):await (async()=>{const url=/^(\/|https:)/.test(m.path)?m.path:S.demo?(S.demoPdf||{})[m.path]:await (await claude.use('manuels')).url(m.path);return await (await fetch(url)).blob()})();const f=new File([bl],(m.titre||'document').replace(/[\\/:*?"<>|]+/g,' ').trim()+'.pdf',{type:'application/pdf'});
    if(navigator.canShare&&navigator.canShare({files:[f]}))await navigator.share({files:[f],title:m.titre});else{const a=document.createElement('a');a.href=URL.createObjectURL(bl);a.download=f.name;document.body.appendChild(a);a.click();a.remove();toast('Fichier enregistré : ouvrez-le pour l’imprimer.')}}catch(e){if(e?.name!=='AbortError')toast('Envoi impossible pour le moment.')}b.disabled=false},
   'pv-close':()=>pvClose(),
+  'rap-open':b=>rapOpen(b.dataset.id),
   'pv-zoom':b=>{PV.z=Math.min(3,Math.max(1,PV.z+(+b.dataset.v)*.5));pvShow()},
   'pv-go':b=>pvFlip(+b.dataset.v),
   'pv-pick':()=>pvPick(),

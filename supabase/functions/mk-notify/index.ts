@@ -17,11 +17,11 @@ async function sendMails(c: Record<string, any>, prix: string) {
     const d = r && r.ok ? await r.json() : null;
     const s = (d?.senders || []).find((x: { active?: boolean }) => x.active !== false) || (d?.senders || [])[0];
     if (!s) return 0;
-    SENDER = { email: s.email, name: "cuervo.co" };
+    SENDER = { email: s.email, name: "Bingo.co" };
   }
   const sujet = (c.pour_loyer ? "Paiement loyer à confirmer — " : "Nouveau paiement à confirmer — ") + prix;
   const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;background:#0A0705;color:#FFF4EA;border-radius:18px">
-  <div style="font-size:22px;font-weight:800">cuervo<span style="color:#FF7A1A">.co</span></div>
+  <div style="font-size:22px;font-weight:800">Bingo<span style="color:#FF7A1A">.co</span></div>
   <h2 style="margin:22px 0 6px;font-size:22px">${c.pour_loyer ? "Paiement loyer à confirmer" : "Nouveau paiement à confirmer"}</h2>
   <p style="color:#BFA996;margin:0 0 18px">Un client vient d'envoyer la capture de son paiement. Vérifie que l'argent est bien arrivé sur ton numéro, puis confirme la vente.</p>
   <table style="width:100%;border-collapse:collapse;background:#16100C;border-radius:14px">
@@ -31,7 +31,7 @@ async function sendMails(c: Record<string, any>, prix: string) {
    <tr><td style="padding:10px 14px;color:#BFA996">Moyen</td><td style="padding:10px 14px">${esc(OPS[c.op] || c.op || "")}</td></tr>
   </table>
   <a href="${SITE}?v=compte" style="display:inline-block;margin-top:22px;padding:14px 26px;border-radius:99px;background:#FF7A1A;color:#1a0a00;font-weight:800;text-decoration:none">Voir et confirmer</a>
-  <p style="color:#7d6b5d;font-size:12px;margin-top:22px">Tu reçois cet e-mail car ton adresse est enregistrée dans ta boutique cuervo.co.</p></div>`;
+  <p style="color:#7d6b5d;font-size:12px;margin-top:22px">Tu reçois cet e-mail car ton adresse est enregistrée dans ta boutique Bingo.co.</p></div>`;
   let n = 0;
   for (const e of c.emails as { email: string; nom: string }[]) {
     const r = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: h, body: JSON.stringify({ sender: SENDER, to: [{ email: e.email, name: e.nom || undefined }], subject: sujet, htmlContent: html }) }).catch(() => null);

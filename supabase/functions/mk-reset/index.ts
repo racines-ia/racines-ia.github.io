@@ -31,12 +31,12 @@ Deno.serve(async (req) => {
     if (!s) return json({ error: "Envoi d'e-mail indisponible." }, 500);
     const lien = `${SITE}?reset=${c.token}`;
     const html = `<div style="font-family:Arial,sans-serif;max-width:520px;margin:auto;padding:24px;background:#0A0705;color:#FFF4EA;border-radius:18px">
-  <div style="font-size:22px;font-weight:800">cuervo<span style="color:#FF7A1A">.co</span></div>
+  <div style="font-size:22px;font-weight:800">Bingo<span style="color:#FF7A1A">.co</span></div>
   <h2 style="margin:22px 0 6px;font-size:22px">Nouveau mot de passe</h2>
   <p style="color:#BFA996;margin:0 0 18px">Bonjour ${esc(c.nom || "")}, tu as demandé à changer le mot de passe de ta boutique. Touche le bouton ci-dessous. Le lien marche pendant 30 minutes.</p>
   <a href="${lien}" style="display:inline-block;padding:14px 26px;border-radius:99px;background:#FF7A1A;color:#1a0a00;font-weight:800;text-decoration:none">Choisir mon nouveau mot de passe</a>
   <p style="color:#7d6b5d;font-size:12px;margin-top:22px">Si ce n'est pas toi, ignore cet e-mail : ton mot de passe ne change pas.</p></div>`;
-    const m = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: h, body: JSON.stringify({ sender: { email: s.email, name: "cuervo.co" }, to: [{ email: c.email }], subject: "Ton nouveau mot de passe cuervo.co", htmlContent: html }) }).catch(() => null);
+    const m = await fetch("https://api.brevo.com/v3/smtp/email", { method: "POST", headers: h, body: JSON.stringify({ sender: { email: s.email, name: "Bingo.co" }, to: [{ email: c.email }], subject: "Ton nouveau mot de passe Bingo.co", htmlContent: html }) }).catch(() => null);
     if (!m || !m.ok) { console.log("brevo", m && m.status, m && await m.text()); return json({ error: "L'e-mail n'a pas pu partir. Réessaie." }, 500); }
     return json({ envoye: true, email: masque(c.email) });
   }

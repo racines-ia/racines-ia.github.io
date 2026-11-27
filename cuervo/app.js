@@ -1,4 +1,4 @@
-/* cuervo.co — place de marché. Données : Supabase (tables mk_*). */
+/* Bingo.co — place de marché. Données : Supabase (tables mk_*). */
 (function () {
 'use strict';
 var SB_URL = 'https://eebqtggnmuzfrwgunpsa.supabase.co';
@@ -42,7 +42,7 @@ function welcome() {
   if (document.getElementById('welcome')) return;
   var w = document.createElement('div'); w.id = 'welcome'; w.className = 'welcome';
   var pt = function (n, t, d) { return '<div class="wpt"><span>' + n + '</span><div><b>' + t + '</b><p>' + d + '</p></div></div>'; };
-  w.innerHTML = '<div class="win"><div class="wlogo">cuervo<em>.co</em></div>' +
+  w.innerHTML = '<div class="win"><div class="wlogo">Bingo<em>.co</em></div>' +
     '<h1>Vends tes produits en ligne, depuis ton téléphone.</h1>' +
     '<p class="lead">Crée ta boutique en ligne pour vendre tes formations, e-books, modèles, logiciels, services… Tes clients ne voient que ta boutique.</p>' +
     '<div class="wpts">' + pt('1', 'Crée ta boutique en 2 minutes', 'Ton nom, ton numéro, ton Gmail : c\'est tout.') +
@@ -171,7 +171,7 @@ function countUp(now) {
 function tabnav() {
   var q = new URLSearchParams(location.search), v = q.get('v'), cur = v === 'compte' || v === 'admin' ? 'shop' : v === 'achats' ? 'buy' : v === 'ia' ? 'ia' : v === 'aide' ? 'aide' : (q.get('p') || q.get('l') || q.get('b') || q.get('c')) ? '' : 'home';
   var it = function (k, href, icn, label) { return '<a class="' + (cur === k ? 'on' : '') + '" href="' + href + '" data-nav>' + ico(icn) + label + '</a>'; };
-  $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a class="' + (cur === 'ia' ? 'on' : '') + '" href="?v=ia" data-nav><span class="ia-ico">' + ico('i-cuervo') + '</span>Cuervo IA</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
+  $('tabnav').innerHTML = '<div class="in">' + it('home', './', 'i-home', 'Accueil') + '<a class="' + (cur === 'ia' ? 'on' : '') + '" href="?v=ia" data-nav><span class="ia-ico">' + ico('i-cuervo') + '</span>Bingo IA</a>' + it('buy', '?v=achats', 'i-bag', 'Mes achats') + it('shop', '?v=compte', 'i-store', S.vendor ? 'Ma boutique' : 'Vendre') + '</div>';
 }
 function header() {
   tabnav();
@@ -418,7 +418,7 @@ async function pageHome(alive) {
     '<div class="g8" style="margin-top:20px">' + (S.vendor ? '<a class="btn btn-primary" href="?v=compte" data-nav><span>Ma boutique</span></a>' :
       '<button class="btn btn-primary" type="button" data-act="wGo" data-id="register"><span>Créer ma boutique</span></button><button class="btn btn-ghost" type="button" data-act="wGo" data-id="login"><span>Ouvrir ma boutique</span></button>') + '</div></div>' +
     '<div class="sec"><div class="kicker">Comment ça marche</div><h2 style="margin-bottom:16px">Tout ce qu\'il faut pour vendre</h2><div class="g12 stag">' +
-    '<a class="keyline" href="?v=aide" data-nav>cuervo.co ne garde aucune somme : tout va sur les numéros Mobile Money du vendeur, sauf le loyer. Voir comment ça marche →</a>' +
+    '<a class="keyline" href="?v=aide" data-nav>Bingo.co ne garde aucune somme : tout va sur les numéros Mobile Money du vendeur, sauf le loyer. Voir comment ça marche →</a>' +
     feature('shop', 'Ta boutique en quelques minutes', 'Ton nom, ta photo, tes numéros Mobile Money : ta boutique est prête.') +
     feature('share', 'Ton lien, tes clients', 'Tes clients ne voient que ta boutique et tes produits. Partage ton lien : ils arrivent directement chez toi.') +
     feature('pay', 'Paiement par Mobile Money', 'M-Pesa, Airtel Money ou Orange Money. Le client envoie sa capture, tu confirmes.') +
@@ -428,7 +428,7 @@ async function pageHome(alive) {
     sellCta(d.loyer));
 }
 
-/* ---------- Cuervo IA ---------- */
+/* ---------- Bingo IA ---------- */
 var IA = { msgs: [], busy: false, ps: null };
 async function iaProducts() { if (IA.ps) return IA.ps; var r = await sb.rpc('mk_home'); IA.ps = (r.data && r.data.products) || []; return IA.ps; }
 function iaRender() {
@@ -436,8 +436,8 @@ function iaRender() {
   box.innerHTML = IA.msgs.map(function (m) {
     if (m.role === 'me') return '<div class="msg me">' + esc(m.text) + '</div>';
     var cards = (m.produits || []).map(function (id) { return (IA.ps || []).filter(function (p) { return p.id === id; })[0]; }).filter(Boolean);
-    return '<div class="msg ia"><div class="who">' + MASCOT + 'Cuervo IA</div>' + esc(m.text) + (cards.length ? '<div class="grid">' + cards.map(card).join('') + '</div>' : '') + '</div>';
-  }).join('') + (IA.busy ? '<div class="msg ia"><div class="who">' + MASCOT + 'Cuervo IA</div><span class="dots"><i></i><i></i><i></i></span></div>' : '');
+    return '<div class="msg ia"><div class="who">' + MASCOT + 'Bingo IA</div>' + esc(m.text) + (cards.length ? '<div class="grid">' + cards.map(card).join('') + '</div>' : '') + '</div>';
+  }).join('') + (IA.busy ? '<div class="msg ia"><div class="who">' + MASCOT + 'Bingo IA</div><span class="dots"><i></i><i></i><i></i></span></div>' : '');
   window.scrollTo(0, document.body.scrollHeight);
 }
 async function iaAsk(text) {
@@ -450,16 +450,16 @@ async function iaAsk(text) {
     var d = r.data, m = d && d.error;
     if (!m && r.error) { try { m = (await r.error.context.json()).error; } catch (e) {} }
     if (d && d.reponse) IA.msgs.push({ role: 'ia', text: d.reponse, produits: d.produits || [] });
-    else IA.msgs.push({ role: 'ia', err: true, text: m || 'Cuervo IA n\'est pas disponible pour le moment. Réessaie dans un instant.' });
+    else IA.msgs.push({ role: 'ia', err: true, text: m || 'Bingo IA n\'est pas disponible pour le moment. Réessaie dans un instant.' });
   } catch (e) { IA.msgs.push({ role: 'ia', err: true, text: 'Connexion internet instable. Réessaie.' }); }
   IA.busy = false; iaRender();
 }
 async function pageIA() {
   setBar(null);
-  page('<div class="ia-head">' + MASCOT + '<h1>Cuervo IA</h1><p class="lead">Ton guide sur cuervo.co : je t\'aide à comprendre comment acheter, créer ta boutique et vendre tes produits.</p>' +
+  page('<div class="ia-head">' + MASCOT + '<h1>Bingo IA</h1><p class="lead">Ton guide sur Bingo.co : je t\'aide à comprendre comment acheter, créer ta boutique et vendre tes produits.</p>' +
     (IA.msgs.length ? '' : '<div class="ia-sugg">' + ['Comment ouvrir ma boutique ?', 'Comment acheter un produit ?', 'Combien coûte le loyer ?', 'Comment partager mes produits ?', 'Puis-je avoir plusieurs boutiques ?'].map(function (q) { return '<button type="button" data-act="iaSugg">' + q + '</button>'; }).join('') + '</div>') +
     '</div><div class="chat" id="chat"></div>' +
-    '<form class="ia-bar" id="iaForm"><div class="in"><input id="ia-q" maxlength="600" autocomplete="off" placeholder="Pose ta question à Cuervo IA…"><button type="submit" aria-label="Envoyer">' + ico('i-arrow') + '</button></div></form>');
+    '<form class="ia-bar" id="iaForm"><div class="in"><input id="ia-q" maxlength="600" autocomplete="off" placeholder="Pose ta question à Bingo IA…"><button type="submit" aria-label="Envoyer">' + ico('i-arrow') + '</button></div></form>');
   iaRender(); iaProducts().catch(function () {});
 }
 document.addEventListener('submit', function (e) { if (e.target.id === 'iaForm') { e.preventDefault(); iaAsk($('ia-q').value); } });
@@ -473,17 +473,17 @@ var VX_ART = {
   safe: '<svg viewBox="0 0 160 120"><path d="M80 8l52 18v34c0 30-22 48-52 56-30-8-52-26-52-56V26z" fill="#2A1C12" stroke="#FF7A1A" stroke-width="3"/><path d="M58 62l15 15 30-32" stroke="#4ADE80" stroke-width="8" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>'
 };
 var VX_SC = [
-  ['shop', 'Vends tes <em>produits digitaux</em> en RDC', 'Formations, fichiers, modèles, applications : ouvre ta boutique sur cuervo.co en quelques minutes.'],
+  ['shop', 'Vends tes <em>produits digitaux</em> en RDC', 'Formations, fichiers, modèles, applications : ouvre ta boutique sur Bingo.co en quelques minutes.'],
   ['mm', 'Enregistre tes <em>Mobile Money</em>', 'M-Pesa, Airtel Money, Orange Money. L\'administrateur confirme tes numéros avant la mise en ligne.'],
   ['pay', 'Le client te paie <em>directement</em>', 'Il paie sur ton numéro, envoie sa capture. Tu confirmes : il reçoit ses fichiers tout de suite.'],
-  ['rent', 'Loyer : <em>15 000 FC</em> pour 35 jours', 'Paie-le tout de suite, ou sur ta première vente : cuervo.co garde le loyer et te reverse le reste.'],
-  ['safe', 'cuervo.co ne garde <em>aucune somme</em>', 'À part le loyer, tout l\'argent va directement sur tes numéros Mobile Money.']
+  ['rent', 'Loyer : <em>15 000 FC</em> pour 35 jours', 'Paie-le tout de suite, ou sur ta première vente : Bingo.co garde le loyer et te reverse le reste.'],
+  ['safe', 'Bingo.co ne garde <em>aucune somme</em>', 'À part le loyer, tout l\'argent va directement sur tes numéros Mobile Money.']
 ];
 var VXT = null;
 function explainer() {
   return '<div class="vx" id="vx"><div class="bars">' + VX_SC.map(function () { return '<i><b></b></i>'; }).join('') + '</div>' +
     VX_SC.map(function (sc, i) { return '<div class="sc" data-i="' + i + '"><div class="art">' + VX_ART[sc[0]] + '</div><div class="big">' + sc[1].replace('15 000 FC', esc(money((S.settings || {}).loyer || 15000, 'CDF'))) + '</div><div class="sm">' + esc(sc[2]).replace('15 000 FC', money((S.settings || {}).loyer || 15000, 'CDF')) + '</div></div>'; }).join('') +
-    '<div class="brandm">cuervo<span>.co</span></div></div><div class="vx-ctl"><button class="btn btn-ghost btn-sm" type="button" data-act="vxReplay" style="width:auto">' + ico('i-play') + '<span>Revoir (15 s)</span></button></div>';
+    '<div class="brandm">Bingo<span>.co</span></div></div><div class="vx-ctl"><button class="btn btn-ghost btn-sm" type="button" data-act="vxReplay" style="width:auto">' + ico('i-play') + '<span>Revoir (15 s)</span></button></div>';
 }
 function vxPlay() {
   var root = $('vx'); if (!root) return; clearTimeout(VXT);
@@ -498,7 +498,7 @@ function vxPlay() {
   show();
 }
 function showExplainer(title) {
-  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>' + (title || 'cuervo.co en 15 secondes') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' + explainer() +
+  sheet('<div class="g16"><div class="shead" style="margin:0"><h2>' + (title || 'Bingo.co en 15 secondes') + '</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' + explainer() +
     '<a class="btn btn-primary" href="?v=aide" data-nav><span>Tout comprendre en détail</span></a></div>');
   vxPlay();
 }
@@ -507,25 +507,25 @@ function showExplainer(title) {
 function pageAide() {
   var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
   setBar(null);
-  page('<div class="kicker" style="padding-top:8px">Comment ça marche</div><h1>cuervo.co, la place de marché des produits digitaux en RDC</h1>' +
+  page('<div class="kicker" style="padding-top:8px">Comment ça marche</div><h1>Bingo.co, la place de marché des produits digitaux en RDC</h1>' +
     '<p class="lead" style="margin-top:12px">Formations, fichiers, modèles, applications, designs : chacun ouvre sa boutique, publie ses produits et encaisse par Mobile Money.</p>' +
     '<div class="sec">' + explainer() + '</div>' +
-    '<div class="sec"><div class="keyline">cuervo.co ne garde aucune somme. À part le loyer des boutiques, tout l\'argent des ventes va directement sur les numéros Mobile Money du vendeur.</div></div>' +
+    '<div class="sec"><div class="keyline">Bingo.co ne garde aucune somme. À part le loyer des boutiques, tout l\'argent des ventes va directement sur les numéros Mobile Money du vendeur.</div></div>' +
     '<div class="sec"><h2 style="margin-bottom:12px">Pour acheter</h2><div class="steps">' +
-    '<div class="step"><div><b>Choisis ton produit</b><p>Parcours les boutiques ou demande conseil à Cuervo IA.</p></div></div>' +
+    '<div class="step"><div><b>Choisis ton produit</b><p>Parcours les boutiques ou demande conseil à Bingo IA.</p></div></div>' +
     '<div class="step"><div><b>Touche « Payer »</b><p>Entre ton nom et ton numéro WhatsApp. Le numéro M-Pesa, Airtel Money ou Orange Money du vendeur s\'affiche.</p></div></div>' +
     '<div class="step"><div><b>Paie et envoie ta capture</b><p>Paie le montant exact, puis envoie la capture de confirmation depuis la page.</p></div></div>' +
     '<div class="step"><div><b>Reçois tes fichiers</b><p>Dès que le vendeur confirme, tes liens de téléchargement s\'affichent sur la page de ta commande (retrouvée dans « Mes achats »).</p></div></div></div></div>' +
     '<div class="sec"><h2 style="margin-bottom:12px">Pour vendre</h2><div class="steps">' +
     '<div class="step"><div><b>Crée ton compte</b><p>Ton prénom, ton nom, ton postnom, le nom de ta boutique et ton numéro de téléphone.</p></div></div>' +
     '<div class="step"><div><b>Enregistre tes Mobile Money</b><p>Dans Ma boutique → Boutique : le nom du compte et tes numéros M-Pesa, Airtel Money ou Orange Money. L\'administrateur les confirme avant la mise en ligne, et après chaque modification.</p></div></div>' +
-    '<div class="step"><div><b>Publie tes produits</b><p>Photos, description (Cuervo IA peut t\'aider), prix en FC ou en $, et le lien de téléchargement Google Drive de ton produit.</p></div></div>' +
+    '<div class="step"><div><b>Publie tes produits</b><p>Photos, description (Bingo IA peut t\'aider), prix en FC ou en $, et le lien de téléchargement Google Drive de ton produit.</p></div></div>' +
     '<div class="step"><div><b>Confirme tes ventes</b><p>Quand l\'argent arrive sur ton numéro, touche « Argent reçu » : le client reçoit son produit.</p></div></div></div></div>' +
     '<div class="sec"><h2 style="margin-bottom:12px">Le loyer : ' + loyer + ' pour 35 jours</h2><div class="steps">' +
-    '<div class="step"><div><b>Option 1 : payer tout de suite</b><p>Tu paies le loyer sur les numéros de cuervo.co (onglet Loyer) et tu envoies ta capture. Chaque paiement confirmé donne 35 jours.</p></div></div>' +
-    '<div class="step"><div><b>Option 2 : payer sur ta première vente</b><p>Ta boutique est en ligne sans rien payer. Ta première vente arrive sur les numéros de cuervo.co : l\'administrateur garde le loyer (jusqu\'à ' + loyer + ') et te reverse le reste. Les ventes suivantes vont directement chez toi pendant 35 jours.</p></div></div>' +
-    '<div class="step"><div><b>Après les 35 jours</b><p>Ta boutique n\'est jamais suspendue pour le loyer : elle reste en ligne. Quand les 35 jours sont finis, le loyer redevient dû automatiquement : ta vente suivante arrive sur les numéros de cuervo.co, qui garde ' + loyer + ' et te reverse le reste. Puis 35 nouveaux jours commencent. Tu peux aussi payer à l\'avance (option 1).</p></div></div></div></div>' +
-    '<div class="sec g8"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><a class="btn btn-ghost" href="?v=ia" data-nav><span>Poser une question à Cuervo IA</span></a></div>');
+    '<div class="step"><div><b>Option 1 : payer tout de suite</b><p>Tu paies le loyer sur les numéros de Bingo.co (onglet Loyer) et tu envoies ta capture. Chaque paiement confirmé donne 35 jours.</p></div></div>' +
+    '<div class="step"><div><b>Option 2 : payer sur ta première vente</b><p>Ta boutique est en ligne sans rien payer. Ta première vente arrive sur les numéros de Bingo.co : l\'administrateur garde le loyer (jusqu\'à ' + loyer + ') et te reverse le reste. Les ventes suivantes vont directement chez toi pendant 35 jours.</p></div></div>' +
+    '<div class="step"><div><b>Après les 35 jours</b><p>Ta boutique n\'est jamais suspendue pour le loyer : elle reste en ligne. Quand les 35 jours sont finis, le loyer redevient dû automatiquement : ta vente suivante arrive sur les numéros de Bingo.co, qui garde ' + loyer + ' et te reverse le reste. Puis 35 nouveaux jours commencent. Tu peux aussi payer à l\'avance (option 1).</p></div></div></div></div>' +
+    '<div class="sec g8"><a class="btn btn-primary" href="?v=compte" data-nav><span>' + (S.vendor ? 'Ma boutique' : 'Ouvrir ma boutique') + '</span></a><a class="btn btn-ghost" href="?v=ia" data-nav><span>Poser une question à Bingo IA</span></a></div>');
   vxPlay();
 }
 
@@ -616,7 +616,7 @@ function landingBox(id, titre, img) {
 }
 function landingReady(id, titre, img) {
   sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Ta landing page est prête</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
-    '<p class="lead">cuervo.co l\'a créée toute seule avec ta fiche produit. Choisis son style, puis partage son lien.</p>' +
+    '<p class="lead">Bingo.co l\'a créée toute seule avec ta fiche produit. Choisis son style, puis partage son lien.</p>' +
     '<div class="lstyles">' + LSTY.map(function (x, i) { return '<button type="button" class="lsty lsty-' + x[0] + (i === 0 ? ' on' : '') + '" data-act="lStyle" data-id="' + esc(id) + '" data-v="' + x[0] + '"><i></i>' + x[1] + '</button>'; }).join('') + '</div>' +
     landingBox(id, titre, safeUrl(img)) + '</div>');
 }
@@ -655,7 +655,7 @@ async function pageLanding(id, alive) {
     (avis.length ? sec('Avis des clients', '<div class="g8">' + avis.map(function (t) { return '<div class="lp-avis"><i>★★★★★</i><p>« ' + esc(t.texte) + ' »</p><small>' + esc(t.nom || 'Client') + '</small></div>'; }).join('') + '</div>') : '') +
     sec('Le vendeur', '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique</small></div>' + ico('i-arrow') + '</a>' + socialRow(s)) +
     sec('Questions', '<div class="g8">' + FAQ.map(function (f) { return '<details class="lp-faq"><summary>' + esc(f[0]) + '</summary><p>' + esc(f[1]) + '</p></details>'; }).join('') + '</div>') +
-    '<p class="lp-foot">Page créée automatiquement par <a href="./" data-nav>cuervo.co</a></p></div>');
+    '<p class="lp-foot">Page créée automatiquement par <a href="./" data-nav>Bingo.co</a></p></div>');
   setBar(canPay ? '<div class="from">' + (p.promo ? 'Prix promo' : 'Prix') + '<b>' + money(p.prix_actuel, p.devise) + '</b></div><button class="btn btn-primary" type="button" data-act="pay">Payer</button>' : null);
 }
 
@@ -665,7 +665,7 @@ async function pageShop(slug, alive) {
   var r = await sb.rpc('mk_shop', { p_slug: slug }); if (!alive()) return;
   if (r.error || !r.data) return notFound('Cette boutique n\'est pas en ligne.');
   var d = r.data, s = d.shop, ps = d.products || [];
-  document.title = s.boutique + ' — cuervo.co';
+  document.title = s.boutique + ' — Bingo.co';
   page((d.apercu ? '<div class="banner"><b>Aperçu</b>Cette boutique n\'est pas encore visible du public.</div><div style="height:16px"></div>' : '') +
     (safeUrl(s.cover_url) ? '<div class="cover wide zoom" data-zoom="' + esc(safeUrl(s.cover_url)) + '">' + pic(s.cover_url) + '</div>' : '<div class="shopbanner"></div>') +
     '<div style="padding:0 8px"><span' + (safeUrl(s.avatar_url) ? ' class="zoom" data-zoom="' + esc(safeUrl(s.avatar_url)) + '"' : '') + ' style="display:inline-block">' + avatar(s, 'lg') + '</span><h1 style="margin-top:12px">' + esc(s.boutique) + '</h1><p class="note" style="margin-top:4px">Par ' + esc(s.vendeur) + '</p>' + (s.bio ? '<p class="lead" style="margin-top:12px;white-space:pre-line">' + esc(s.bio) + '</p>' : '') + '</div>' +
@@ -784,7 +784,7 @@ var A = {
       if (md && md.value !== 'premiere_vente') await sb.from('mk_vendors').update({ loyer_mode: md.value }).eq('id', S.user.id);
       var em = g('a-email').toLowerCase();
       if (em && /^[^@\s]+@[^@\s]+\.[a-z]{2,}$/i.test(em)) await sb.from('mk_vendors').update({ email: em }).eq('id', S.user.id);
-      await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); await route(); showExplainer('Bienvenue sur cuervo.co');
+      await loadMe(); header(); S.tab = 'boutique'; toast('Boutique créée'); await route(); showExplainer('Bienvenue sur Bingo.co');
     } catch (e) { busy(el, false); err.textContent = errMsg(e); err.classList.remove('hide'); }
   },
   forgot: function () {
@@ -794,7 +794,7 @@ var A = {
       '<label>Numéro de téléphone<input id="f-tel" type="tel" inputmode="tel" placeholder="Ex. 0812 345 678" value="' + esc(tel) + '"></label>' +
       '<div class="msg-err hide" id="f-err"></div><div class="banner ok hide" id="f-ok"></div>' +
       '<button class="btn btn-primary" type="button" data-act="forgotSend"><span>Recevoir le lien sur mon Gmail</span></button>' +
-      (wa ? '<a class="linkbtn" style="text-align:center" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, j\'ai oublié le mot de passe de ma boutique cuervo.co. Mon numéro de compte : ' + tel) + '">Pas de Gmail ? Écrire à l\'administrateur</a>' : '') + '</div>');
+      (wa ? '<a class="linkbtn" style="text-align:center" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, j\'ai oublié le mot de passe de ma boutique Bingo.co. Mon numéro de compte : ' + tel) + '">Pas de Gmail ? Écrire à l\'administrateur</a>' : '') + '</div>');
   },
   forgotSend: async function (el) {
     var err = $('f-err'), ok = $('f-ok'), tel = waNum($('f-tel').value); err.classList.add('hide'); ok.classList.add('hide');
@@ -835,7 +835,7 @@ var A = {
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Nouveau mot de passe</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
       '<p class="lead">Mot de passe de « ' + esc(el.dataset.name) + ' ». Note-le : il ne sera plus affiché.</p><div class="paynum"><div class="n">' + pw + '</div></div>' +
       '<button class="btn btn-ghost btn-sm" type="button" data-act="copy" data-text="' + pw + '">Copier</button>' +
-      (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, voici ton nouveau mot de passe cuervo.co : ' + pw + '\nConnecte-toi avec ton numéro, puis change-le dans Ma boutique → Boutique.') + '"><span>Envoyer au vendeur sur WhatsApp</span></a>' : '') + '</div>');
+      (wa ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, voici ton nouveau mot de passe Bingo.co : ' + pw + '\nConnecte-toi avec ton numéro, puis change-le dans Ma boutique → Boutique.') + '"><span>Envoyer au vendeur sur WhatsApp</span></a>' : '') + '</div>');
   },
   logout: async function () { await sb.auth.signOut(); S.user = null; S.vendor = null; S.shops = []; S.admin = false; try { localStorage.removeItem('cv_shop'); } catch (e) {} header(); nav('./'); },
   tab: function (el) { S.tab = el.dataset.id; armed = ''; renderDash(); },
@@ -862,7 +862,7 @@ var A = {
     busy(el, true);
     try {
       var perm = await Notification.requestPermission();
-      if (perm !== 'granted') { busy(el, false); return toast('Autorise les notifications pour cuervo.co dans les réglages du navigateur'); }
+      if (perm !== 'granted') { busy(el, false); return toast('Autorise les notifications pour Bingo.co dans les réglages du navigateur'); }
       var reg = await navigator.serviceWorker.register('sw.js', { scope: './' }); await navigator.serviceWorker.ready;
       var sub = await reg.pushManager.getSubscription() || await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64u(VAPID_PUB) });
       var r = await savePush(sub); if (r.error) throw r.error;
@@ -982,7 +982,7 @@ var A = {
   report: function (el) {
     S.rep = { id: el.dataset.id, motif: '' };
     sheet('<div class="g16"><div class="shead" style="margin:0"><h2>Signaler ce produit</h2><button class="x" type="button" data-act="closeSheet" aria-label="Fermer">' + ico('i-x') + '</button></div>' +
-      '<p class="note">Choisis ce qui s\'est passé. L\'administrateur de cuervo.co reçoit ton signalement et peut bloquer la boutique.</p>' +
+      '<p class="note">Choisis ce qui s\'est passé. L\'administrateur de Bingo.co reçoit ton signalement et peut bloquer la boutique.</p>' +
       '<div class="rep-list stag">' + REPORTS.map(function (m, i) { return '<button class="rep-opt" type="button" data-act="repPick" data-i="' + i + '"><span class="rep-dot"></span><span class="grow"><b>' + esc(m[0]) + '</b><small>' + esc(m[1]) + '</small></span></button>'; }).join('') + '</div>' +
       '<label>Explique en quelques mots (facultatif)<textarea id="rep-d" rows="3" maxlength="600" placeholder="Ex. : j\'ai payé le 10 novembre, le vendeur ne répond plus."></textarea></label>' +
       '<label>Ton numéro WhatsApp (facultatif)<input id="rep-c" type="tel" maxlength="40" placeholder="Pour que l\'administrateur te recontacte"></label>' +
@@ -1079,7 +1079,7 @@ async function pageOrder(token, alive) {
     } else {
       body = '<div class="wait"></div><div class="center"><h1 style="font-size:24px">Capture bien reçue</h1><p class="lead" style="margin-top:8px">Le vendeur vérifie ton paiement. Cette page se met à jour toute seule : tes fichiers apparaîtront ici.</p></div>' +
         '<div class="recap"><span>' + esc(o.titre) + '</span><b class="gt">' + money(o.montant, o.devise) + '</b></div>' +
-        (waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) + '?text=' + encodeURIComponent('Bonjour, je viens de payer « ' + o.titre + ' » (' + money(o.montant, o.devise) + ' par ' + (OPS[o.op] || 'Mobile Money') + ') sur cuervo.co et j\'ai envoyé ma capture. Mon nom : ' + (o.nom || '') + '. Merci de confirmer mon paiement.') + '">' + ico('i-chat') + '<span>Prévenir le vendeur sur WhatsApp</span></a><p class="note center">Le vendeur confirme plus vite quand tu le préviens.</p>' : '');
+        (waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) ? '<a class="btn btn-primary" target="_blank" rel="noopener" href="https://wa.me/' + waNum(o.pour_loyer ? o.admin_whatsapp : (s.whatsapp || s.tel)) + '?text=' + encodeURIComponent('Bonjour, je viens de payer « ' + o.titre + ' » (' + money(o.montant, o.devise) + ' par ' + (OPS[o.op] || 'Mobile Money') + ') sur Bingo.co et j\'ai envoyé ma capture. Mon nom : ' + (o.nom || '') + '. Merci de confirmer mon paiement.') + '">' + ico('i-chat') + '<span>Prévenir le vendeur sur WhatsApp</span></a><p class="note center">Le vendeur confirme plus vite quand tu le préviens.</p>' : '');
     }
     page('<div class="prod g16" style="margin-top:8px">' + body + '</div>' +
       '<a class="shoprow" href="?b=' + esc(s.slug) + '" data-nav>' + avatar(s) + '<div class="grow"><b>' + esc(s.boutique) + '</b><small>Voir la boutique</small></div>' + ico('i-arrow') + '</a>' +
@@ -1125,7 +1125,7 @@ async function loadDash() {
 function loyerChoice(cur, name) {
   var loyer = money((S.settings || {}).loyer || 15000, 'CDF');
   return '<div class="choice"><div style="font-size:14px;font-weight:600">Comment veux-tu payer ton loyer de ' + loyer + ' pour 35 jours ?</div>' +
-    '<label class="opt"><input type="radio" name="' + name + '" value="premiere_vente"' + (cur !== 'immediat' ? ' checked' : '') + '><span><b>Sur ma première vente</b><small>Rien à payer maintenant. Ta première vente arrive chez cuervo.co, qui garde le loyer et te reverse le reste.</small></span></label>' +
+    '<label class="opt"><input type="radio" name="' + name + '" value="premiere_vente"' + (cur !== 'immediat' ? ' checked' : '') + '><span><b>Sur ma première vente</b><small>Rien à payer maintenant. Ta première vente arrive chez Bingo.co, qui garde le loyer et te reverse le reste.</small></span></label>' +
     '<label class="opt"><input type="radio" name="' + name + '" value="immediat"' + (cur === 'immediat' ? ' checked' : '') + '><span><b>Tout de suite</b><small>Tu paies ' + loyer + ' maintenant (onglet Loyer) : tes ventes vont directement chez toi pendant 35 jours.</small></span></label>' +
     '<a class="linkbtn" href="?v=aide" data-nav style="text-align:center">Comment ça marche ?</a></div>';
 }
@@ -1157,9 +1157,9 @@ function shopStatus(v) {
   else if (v.mm_statut === 'refuse') todo.push('tes numéros Mobile Money ont été refusés : corrige-les (onglet Boutique)');
   var ok = v.abo_fin && new Date(v.abo_fin + 'T23:59:59') >= new Date();
   if (todo.length) return ['', 'Boutique pas encore en ligne', 'Il reste à faire : ' + todo.join(' ; ') + '.'];
-  if (!v.is_admin && !ok) return ['ok', 'Boutique en ligne', 'Loyer à payer sur ta prochaine vente : elle arrivera chez cuervo.co, qui garde ' + loyer + ' et te reverse le reste.'];
+  if (!v.is_admin && !ok) return ['ok', 'Boutique en ligne', 'Loyer à payer sur ta prochaine vente : elle arrivera chez Bingo.co, qui garde ' + loyer + ' et te reverse le reste.'];
   var left = v.is_admin ? 99 : Math.ceil((new Date(v.abo_fin + 'T23:59:59') - new Date()) / 864e5);
-  if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Ensuite, ta vente suivante arrivera chez cuervo.co, qui gardera ' + loyer + ' et te reversera le reste. Tu peux aussi payer à l\'avance dans l\'onglet Loyer.'];
+  if (left <= 5) return ['', 'Loyer bientôt à payer', 'Ta boutique est en ligne, mais ton loyer se termine le ' + fmtDate(v.abo_fin) + ' (' + (left <= 1 ? 'dernier jour' : 'dans ' + left + ' jours') + '). Ensuite, ta vente suivante arrivera chez Bingo.co, qui gardera ' + loyer + ' et te reversera le reste. Tu peux aussi payer à l\'avance dans l\'onglet Loyer.'];
   return ['ok', 'Boutique en ligne', v.is_admin ? 'Compte administrateur : pas de loyer.' : 'Loyer payé jusqu\'au ' + fmtDate(v.abo_fin) + '.'];
 }
 async function pageAccount(alive) {
@@ -1197,10 +1197,10 @@ function salesCard() {
 var VAPID_PUB = 'BLtRAGJQHR_PdDY53BuJclpFDnRcntA05a7vsZUsj3l3h8-fyr6U2hlleG6hoVJMeY885Hdgddgw4bwazZ7mlik';
 function pushOk() { return 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window; }
 function pushCard() {
-  if (!pushOk()) return '<div class="pushcard"><b>Notifications</b><p>Ce navigateur ne peut pas recevoir de notifications. Ouvre cuervo.co dans Chrome.</p></div>';
+  if (!pushOk()) return '<div class="pushcard"><b>Notifications</b><p>Ce navigateur ne peut pas recevoir de notifications. Ouvre Bingo.co dans Chrome.</p></div>';
   var on = Notification.permission === 'granted' && S.pushOn;
   return '<div class="pushcard' + (on ? ' on' : '') + '">' + ico(on ? 'i-check' : 'i-clock') + '<div class="grow"><b>' + (on ? 'Notifications activées' : 'Sois prévenu à chaque paiement') + '</b><p>' +
-    (on ? 'Ce téléphone sonne dès qu\'un client envoie sa capture de paiement.' : 'Ton téléphone sonne dès qu\'un client envoie sa capture, même si cuervo.co est fermé.') + '</p></div>' +
+    (on ? 'Ce téléphone sonne dès qu\'un client envoie sa capture de paiement.' : 'Ton téléphone sonne dès qu\'un client envoie sa capture, même si Bingo.co est fermé.') + '</p></div>' +
     (on ? '' : '<button class="btn btn-primary btn-sm" type="button" data-act="pushOn">Activer</button>') + '</div>';
 }
 function b64u(s) { var p = '='.repeat((4 - s.length % 4) % 4), r = atob((s + p).replace(/-/g, '+').replace(/_/g, '/')), a = new Uint8Array(r.length); for (var i = 0; i < r.length; i++) a[i] = r.charCodeAt(i); return a; }
@@ -1241,7 +1241,7 @@ function dashOrders() {
   return h + '<div class="g12 stag">' + S.orders.slice().sort(function (a, b) { return rank(a) - rank(b); }).map(function (o) {
     var s = st[o.statut] || st.attente, acts = '';
     if (o.pour_loyer) {
-      var info = o.statut === 'attente' ? 'Cette vente paie ton loyer : le client paie cuervo.co, qui confirme la vente.' : o.statut === 'paye' ? ('Loyer retenu : ' + money(o.loyer_retenu || 0, 'CDF') + (o.a_reverser != null ? ' · reste pour toi : ' + money(o.a_reverser, 'CDF') : '') + (o.reverse_fait ? ' · reversé' : ' · en cours de reversement')) : '';
+      var info = o.statut === 'attente' ? 'Cette vente paie ton loyer : le client paie Bingo.co, qui confirme la vente.' : o.statut === 'paye' ? ('Loyer retenu : ' + money(o.loyer_retenu || 0, 'CDF') + (o.a_reverser != null ? ' · reste pour toi : ' + money(o.a_reverser, 'CDF') : '') + (o.reverse_fait ? ' · reversé' : ' · en cours de reversement')) : '';
       return '<div class="ord"><div class="top"><div><b>' + esc(o.nom) + '</b><small>' + esc(o.tel) + ' · ' + (OPS[o.op] || '') + '</small><small>' + esc(o.titre) + ' · ' + money(o.montant, o.devise) + '</small></div><span class="tag ' + s[0] + '">' + s[1] + '</span></div><div class="banner" style="margin:0"><b>Vente-loyer</b>' + info + '</div></div>';
     }
     if (o.capture_path) acts += '<button class="btn btn-ghost btn-sm" type="button" data-act="viewCapture" data-path="' + esc(o.capture_path) + '">Voir la capture</button>';
@@ -1443,7 +1443,7 @@ function renderAdmin() {
     var nums = Object.keys(OPS).filter(function (k) { return o['v_' + k]; }).map(function (k) { return OPS[k] + ' : ' + esc(o['v_' + k]); }).join(' · ');
     var wa = waNum(o.vendeur_tel), rest = o.a_reverser != null ? money(o.a_reverser, 'CDF') : 'le reste';
     return '<div class="ord">' + head + '<div class="banner" style="margin:0"><b>À reverser : ' + rest + '</b>Loyer gardé : ' + money(o.loyer_retenu || 0, 'CDF') + (nums ? '<br>Numéros du vendeur : ' + nums + (o.mm_nom ? ' (' + esc(o.mm_nom) + ')' : '') : '') + '</div>' +
-      (wa ? '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, ta vente « ' + o.titre + ' » est confirmée. cuervo.co a gardé ' + money(o.loyer_retenu || 0, 'CDF') + ' pour ton loyer et t\'envoie ' + rest + '.') + '"><span>Prévenir le vendeur</span></a>' : '') +
+      (wa ? '<a class="btn btn-ghost btn-sm" target="_blank" rel="noopener" href="https://wa.me/' + wa + '?text=' + encodeURIComponent('Bonjour, ta vente « ' + o.titre + ' » est confirmée. Bingo.co a gardé ' + money(o.loyer_retenu || 0, 'CDF') + ' pour ton loyer et t\'envoie ' + rest + '.') + '"><span>Prévenir le vendeur</span></a>' : '') +
       '<button class="btn btn-primary btn-sm" type="button" data-act="admRev" data-id="' + o.id + '"><span>Reste envoyé au vendeur</span></button></div>';
   }).join('') + '</div>' : '<div class="empty">Aucune vente-loyer à traiter.</div>');
   else if (S.atab === 'confirmer') body = mm.length ? '<div class="g12 stag">' + mm.map(function (v) {

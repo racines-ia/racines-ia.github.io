@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 
-// Cuervo IA : guide les visiteurs de cuervo.co (produits, prix, achat, boutiques, loyer).
+// Bingo IA : guide les visiteurs de Bingo.co (produits, prix, achat, boutiques, loyer).
 const cors = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
@@ -37,7 +37,7 @@ Deno.serve(async (req) => {
   h.push(now); hits.set(ip, h);
 
   const key = Deno.env.get("GEMINI_API_KEY");
-  if (!key) return json({ error: "Cuervo IA n'est pas encore activé." }, 503);
+  if (!key) return json({ error: "Bingo IA n'est pas encore activé." }, 503);
   const body = await req.json().catch(() => ({}));
   const msgs = (Array.isArray(body.messages) ? body.messages : []).slice(-10)
     .map((m: { role?: string; text?: string }) => ({ role: m.role === "ia" ? "model" : "user", parts: [{ text: String(m.text ?? "").slice(0, 600) }] }))
@@ -50,17 +50,17 @@ Deno.serve(async (req) => {
   const home = hr.ok ? await hr.json() : { products: [], loyer: 15000 };
   const ids = new Set<string>(); // plus de catalogue global : chaque boutique partage ses propres liens
 
-  const system = `Tu es « Cuervo IA », l'assistant de cuervo.co, une place de marché de produits digitaux en République démocratique du Congo (formations, fichiers, modèles, applications, designs…).
+  const system = `Tu es « Bingo IA », l'assistant de Bingo.co, une place de marché de produits digitaux en République démocratique du Congo (formations, fichiers, modèles, applications, designs…).
 Réponds en français simple et chaleureux, en 2 à 5 phrases courtes. Tutoie le visiteur.
 Tu aides à comprendre comment acheter, comment ouvrir et gérer une boutique, comment vendre et partager ses produits, et comment fonctionne le loyer.
-cuervo.co n'a PAS de catalogue public : chaque vendeur partage le lien de sa boutique ou de ses produits (WhatsApp, Facebook, TikTok…). Tu ne connais aucun produit : ne cite, ne recommande et n'invente jamais de produit, de prix ou de boutique. Si on te demande un produit, explique qu'il faut ouvrir le lien envoyé par le vendeur, ou lui demander son lien.
+Bingo.co n'a PAS de catalogue public : chaque vendeur partage le lien de sa boutique ou de ses produits (WhatsApp, Facebook, TikTok…). Tu ne connais aucun produit : ne cite, ne recommande et n'invente jamais de produit, de prix ou de boutique. Si on te demande un produit, explique qu'il faut ouvrir le lien envoyé par le vendeur, ou lui demander son lien.
 Règles du site :
 - Acheter : ouvrir le produit, toucher « Payer », entrer son nom et son numéro WhatsApp, payer par M-Pesa, Airtel Money ou Orange Money au numéro affiché, puis envoyer la capture. Dès que le paiement est confirmé, le client accède à ses fichiers sur la page de sa commande.
-- L'argent des ventes va directement sur les numéros Mobile Money du vendeur. cuervo.co ne garde aucune somme, sauf le loyer des boutiques.
+- L'argent des ventes va directement sur les numéros Mobile Money du vendeur. Bingo.co ne garde aucune somme, sauf le loyer des boutiques.
 - Ouvrir une boutique : toucher « Créer ma boutique », entrer son nom, son numéro, son Gmail et un mot de passe, puis ajouter ses numéros Mobile Money (confirmés par l'administrateur) et ses produits (jusqu'à 10 photos et 4 vidéos par produit). Une page de vente (landing page) est créée pour chaque produit.
 - Un même compte peut avoir plusieurs boutiques (« Mes boutiques » → « Nouvelle boutique »), chacune avec son nom, ses produits et son propre loyer.
 - Mot de passe oublié : « Ouvrir ma boutique » → « Mot de passe oublié ? » : un lien arrive sur le Gmail de la boutique.
-- Loyer : ${money(Number(home.loyer ?? 15000), "CDF")} pour 35 jours. Le vendeur choisit : le payer tout de suite, ou le payer sur sa première vente (cette vente arrive alors chez cuervo.co, qui garde le loyer et reverse le reste au vendeur). La boutique n'est jamais suspendue pour le loyer : après les 35 jours, le loyer redevient dû automatiquement et la vente suivante arrive chez cuervo.co, qui garde le loyer et reverse le reste.
+- Loyer : ${money(Number(home.loyer ?? 15000), "CDF")} pour 35 jours. Le vendeur choisit : le payer tout de suite, ou le payer sur sa première vente (cette vente arrive alors chez Bingo.co, qui garde le loyer et reverse le reste au vendeur). La boutique n'est jamais suspendue pour le loyer : après les 35 jours, le loyer redevient dû automatiquement et la vente suivante arrive chez Bingo.co, qui garde le loyer et reverse le reste.
 - Pour une question sur une commande précise, conseille d'écrire au vendeur depuis la page du produit.
 Réponds uniquement en JSON : {"reponse":"ton texte","produits":[]}.`;
 
@@ -70,11 +70,11 @@ Réponds uniquement en JSON : {"reponse":"ton texte","produits":[]}.`;
     if (r.status === 400) r = await ask(key, m, system, msgs, false);
     if (r.status === 200 && r.text) { text = r.text; break; }
   }
-  if (!text) return json({ error: "Cuervo IA n'a pas répondu. Réessaie dans un instant." }, 502);
+  if (!text) return json({ error: "Bingo IA n'a pas répondu. Réessaie dans un instant." }, 502);
   let parsed: { reponse?: unknown; produits?: unknown } = {};
   try { parsed = JSON.parse(text.replace(/^```(json)?|```$/g, "").trim()); } catch (_) { parsed = { reponse: text }; }
   const reponse = String(parsed.reponse ?? "").trim().slice(0, 2000);
   const produits = (Array.isArray(parsed.produits) ? parsed.produits : []).map(String).filter((i) => ids.has(i)).slice(0, 3);
-  if (!reponse) return json({ error: "Cuervo IA n'a rien répondu. Réessaie." }, 502);
+  if (!reponse) return json({ error: "Bingo IA n'a rien répondu. Réessaie." }, 502);
   return json({ reponse, produits });
 });
